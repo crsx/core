@@ -135,13 +135,6 @@ language. \KR{Changed to Lionel's proposed syntax, except attributes are called 
 
 \MS{About Figure~\ref{fig:syntax}
   \begin{itemize}
-  \item $ D ::= \kw{sort}~S~a^*~\kwm\{\, F^*\,\kwm\}$. What does the $a$ stand for?
-  \item The keyword $\kw{rule}$ is redundant? Maybe also $\kw{data}$ and $\kw{scheme}$?
-  \item $O ::= ~\mid \kw{default}$ \\
-    Is this really ``core''? I understand $\kw{default}$ as the ``fallback'' rule of a set of rules
-    with the same function symbol, e.g., $ Plus([]\#1(), []\#2[]) → \#2[] ;$ in
-    Figure~\ref{fig:peano}. But it would be easily computable whether a rule is a fallback rule,
-    i.e., the most general instance of a set of rules. Am I missing something?
   \item There are three different ways to ``brace'' 
      \begin{itemize}
      \item $\kwm\{\ \kwm\} $: for associations
@@ -150,17 +143,29 @@ language. \KR{Changed to Lionel's proposed syntax, except attributes are called 
      \end{itemize}
      I find this a bit confusing. Why not only one? Do the braces \emph{add} any info?
   \end{itemize}
-} \KR{A: Fixed, yes but I suggest we keep'em, fixed, yes I like different braces but I did simplify
-  decarations to not be grouped.}
+} 
+%
+\KR{A: Fixed, yes but I suggest we keep'em, fixed} %
+\MS{I am not sure, what you are refering to?} 
+
+\KR{yes I like different braces} %
+\MS{I understand, and actually also like them. The only thing I am unsure about is the brackets in:
+  $M\,\kw[\,T^{*\kw,}\,\kw]$. Why $\kw[\kw]$ and not $\kw(\kw)$?}
+
+\KR{ but I did simplify decarations to not be grouped.} 
+\MS{Thank you! Sorry, I was about to change
+  that yesterday, but I wasn't sure about two cases:
+  \begin{itemize}
+  \item  $S~\kw{variable}\,\kw;$ \ldots What does this keyword indicate now?
+  \item  $S~\kw{rule}~T~\kw{$→$}~T\,\kw;$ \ldots Here the $S$ is superflous, no?
+  \end{itemize}
+}
 
 \begin{definition}[\hax syntax]
   %%
   The \hax syntax is shown in Figure~\ref{fig:syntax}. The top level of a \hax script is a sequence
   of declarations $D^*$ and the grammar assumes that we have three categories of identifier tokens
   defined:
-  %%
-  \MS{Wouldn't e.g., $¬$, $\kw{scheme}$, or $→$ also be a token?}
-  \KR{A: Yes, as now made explicit these are just the \emph{identifier} token.}
   %%
   \begin{itemize}
 
@@ -182,7 +187,8 @@ language. \KR{Changed to Lionel's proposed syntax, except attributes are called 
   %%
   \MS{We mix a bit notation here, sometimes ``$A^{*\kw,}$'', but also e.g., $c(P_1,…,P_n)$. I
     personally prefer the latter, but I would stick to one. Or am I missing something?}
-  \KR{A: The former is \emph{concrete} syntax (``the commas must be there''), the latter abstract.}
+  \KR{A: The former is \emph{concrete} syntax (``the commas must be there''), the latter abstract.} 
+  \MS{Hmmm... Could you give me an intution, when to use which?}
   %%
   notation means zero or more $A$s separated by commas. We shall use the
   following terminology:
@@ -192,8 +198,9 @@ language. \KR{Changed to Lionel's proposed syntax, except attributes are called 
   \item A term of the form $c(P_1,…,P_n)$ ($n≥0$) is called a \emph{construction}; if furthermore
     the top symbol $c$ is declared with a "scheme c {…}" declaration then it is called a
     \emph{function construction}, and if it is declared with "data d {…}" then it is called a
-    \emph{data construction}.
-    %%
+    \emph{data construction}.  \MS{Suggestion: If $n=0$, i.e., the function or data symbol does not take any
+      arguments, we usually drop the $()$. That is, we write $0$ instead of $0()$.}
+    
     \MS{Here comes a really general question: How do data and function constructors/constructions
       relate to constructor and defined symbols in term rewriting (To clarify: A symbol is
       \emph{defined} wrt to a set of rules, if it occurs at the root of a left-hand side of a
@@ -201,12 +208,16 @@ language. \KR{Changed to Lionel's proposed syntax, except attributes are called 
       If so, I may argue, that the distinction is easily computable and is maybe not core?
       }
       \KR{A: Yes, one can argue this. Not sure what the right answer is.}
+      \MS{I'd go for simpler. Maybe we can discuss this on the call?}
     %% 
 
     \item Argument ``pieces'' $P$ of constructions take one of two forms: \emph{scopes}
       $[v_1,…,v_n]T$, which introduce new local variables $v_1,…,v_n$ along with a term $T$ wherein
       they can occur, and \emph{associations} $\{A_1,…,A_n\}$. Each $A$ is either an \emph{entry}
-      $T:T$, or an \emph{exclusion} $¬T$, or a \emph{catcher} ${:}M$.
+      $T:T$, or an \emph{exclusion} $¬T$, or a \emph{catcher} ${:}M$.  \MS{Suggestion: Again, if
+        $n=0$, i.e., there are no new variables introduced in the scope, we usually drop the
+        $[]$. That is, we write $S(0)$ instead of $S([]0)$, and also $S(x)$ instead of $S([]x)$,
+        where $x$ is unbound in this scope.}
 
   \item A term of the form $v$ is a \emph{variable occurrence}; if the variable $v$ occurs contained
     in a scope $[…v…]T$ then the variable occurrence is \emph{bound}.
@@ -216,75 +227,62 @@ language. \KR{Changed to Lionel's proposed syntax, except attributes are called 
       meta-application}. \KR{Notice that this means one \emph{cannot} substitute a variable by an
       association!}
 
+  \item  \MS{E.g., in KR thesis, TeReSe, a distinction between meta term and term (i.e., a meta term without
+     meta variables) is made. Do we also want to do this?}
   \end{itemize}
   %%
   A term is called a \emph{pattern fragment} if all contained meta-applications are pattern
   meta-applications, and a \emph{pattern} if it is also a function construction.
-
-  \MS{I next write down a couple of Terms wrt.\ to the grammar in Figure~\ref{fig:syntax}.
-      I'll start without Associations, just to get an idea.}
-   \begin{hacs}[numbers=right,texcl]
-     Zero                  
-     Plus(#X, #Y) 
-     S(Zero)         
-     x                    
-     #X                    
-    [x]#X[x]               // This pattern meta-application is not a Term. Is this intended?
-    [x,y]#F[y,x]           // ditto
-    S([x,y]#X[y,x,z])
-    #X[x]
-    #F[Zero]           
-    #F[#X]
-   \end{hacs}
-   \MS{So currently, a meta-application is not a term (except for $\#X$). Do we want this?}
-   
-   \MS{E.g., in KR thesis, TeReSe, a distinction between meta term and term (i.e., a meta term without
-     meta variables) is made. Do we also want to do this?}
-   
-   \MS{There are not any examples making use of Associations yet. So I am not sure I understand the
-     semantics here. I'll continue by writing down some Terms with Associations of the form $T \kw{:} T$:}
-   \begin{hacs}[numbers=right,texcl]
-     Plus(x, { x : Zero }) 
-     Plus(#X, { x : Zero }) 
-     S({ #X : #Y })                             
-     #Z[S({ #X : #Y })]                    
-     S({[x]#X[x] : Zero })  
-     Plus(Zero, {Zero : S(Zero)})
-     Plus( {x : y}, { z : #X })
-   \end{hacs}
-   \MS{I expect, most of them don't make sense. Could someone indicate which and why? They are all
-     derivable from the syntax.}
-   
-  \MS{I'll take the above examples and continue with Associations of the form  $¬T$:}
-   \begin{hacs}[numbers=right,texcl]
-     Plus(x, { ¬x }) 
-     Plus(x, { ¬Zero }) 
-     Plus(#X, { ¬Zero }) 
-     S({ ¬#X })                             
-     #Z[S({ ¬#Z[x] })]                    
-     S({ ¬S([x]#X[x]) })  
-     Plus(Zero, { ¬S(Zero)})
-     Plus( { ¬x}, { ¬z})
-   \end{hacs}
-   \MS{Again I expect that most of them don't make sense. Could someone indicate which and why? They
-     are all derivable from the syntax.}
- 
-     \MS{Finally I'll take the above examples again and continue with Associations of the form  $: M$:}
-   \begin{hacs}[numbers=right,texcl]
-     Plus(x, { : #X }) 
-     Plus(#X, { : #X }) 
-     S({ : #X })                             
-     Plus(#X, { : #Y })
-     Plus([x].#X[x], { : #X })
-     Plus( { : #X}, { : #X})
-     Plus( { : #X}, { : #Y})
-   \end{hacs}
-   \MS{Again I expect that most of them don't make sense. Could someone indicate which and why? They
-     are all derivable from the syntax.}
-
-   \KR{A: We talked about these in our call…any chance you can reduce, Maria?}
-
 \end{definition}
+
+
+  \begin{example}
+    Example terms without Associations are: 
+    %% 
+    \begin{hacs}[numbers=right, texcl]
+      Zero, Plus(#X, #Y), S(Zero), x, #X, S([x,y]#X[y,x,z]), #X[x], #F[Zero], #F[#X]
+      [x,y]#F[y,x]  // This pattern meta-application is not a Term. 
+    \end{hacs}
+    \MS{So currently, a meta-application is (strictly speaking) not called a term (except for
+      $\#X$). Do we want this?}
+    
+    Example terms with Associations of the form $T \kw{:} T$, where the key is a variable or a
+      constant, are
+    %%
+    \begin{hacs}[numbers=right,texcl]
+      Plus(x, { x : Zero }), Plus(#X, { x : Zero }), Plus(Zero, {Zero : S(Zero)}) 
+    \end{hacs}
+ 
+    Example terms, where the keys are meta-variables. \MS{I am sorry, I forgot, is this allowed?}
+    \begin{hacs}[numbers=right,texcl]
+     S({ #X : #Y }), #Z[S({ #X : #Y })]                    
+     S({[x]#X[x] : Zero }), 
+   \end{hacs}
+
+   \MS{The semantic of the following two is unclear, or?}
+   \begin{hacs}[numbers=right,texcl]  
+     S( {x : y, x : Zero} )
+     Plus( {x : y}, {x : Zero} )
+   \end{hacs}
+    Example terms with Associations of the form $¬T$ are:
+   \begin{hacs}[numbers=right,texcl]
+     Plus(x, { ¬x }), Plus(x, { ¬Zero }), Plus(#X,{¬Zero}), S({ ¬#X }), 
+     #Z[S({ ¬#Z[x] })], S({ ¬S([x]#X[x]) }), Plus(Zero,{¬S(Zero)}), Plus({ ¬x}, { ¬z})
+   \end{hacs}
+ 
+   Finally, Example terms with Associations of the form $: M$ are:
+   \begin{hacs}[numbers=right,texcl]
+     Plus(x, { : #X }), Plus( { : #X}, { : #X}), Plus( { : #X}, { : #Y})
+     Plus( #X, { : #X })  // note, here \#X are distinct, the former is acutally []\#X
+   \end{hacs}
+   
+  \MS{The semantic of the following is unclear, or?}
+  \begin{hacs}[numbers=right,texcl]
+    Plus( { : #X, : #Y})
+  \end{hacs}
+ \end{example}  
+ \MS{I reduced the space they take up and added a couple of questions in between. Is it okay like
+   this or do you want me to kick them out at all?}
 
 
 \begin{figure*}[t]
@@ -391,10 +389,7 @@ List[α] rule Map([x]#[x], []Cons([]#1[], []#2[])) →  Cons([]#[#1[]], Map([x]#
 %%
 \MS{May I drop the empty parenthesis in Example~\ref{ex:peano}, Figure~\ref{fig:peano},
   Figure~\ref{fig:lambda}, and Figure~\ref{fig:list}? They create a lot of noise.}
-\KR{A: The current presentation has \emph{all} sugar later. Can be discussed.}
-
-\MS{Could I get an intution, why it is preferable to group data, scheme and rule declarations by the
-  return type?}\KR{A: No more.}
+\KR{A: The current presentation has \emph{all} sugar later. Can be discussed.} 
 
 \begin{remark}
   One difference between the CRSX family, including \hax, and other higher order rewriting
