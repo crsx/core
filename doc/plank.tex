@@ -232,7 +232,8 @@ language. \KR{Changed to Lionel's proposed syntax, except attributes are called 
   \end{itemize}
   %%
   A term is called a \emph{pattern fragment} if all contained meta-applications are pattern
-  meta-applications, and a \emph{pattern} if it is also a function construction.
+  meta-applications, and a \emph{pattern} if it is also a function construction. \KR{Yes, this needs
+    to say that otherwise only data constructors are there.}
 \end{definition}
 
 
@@ -601,7 +602,7 @@ addition attribute set inside an attribute set.}
     &\dfrac
     { Γ,Δ,\op{Pattern} ⊢ T_1 : s[\ov{S}]  \qquad Γ,Δ,\op{Contract} ⊢ T_2 : s[\ov{S}] }
     { Γ ⊢ s[\ov{S}]~\kw{rule}~T_1~\kw{→}~T_2\,\kw; }
-    && (∃Δ)
+    && (∃Δ; T_1\text{~must be a pattern})
     \tag{S-D-Rule}
     %
     \\
