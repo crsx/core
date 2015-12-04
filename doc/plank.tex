@@ -237,10 +237,10 @@ language. \KR{Changed to Lionel's proposed syntax, except attributes are called 
 \end{definition}
 
 
-  \begin{example}
-    Example terms without Associations are: 
-    %% 
-    \begin{hacs}[numbers=right, texcl]
+\begin{example}
+  Example terms without Associations are: 
+  %% 
+  \begin{hacs}[numbers=right, texcl]
       Zero, Plus(#X, #Y), S(Zero), x, #X, S([x,y]#X[y,x,z]), #X[x], #F[Zero], #F[#X]
       [x,y]#F[y,x]  // This pattern meta-application is not a Term. 
     \end{hacs}
@@ -248,12 +248,12 @@ language. \KR{Changed to Lionel's proposed syntax, except attributes are called 
       $\#X$). Do we want this?}
     
     Example terms with Associations of the form $T \kw{:} T$, where the key is a variable or a
-      constant, are
-    %%
+    constant, are
+    %% 
     \begin{hacs}[numbers=right,texcl]
       Plus(x, { x : Zero }), Plus(#X, { x : Zero }), Plus(Zero, {Zero : S(Zero)}) 
     \end{hacs}
- 
+    
     Example terms, where the keys are meta-variables. \MS{I am sorry, I forgot, is this allowed?}
     \begin{hacs}[numbers=right,texcl]
      S({ #X : #Y }), #Z[S({ #X : #Y })]                    
@@ -265,26 +265,26 @@ language. \KR{Changed to Lionel's proposed syntax, except attributes are called 
      S( {x : y, x : Zero} )
      Plus( {x : y}, {x : Zero} )
    \end{hacs}
-    Example terms with Associations of the form $¬T$ are:
+   Example terms with Associations of the form $¬T$ are:
    \begin{hacs}[numbers=right,texcl]
      Plus(x, { ¬x }), Plus(x, { ¬Zero }), Plus(#X,{¬Zero}), S({ ¬#X }), 
      #Z[S({ ¬#Z[x] })], S({ ¬S([x]#X[x]) }), Plus(Zero,{¬S(Zero)}), Plus({ ¬x}, { ¬z})
    \end{hacs}
- 
+   
    Finally, Example terms with Associations of the form $: M$ are:
    \begin{hacs}[numbers=right,texcl]
      Plus(x, { : #X }), Plus( { : #X}, { : #X}), Plus( { : #X}, { : #Y})
      Plus( #X, { : #X })  // note, here \#X are distinct, the former is acutally []\#X
    \end{hacs}
    
-  \MS{The semantic of the following is unclear, or?}
-  \begin{hacs}[numbers=right,texcl]
+   \MS{The semantic of the following is unclear, or?}
+   \begin{hacs}[numbers=right,texcl]
     Plus( { : #X, : #Y})
   \end{hacs}
- \end{example}  
- \MS{I reduced the space they take up and added a couple of questions in between. Is it okay like
-   this or do you want me to kick them out at all?}
-
+\end{example}  
+\MS{I reduced the space they take up and added a couple of questions in between. Is it okay like
+  this or do you want me to kick them out at all?}  \KR{A: I think we should give terms in
+  connection with the examples below, and make sure to explain that some are incorrectly sorted.}
 
 \begin{figure*}[t]
   \vspace*{-1em}
@@ -299,7 +299,7 @@ N[] rule Plus([]S([]#1[]), []#2[]) →  S([]Plus([]#1[], []#2[])) ;  // $(1+x)+y
   \end{hacs}
   \vspace*{-1em}
   \caption{Peano numerals in \hax.}
-  \label{fig:peano}
+  %\label{fig:peano}
   %%
   \vspace{1em}
   \begin{hacs}[numbers=right,texcl]
@@ -311,7 +311,7 @@ N[] rule Plus([]S([]#1[]), []#2[]) →  S([]Plus([]#1[], []#2[])) ;  // $(1+x)+y
   \end{hacs}
   \vspace*{-1em}
   \caption{Untyped λ calculus in \hax.}
-  \label{fig:lambda}
+  %\label{fig:lambda}
   %%
   \vspace{1em}\small
   \begin{hacs}[numbers=right,texcl]
@@ -325,35 +325,75 @@ List[α] rule Map([x]#[x], []Cons([]#1[], []#2[])) →  Cons([]#[#1[]], Map([x]#
   \end{hacs}
   \vspace*{-1em}
   \caption{Polymorphic lists in \hax.}
+  %\label{fig:list}
+  %%
+\end{figure*}
+
+\KR{Extra figure inserted without empty parentheses. It is much more readable…}
+
+\begin{figure*}[p]
+  \vspace*{-1em}
+  %%
+  \begin{hacs}[numbers=right,texcl]
+// N is natural number sort
+N data Z ;                                                       // zero
+N data S(N) ;                                                 // successor
+N scheme Plus(N, N) ;                                    // $+$ operator
+N rule Plus(Z, #2) →  #2 ;                             // $0+x = x$
+N rule Plus(S(#1), #2) →  S(Plus(#1, #2)) ;  // $(1+x)+y=1+(x+y)$
+  \end{hacs}
+  \vspace*{-1em}
+  \caption{Peano numerals.}
+  \label{fig:peano}
+  %%
+  \vspace{1em}
+  \begin{hacs}[numbers=right,texcl]
+// Λ is sort of λ terms
+Λ variable ;                                                      // permit variables
+Λ data Lm([Λ]Λ) ;                                            // abstraction
+Λ scheme Ap(Λ, Λ) ;                                      // application
+Λ rule Ap(Lm([x]#body[x]), #arg) → #body[#arg] ;   // β-reduction
+  \end{hacs}
+  \vspace*{-1em}
+  \caption{Untyped λ calculus.}
+  \label{fig:lambda}
+  %%
+  \vspace{1em}\small
+  \begin{hacs}[numbers=right,texcl]
+List[α] data Nil; List[α] data Cons(α, List[α]); List[α] variable;
+List[α] scheme Append(List[α], List[α]);
+List[α] rule Append(Nil, #2) →  #2;
+List[α] rule Append(Cons(#11, #12), #2) →  Cons(#11, Append(#12, #2));
+List[α] scheme Map([β]α, List[β]);
+List[α] rule Map([x]#[x], Nil) →  Nil;
+List[α] rule Map([x]#[x], Cons(#1, #2)) →  Cons(#[#1], Map([x]#[x], #2));
+  \end{hacs}
+  \vspace*{-1em}
+  \caption{Polymorphic lists.}
   \label{fig:list}
   %%
-%%%   \vspace{1em}
-%%%   \small
-%%%   \begin{hacs}[numbers=right,texcl]
-%%% sort Dummy[] { variable; }
-%%% sort Bool[] val { data T({Dummy[]:Bool[]}); data F({Dummy[]:Bool[]});
-%%%  data Not([]Bool[], {Dummy[]:Bool[]}); data Or([]Bool[], []Bool[], {Dummy[]:Bool[]});
-%%% 
-%%%  scheme Eval1([]Dummy[], []Bool[]); scheme Eval2([]Dummy[], []Bool[]);
-%%%  rule Eval1([]d, []T({})) → T({d:T({})});
-%%%  rule Eval1([]d, []F({})) → F({d:F({})});
-%%% 
-%%%  rule Eval1([]d, []Not([]#[], {¬d}) → Eval2([]d, []Not([]Eval1([]d, []#[])));
-%%%  rule Eval2([]d, []Not([]#[]val{d:T()})) → Not([]#[]) val{d:F()};
-%%%  rule Eval2([]d, []Not([]#[]val{d:F()})) → Not([]#[]) val{d:T()};
-%%% 
-%%%  rule Eval1([]d, []Or([]#1[], []#2[])val{¬d})
-%%%    → Eval2([]d, []Or([]Eval1([]d, []#1[]), Eval1([]d, []#2[])));
-%%%  rule Eval2([]d, []Or([]#1[]val{d:F()}, []#2[]val{d:#v2[]})) → Or([]#1[], []#2[])val{d:#v2[]};
-%%%  rule Eval2([]d, []Or([]#1[]val{d:T()}, []#2[])) → Or([]#1[], []#2[]) val{d:T()};
-%%% 
-%%%  scheme Eval([]Bool[]); rule Eval([]#[]) →  Eval1([]dummy, []#[]);
-%%% }
-%%%   \end{hacs}
-%%%   \vspace*{-1em}
-%%%   \caption{Boolean \emph{value} attribute synthesis in \hax.}
-%%%   \label{fig:bool}
-%%%   %%
+  \begin{hacs}
+// Abstract Syntax.
+Program[α,β] data Block(α, β, Program[α,β]);
+Program[α,β] data Then(Program[α,β], Program[α,β]);
+Program[α,β] data Stat(α);
+
+// Type Environment.
+Γ[α,β] data Env({α:β});
+
+// Create environment from Program
+Γ[α,β] scheme Mk(Program[α,β]);
+Γ[α,β] rule Mk(Stat(#)) → Env({});
+Γ[α,β] rule Mk(Then(#1, #2)) → Union(Mk(#1), Mk(#2));
+Γ[α,β] rule Mk(Block(#x, #t, #)) → Union(Env({#x:#t), Mk(#));
+
+// Helper to create union of two environments.
+Γ[α,β] scheme Union(Γ[α,β], Γ[α,β]);
+Γ[α,β] rule Union(Env({:#1}), Env({:#2})) → Env({:#1,:#2});
+  \end{hacs}
+  \caption{Type environment over simple AST.}
+  \label{fig:te}
+  %%
 \end{figure*}
 
 \begin{example}[Peano]\label{ex:peano}
@@ -365,9 +405,8 @@ List[α] rule Map([x]#[x], []Cons([]#1[], []#2[])) →  Cons([]#[#1[]], Map([x]#
   %%
   \begin{itemize}
 
-  \item The defined sort is "N", written "N[]", as it has no sort parameters. All the other
-    declarations define artifacts of the "N" sort, so are inside the \kw{sort} declaration's
-    \kw{\{\}}s.
+  \item The defined sort is "N". All the other declarations define artifacts of the "N" sort, so are
+    inside the \kw{sort} declaration's \kw{\{\}}s.
 
   \item There are two \kw{data} constructors: "Z" with no parameters, and "S" with a single numeric
     argument. The single numeric argument is specified as "[]N[]" because it has no locally scoped
@@ -382,9 +421,9 @@ List[α] rule Map([x]#[x], []Cons([]#1[], []#2[])) →  Cons([]#[#1[]], Map([x]#
   A sample rewrite sequence using this system, corresponding to the computation $1+1=2$, is
   %%
   \begin{displaymath}
-    "Plus([]S([]Z()), []S([]Z()))" →
-    "S([]Plus([]Z(), []S([]Z())))" →
-    "S([]S([]Z()))"
+    "Plus([]S([]Z), []S([]Z))" →
+    "S([]Plus([]Z, []S([]Z)))" →
+    "S([]S([]Z))"
   \end{displaymath}
 \end{example}
 %%
@@ -462,56 +501,13 @@ List[α] rule Map([x]#[x], []Cons([]#1[], []#2[])) →  Cons([]#[#1[]], Map([x]#
   %%
 \end{example}
 
-%%% \begin{example}[Boolean formulae]\label{ex:bool}
-%%%   Figure~\ref{fig:bool} shows how a Boolean expression can be annotated with an attribute "val",
-%%%   which has the computed logical value of the expression. Because \hax has no automatic propagation
-%%%   of attributes, the annotations are generated by helper "Eval1" and "Eval2" schemes.
-%%%   %%
-%%%   Line~1 sets up a "Dummy" sort for a dummy key variable for maps. %
-%%%   Line~2 sets up an attribute "val", which maps ``dummy variables'' to "Bool" values. %
-%%%   Lines 3~and 4 set up the "Bool" sort with data constructors for the Boolean expressions true
-%%%   ("T"), false ("F"), negation ("Not"), and disjunction ("Or"). %
-%%%   Line~6 declares the "Eval1" and "Eval2" schemes, which take a dummy variable and a Boolean term
-%%%   (and form a Boolean term by being defined inside the "sort Bool").  %
-%%%   Lines 7~and 8 define the "Eval1" scheme on the two trivial cases: literal thruth values are
-%%%   annotated with a "val" that maps the dummy variable to the truth value. %
-%%%   Lines 10~through 12 define the "Eval1" scheme for negation. %
-%%%   The first rule in line~10 expresses that "Eval1" can rewrite a "Not"-term where the "val"
-%%%   attribute does \emph{not} have a binding for the dummy variable: in that case, the result is
-%%%   obtained by applying the "Eval1" scheme recursively to the negated subterm and allowing the full
-%%%   negation to be ``postprocessed'' by the "Eval2" scheme. %
-%%%   Lines 11~and 12 give the details for how this works: once a negation term is obtained that has an
-%%%   actual "val" attribute, then the "Eval2" scheme can rewrite the term to one where the negated
-%%%   value is assigned to the negation term. %
-%%%   Similarly, Lines 14~through 17 give rules for evaluating a disjunction. %
-%%%   Finally, line~19 defines a root scheme that annotates an entire Boolean term by creating a "dummy"
-%%%   variable and then passing control to "Eval1".
-%%% 
-%%%   Here is a possible simplification using this scheme to annotate a term corresponding to the
-%%%   logical formula $(¬F)∨T$:
-%%%   %%
-%%%   \begin{hacs}
-%%%     Eval([]Or([]Not([]F()), []T()))
-%%%     → Eval1([]d, []Or([]Not([]F()), []T()))
-%%%     → Eval2([]d, []Or(Eval1([]d, []Not([]F())), Eval1([]d, []T())))
-%%%     → Eval2([]d, []Or(Eval1([]d, []Not([]F())), []T()val{d:T()}))
-%%%     → Eval2([]d, []Or(Eval2([]d, []Not(Eval1([]d, []F()))), []T()val{d:T()}))
-%%%     → Eval2([]d, []Or(Eval2([]d, []Not([]F()val{d:F()})), []T()val{d:T()}))
-%%%     → Eval2([]d, []Or([]Not([]F()val{d:F()})val{d:T()}, []T()val{d:T()}))
-%%%     → Or([]Not([]F()val{d:F()})val{d:T()}, []T()val{d:T()})val{d:T()}
-%%%   \end{hacs}%
-%%%   %%
-%%%   The final term has every subterm annotated with its logical value.
-%%%   %%
-%%% 
-%%%   \CK{I don't think this example works, though: in the end, you have all those formulas annotated,
-%%%     but you don't have any reference to the variable d in the terms!  How can you check what the
-%%%     value of the dummy variable is in the attribute set?  If you create a new variable to match
-%%%     against, it won't be equal to $d$.  For what I remember, the ``dummy'' thing we originally had
-%%%     going was just a sort with only one nullary constructor, which \emph{would} be easily
-%%%     queryable.} \KR{That would depend on the context capturing $d$. Suggestions for improvements
-%%%     welcome.}
-%%% \end{example}
+
+
+\begin{example}[maps]
+  %%
+  
+  %%
+\end{example}
 
 \TBD{Summarize unexplained features, like default rules.}
 
