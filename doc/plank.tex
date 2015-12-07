@@ -93,7 +93,7 @@ and finally Section~\ref{sec:conc} concludes and compares to related work.
 
 In this section we outline the \hax calculus, with a minimal syntax that supports the \HAX source
 language. \KR{Changed to Lionel's proposed syntax, except attributes are called ``associations''
-  (they are different) and can only occur as construction ``pieces.''} \MS{pieces == subterms?}
+  (they are different) and can only occur as construction ``pieces.''} 
 
 \begin{figure*}[ht]
   \begin{align}
@@ -133,35 +133,11 @@ language. \KR{Changed to Lionel's proposed syntax, except attributes are called 
   \label{fig:syntax}
 \end{figure*}
 
-\MS{About Figure~\ref{fig:syntax}
-  \begin{itemize}
-  \item There are three different ways to ``brace'' 
-     \begin{itemize}
-     \item $\kwm\{\ \kwm\} $: for associations
-     \item $\kw{[ ]}$: for variables and meta variable arguments
-     \item $\kw{()}$: for term, data and scheme arguments
-     \end{itemize}
-     I find this a bit confusing. Why not only one? Do the braces \emph{add} any info?
-  \end{itemize}
-} 
-%
-\KR{A: Fixed, yes but I suggest we keep'em, fixed} %
-\MS{I am not sure, what you are refering to?} 
+\MS{$S~\kw{variable}\,\kw;$ \ldots What does this keyword indicate now?}
 
-\KR{yes I like different braces} %
-\MS{I understand, and actually also like them. The only thing I am unsure about is the brackets in:
-  $M\,\kw[\,T^{*\kw,}\,\kw]$. Why $\kw[\kw]$ and not $\kw(\kw)$?}
+\MS{About $F ::= \kw[\,S_1^{*\kw,}\,\kw]\,S_2$. Can $S_1$ actually be something different than a sort variable?}
 
-\KR{ but I did simplify decarations to not be grouped.} 
-\MS{Thank you! Sorry, I was about to change
-  that yesterday, but I wasn't sure about two cases:
-  \begin{itemize}
-  \item  $S~\kw{variable}\,\kw;$ \ldots What does this keyword indicate now?
-  \item  $S~\kw{rule}~T~\kw{$→$}~T\,\kw;$ \ldots Here the $S$ is superflous, no?
-  \end{itemize}
-}
-
-\begin{definition}[\hax syntax]
+\begin{definition}[\hax syntax]\label{def:syntax}
   %%
   The \hax syntax is shown in Figure~\ref{fig:syntax}. The top level of a \hax script is a sequence
   of declarations $D^*$ and the grammar assumes that we have three categories of identifier tokens
@@ -175,10 +151,6 @@ language. \KR{Changed to Lionel's proposed syntax, except attributes are called 
     $c$ when either a data or function constructor makes sense.  
   \item $v,α ∈ \mathcal{V}$ stand for \emph{variable} tokens, which are lower case words like "x" or
     "foo" or even "lowWord", used for term variables and sort variables (respectively). 
-    %%
-    \MS{Minor detail: Why don't we separate the two variable tokens in term and sort variables,
-      i.e., introduce them separately?}
-    %% 
   \item $M ∈ \mathcal{M}$ stands for \emph{meta-variable} tokens, which are tokens that start with
     "#" like "#arg" or "#BigFoot" or even just "#1" or merely~"#".
   \end{itemize}
@@ -198,26 +170,26 @@ language. \KR{Changed to Lionel's proposed syntax, except attributes are called 
   \item A term of the form $c(P_1,…,P_n)$ ($n≥0$) is called a \emph{construction}; if furthermore
     the top symbol $c$ is declared with a "scheme c {…}" declaration then it is called a
     \emph{function construction}, and if it is declared with "data d {…}" then it is called a
-    \emph{data construction}.  \MS{Suggestion: If $n=0$, i.e., the function or data symbol does not take any
-      arguments, we usually drop the $()$. That is, we write $0$ instead of $0()$.}
+    \emph{data construction}. If $n=0$, i.e., the function or data symbol does not take any
+      arguments, we usually drop the $()$. That is, we write $0$ instead of $0()$.
     
     \MS{Here comes a really general question: How do data and function constructors/constructions
       relate to constructor and defined symbols in term rewriting (To clarify: A symbol is
       \emph{defined} wrt to a set of rules, if it occurs at the root of a left-hand side of a
-      rule. The other symbols are constructors.) I have a feeling, that this is actually similar? 
-      If so, I may argue, that the distinction is easily computable and is maybe not core?
-      }
-      \KR{A: Yes, one can argue this. Not sure what the right answer is.}
-      \MS{I'd go for simpler. Maybe we can discuss this on the call?}
+      rule. The other symbols are constructors.) I have a feeling, that this is actually similar?
+      If so, I may argue, that the distinction is easily computable and is maybe not core?  } \KR{A:
+      Yes, one can argue this. Not sure what the right answer is.}  \MS{I'd go for simpler. Maybe we
+      can discuss this on the call?}  \MS{Conclusion: For implementation it is easier to declare
+      it. It is computable though.}
     %% 
 
-    \item Argument ``pieces'' $P$ of constructions take one of two forms: \emph{scopes}
-      $[v_1,…,v_n]T$, which introduce new local variables $v_1,…,v_n$ along with a term $T$ wherein
-      they can occur, and \emph{associations} $\{A_1,…,A_n\}$. Each $A$ is either an \emph{entry}
-      $T:T$, or an \emph{exclusion} $¬T$, or a \emph{catcher} ${:}M$.  \MS{Suggestion: Again, if
-        $n=0$, i.e., there are no new variables introduced in the scope, we usually drop the
-        $[]$. That is, we write $S(0)$ instead of $S([]0)$, and also $S(x)$ instead of $S([]x)$,
-        where $x$ is unbound in this scope.}
+  \item Argument ``pieces'' $P$ of constructions take one of two forms: \emph{scopes}
+    $[v_1,…,v_n]T$, which introduce new local variables $v_1,…,v_n$ along with a term $T$ wherein
+    they can occur, and \emph{associations} $\{A_1,…,A_n\}$ \MS{Should we write $A_1, \ldots, A_k$?
+      So no one mistakes it with the $n$ in $v_1, \ldots, v_n$}. Each $A$ is either an \emph{entry}
+    $T:T$, or an \emph{exclusion} $¬T$, or a \emph{catcher} ${:}M$. Again, if $n=0$, i.e., there are
+    no new variables introduced in the scope, we usually drop the $[]$. That is, we write $S(0)$
+    instead of $S([]0)$, and also $S(x)$ instead of $S([]x)$, where $x$ is unbound in this scope.
 
   \item A term of the form $v$ is a \emph{variable occurrence}; if the variable $v$ occurs contained
     in a scope $[…v…]T$ then the variable occurrence is \emph{bound}.
@@ -236,6 +208,29 @@ language. \KR{Changed to Lionel's proposed syntax, except attributes are called 
     to say that otherwise only data constructors are there.}
 \end{definition}
 
+We distinguish three different ways to brace elements (cf.\ Figure~\ref{fig:syntax}). For
+\emph{term}, \emph{data}, and \emph{scheme arguments} we use $\kw{( )}$, to brace the
+\emph{variables} and the \emph{sort variables} we use $\kw{[ ]}$, \MS{also for args of meta
+  variables}, and for \emph{associations} we use $\kwm\{ \kwm\}$.
+
+
+\MS{I am unsure about is the brackets in: $M\,\kw[\,T^{*\kw,}\,\kw]$. Why $\kw[\kw]$ and not
+  $\kw(\kw)$? Fragment from Figure~\ref{fig:list} with  $\kw(\kw)$:}
+  %% 
+  \begin{hacs}[numbers=right,texcl]
+    List[α] scheme Map([β]α, List[β]);
+    List[α] rule Map([x]#(x), Nil) →  Nil;
+    List[α] rule Map([x]#(x), Cons(#1, #2)) →  Cons(#(#1), Map([x]#(x), #2));
+  \end{hacs}
+\MS{I prefer the $\kw(\kw)$. You? Do you want me to change the examples throughout the document?}
+
+In Figure~\ref{fig:syntax}, the $S$ in $S~\kw{rule}~T~\kw{$→$}~T\,\kw;$ is not superflous. Consider
+the following two rules:
+\begin{hacs}[numbers=right,texcl]
+  List[α] rule Map([x]#(x), Nil) →  Nil;
+  List[Int] rule Map([x]#(x), Cons(#1, #2)) →  Cons(#(#1), Map([x]#(x), #2));
+\end{hacs}
+\MS{I am not sure, I completely understand yet.}
 
 \begin{example}
   Example terms without Associations are: 
@@ -285,6 +280,7 @@ language. \KR{Changed to Lionel's proposed syntax, except attributes are called 
 \MS{I reduced the space they take up and added a couple of questions in between. Is it okay like
   this or do you want me to kick them out at all?}  \KR{A: I think we should give terms in
   connection with the examples below, and make sure to explain that some are incorrectly sorted.}
+\MS{Okay, I am on it!}
 
 \begin{figure*}[t]
   \vspace*{-1em}
@@ -329,7 +325,8 @@ List[α] rule Map([x]#[x], []Cons([]#1[], []#2[])) →  Cons([]#[#1[]], Map([x]#
   %%
 \end{figure*}
 
-\KR{Extra figure inserted without empty parentheses. It is much more readable…}
+\KR{Extra figure inserted without empty parentheses. It is much more readable…} \MS{I agree --- do
+  you want me to drop the parentheses in every example? (I added explanations in Definition~\ref{def:syntax}.)}
 
 \begin{figure*}[p]
   \vspace*{-1em}
