@@ -135,7 +135,24 @@ language. \KR{Changed to Lionel's proposed syntax, except attributes are called 
 
 \MS{$S~\kw{variable}\,\kw;$ \ldots What does this keyword indicate now?}
 
+\CK{By my understanding, there are several different properties to $\kw{variable}$:
+  \begin{itemize}
+  \item variables of that sort may occur unbound in the terms whose reduction
+    you consider (others will only occur bound);
+  \item you can \emph{match} on a variable (either bound or free) of one of
+    these sorts;
+  \item variables of these sorts may occur free in the right-hand side of a
+    rule;
+  \end{itemize}
+  It may also be possible / needed to restrict instantiation, i.e.~you're not
+  allowed to ever substitute a variable of those sorts by a different variable. \\
+  (Kris may be able to indicate the exact truth factor of each of these
+  properties and whether I missed a bit.)
+}
+
 \MS{About $F ::= \kw[\,S_1^{*\kw,}\,\kw]\,S_2$. Can $S_1$ actually be something different than a sort variable?}
+
+\CK{They really shouldn't be.}
 
 \begin{definition}[\hax syntax]\label{def:syntax}
   %%
@@ -201,11 +218,16 @@ language. \KR{Changed to Lionel's proposed syntax, except attributes are called 
 
   \item  \MS{E.g., in KR thesis, TeReSe, a distinction between meta term and term (i.e., a meta term without
      meta variables) is made. Do we also want to do this?}
+     \CK{I'd say it's certainly desirable to do so, as we don't really want to have to
+     deal with rewriting meta-terms, just terms.  Moreover, the difference is larger
+     here than in TeReSe, as I'd also expect that terms have no exclusions.}
   \end{itemize}
   %%
   A term is called a \emph{pattern fragment} if all contained meta-applications are pattern
   meta-applications, and a \emph{pattern} if it is also a function construction. \KR{Yes, this needs
-    to say that otherwise only data constructors are there.}
+    to say that otherwise only data constructors are there.} \CK{This is somehwat tricky to
+    work with recursively, for it makes $Z[x]$ not a pattern fragment if $Z$ is a
+    meta-variable, giving problems with induction for a term like $f(x.g(Z[x]))$.}
 \end{definition}
 
 We distinguish three different ways to brace elements (cf.\ Figure~\ref{fig:syntax}). For
@@ -224,6 +246,21 @@ We distinguish three different ways to brace elements (cf.\ Figure~\ref{fig:synt
   \end{hacs}
 \MS{I prefer the $\kw(\kw)$. You? Do you want me to change the examples throughout the document?}
 
+\CK{I actually think the greater objection is with bracing sort arguments by
+  square brackets: sort constructors are far closer to function symbols than to
+  binders, and this isn't just about variables: $\kw{list[list[nat]]}$ is a
+  sort.  So why the square brackets?}
+
+\CK{As for meta-variables: while I quite like giving them separate brackets
+  from function applications because the arguments to meta-variables function
+  somewhat like a substitution, it gets kind of icky when you use the same
+  brackets for abstraction: $\kw{[x]Z[a(x)]}$ uses square brackets in two
+  completely different ways.  So I guess I would support changing this (not
+  strongly, but I'm not opposed to it despite my own preference for square
+  meta-variable brackets and corresponding use in my thesis), or alternatively,
+  changing abstractions to have the (more common!) form $\vec{x}.s$ or
+  $\lambda \vec{x}.s$ rather than $[\vec{x}]s$.}
+
 In Figure~\ref{fig:syntax}, the $S$ in $S~\kw{rule}~T~\kw{$→$}~T\,\kw;$ is not superflous. Consider
 the following two rules:
 \begin{hacs}[numbers=right,texcl]
@@ -231,6 +268,13 @@ the following two rules:
   List[Int] rule Map([x]#(x), Cons(#1, #2)) →  Cons(#(#1), Map([x]#(x), #2));
 \end{hacs}
 \MS{I am not sure, I completely understand yet.}
+
+\CK{This states why it is important to give the sort of a rule: because
+sometimes, sorts may be ambiguous.  The first rule is defined for arbitrary
+lists, the second only for lists of integers, and will be met with a
+compiler error if you try to use it on a list of strings.  I'm not convinced
+it's a very good example, though: it doesn't make it clear why you would
+\emph{want} the rule to be limited to integer lists!}
 
 \begin{example}
   Example terms without Associations are: 
@@ -241,6 +285,10 @@ the following two rules:
     \end{hacs}
     \MS{So currently, a meta-application is (strictly speaking) not called a term (except for
       $\#X$). Do we want this?}
+
+    \CK{A meta-application $\#X[\kw{0}]$ or $\#X[z]$ is a term.  However,
+    \emph{scopes} are not considered terms (I would propose not calling it
+    a ``pattern meta-application'' as that is misleading, though).}
     
     Example terms with Associations of the form $T \kw{:} T$, where the key is a variable or a
     constant, are
@@ -250,12 +298,19 @@ the following two rules:
     \end{hacs}
     
     Example terms, where the keys are meta-variables. \MS{I am sorry, I forgot, is this allowed?}
+    \CK{Woah, the second one definitely isn't, because the key is not a term;
+    even if it was, this would not be sortable with our second-order system.
+    I don't think there's any problem with the first.}
     \begin{hacs}[numbers=right,texcl]
      S({ #X : #Y }), #Z[S({ #X : #Y })]                    
      S({[x]#X[x] : Zero }), 
    \end{hacs}
 
    \MS{The semantic of the following two is unclear, or?}
+   \CK{For the former, yes -- an association should be a mapping.  But for the
+   latter, couldn't it be a term carrying \emph{two} association mappings?  I
+   don't know whether we ever want this, but it doesn't necessarily give
+   ambiguity, I think.}
    \begin{hacs}[numbers=right,texcl]  
      S( {x : y, x : Zero} )
      Plus( {x : y}, {x : Zero} )
@@ -408,6 +463,9 @@ Program[α,β] data Stat(α);
   \item There are two \kw{data} constructors: "Z" with no parameters, and "S" with a single numeric
     argument. The single numeric argument is specified as "[]N[]" because it has no locally scoped
     binders ("[]"$_-$) and the "N" sort has no sort parameters ($_-$"[]").
+    \CK{This formulation (and likely some of the following ones) should be changed if the
+    more readable version of the figures is kept (which I think is a good idea!).  Could make that
+    something on the lines of explaining that N should be read []N[].}
 
   \item There is a single function (\kw{scheme}) constructor, "Plus", with two numeric arguments.
 
@@ -449,7 +507,12 @@ Program[α,β] data Stat(α);
     \KR{Perhaps---suggestions?} \MS{Wouldn't Figure~\ref{fig:list} then also require \kw{variable}?
       It uses variables ($x, \beta, \alpha$) as well. However, neither Figure~\ref{fig:list} nor
       Figure~\ref{fig:lambda} use unbound variables. What exactly do we want to express with the
-      \kw{variable}?} \KR{A: Fixed?}
+      \kw{variable}?} \KR{A: Fixed?} 
+    \CK{Definitely not! I think it became worse, actually. :)  The variable in this example is
+      of type $\alpha$, not of list type, so the variable indicator doesn't refer to it.  Also,
+      for what I've understood of syntactic, not every variable is syntactic!  If my attempted
+      explanation earlier is correct, I don't mind rephrasing this sentence, but would prefer to
+      do so only after we resolve whether to call terms and meta-terms something different. :)}
 
   \item "Λ" also includes a usual case for application construction, which is a "scheme" because it
     can (sometimes) be rewritten.
@@ -502,7 +565,10 @@ Program[α,β] data Stat(α);
 
 \begin{example}[maps]
   %%
-  
+\CK{This example is interesting, because it combines two catchers in
+the same association set on the right! I wonder how that's defined.
+(Although it's easily avoided if undesirable, by simply replacing the
+``union'' by an ``add''.)}
   %%
 \end{example}
 
