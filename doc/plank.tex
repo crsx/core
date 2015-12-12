@@ -16,16 +16,16 @@
 \title{ \hax: A Plank for Higher-order Attribute Contraction Schemes }
 \author{%
   Cynthia Kop \\
- University of Copenhagen
- \and
- Kristoffer H. Rose \\
- Two Sigma Investments
- \and
- Maria Schett \\
- University of Innsbruck
- \and
- Lionel Villard \\
- IBM Research
+  University of Copenhagen
+  \and
+  Kristoffer H. Rose \\
+  Two Sigma Investments, LLC
+  \and
+  Maria Schett \\
+  University of Innsbruck
+  \and
+  Lionel Villard \\
+  IBM Research
 }
 
 %% Discussion
@@ -51,7 +51,7 @@
   how the central constructs of the much richer \HAX and \CRSX formalisms can be represented in
   \hax. We also outline how \hax can be implemented, and summarize central properties of the system.
 
-  \CK{Cynthia's comments.} \KR{Kris' comments.} \LV{Lionel's comments.} \MS{Maria's comments.}
+  \CK{Cynthia!} \KR{Kris!} \LV{Lionel!} \MS{Maria!}
 \end{abstract}
 
 \compacttableofcontents
@@ -91,9 +91,7 @@ and finally Section~\ref{sec:conc} concludes and compares to related work.
 \section{Overview}
 \label{sec:overview}
 
-In this section we outline the \hax calculus, with a minimal syntax that supports the \HAX source
-language. \KR{Changed to Lionel's proposed syntax, except attributes are called ``associations''
-  (they are different) and can only occur as construction ``pieces.''} 
+In this section we outline the \hax calculus, and give several examples.
 
 \begin{figure*}[ht]
   \begin{align}
@@ -154,6 +152,8 @@ language. \KR{Changed to Lionel's proposed syntax, except attributes are called 
 
 \CK{They really shouldn't be.}
 
+\KR{Why not? Is there a problem with the new Example~\ref{ex:pick}.}
+
 \begin{definition}[\hax syntax]\label{def:syntax}
   %%
   The \hax syntax is shown in Figure~\ref{fig:syntax}. The top level of a \hax script is a sequence
@@ -178,6 +178,8 @@ language. \KR{Changed to Lionel's proposed syntax, except attributes are called 
     personally prefer the latter, but I would stick to one. Or am I missing something?}
   \KR{A: The former is \emph{concrete} syntax (``the commas must be there''), the latter abstract.} 
   \MS{Hmmm... Could you give me an intution, when to use which?}
+  \KR{A: Use the more convenient one on each occasion. This is meant to be an example of
+    ``non-confusing sloppiness.''}
   %%
   notation means zero or more $A$s separated by commas. We shall use the
   following terminology:
@@ -221,6 +223,7 @@ language. \KR{Changed to Lionel's proposed syntax, except attributes are called 
      \CK{I'd say it's certainly desirable to do so, as we don't really want to have to
      deal with rewriting meta-terms, just terms.  Moreover, the difference is larger
      here than in TeReSe, as I'd also expect that terms have no exclusions.}
+
   \end{itemize}
   %%
   A term is called a \emph{pattern fragment} if all contained meta-applications are pattern
@@ -311,10 +314,10 @@ it's a very good example, though: it doesn't make it clear why you would
    latter, couldn't it be a term carrying \emph{two} association mappings?  I
    don't know whether we ever want this, but it doesn't necessarily give
    ambiguity, I think.}
-   \begin{hacs}[numbers=right,texcl]  
-     S( {x : y, x : Zero} )
-     Plus( {x : y}, {x : Zero} )
-   \end{hacs}
+%   \begin{hacs}[numbers=right,texcl]  
+%     S( {x : y, x : Zero} )
+%     Plus( {x : y}, {x : Zero} )
+%   \end{hacs}
    Example terms with Associations of the form $¬T$ are:
    \begin{hacs}[numbers=right,texcl]
      Plus(x, { ¬x }), Plus(x, { ¬Zero }), Plus(#X,{¬Zero}), S({ ¬#X }), 
@@ -337,51 +340,9 @@ it's a very good example, though: it doesn't make it clear why you would
   connection with the examples below, and make sure to explain that some are incorrectly sorted.}
 \MS{Okay, I am on it!}
 
-\begin{figure*}[t]
-  \vspace*{-1em}
-  %%
-  \begin{hacs}[numbers=right,texcl]
-// N[] is natural number sort
-N[] data Z() ;                                                       // zero
-N[] data S([]N[]) ;                                                 // successor
-N[] scheme Plus([]N[], []N[]) ;                                    // $+$ operator
-N[] rule Plus([]Z(), []#2[]) →  #2[] ;                             // $0+x = x$
-N[] rule Plus([]S([]#1[]), []#2[]) →  S([]Plus([]#1[], []#2[])) ;  // $(1+x)+y=1+(x+y)$
-  \end{hacs}
-  \vspace*{-1em}
-  \caption{Peano numerals in \hax.}
-  %\label{fig:peano}
-  %%
-  \vspace{1em}
-  \begin{hacs}[numbers=right,texcl]
-// Λ[] is sort of λ terms
-Λ[] variable ;                                                      // permit variables
-Λ[] data Lm([Λ[]]Λ[]) ;                                            // abstraction
-Λ[] scheme Ap([]Λ[], []Λ[]) ;                                      // application
-Λ[] rule Ap([]Lm([x]#body[x]), []#arg[]) → #body[#arg[]] ;   // β-reduction
-  \end{hacs}
-  \vspace*{-1em}
-  \caption{Untyped λ calculus in \hax.}
-  %\label{fig:lambda}
-  %%
-  \vspace{1em}\small
-  \begin{hacs}[numbers=right,texcl]
-List[α] data Nil(); List[α] data Cons([]α, []List[α]); List[α] variable;
-List[α] scheme Append([]List[α], []List[α]);
-List[α] rule Append([]Nil(), []#2[]) →  #2[];
-List[α] rule Append([]Cons([]#11[], []#12[]), []#2[]) →  Cons([]#11[], Append([]#12[], []#2[]));
-List[α] scheme Map([β]α, []List[β]);
-List[α] rule Map([x]#[x], []Nil()) →  Nil();
-List[α] rule Map([x]#[x], []Cons([]#1[], []#2[])) →  Cons([]#[#1[]], Map([x]#[x], []#2[]));
-  \end{hacs}
-  \vspace*{-1em}
-  \caption{Polymorphic lists in \hax.}
-  %\label{fig:list}
-  %%
-\end{figure*}
-
 \KR{Extra figure inserted without empty parentheses. It is much more readable…} \MS{I agree --- do
-  you want me to drop the parentheses in every example? (I added explanations in Definition~\ref{def:syntax}.)}
+  you want me to drop the parentheses in every example? (I added explanations in
+  Definition~\ref{def:syntax}.)} \KR{Yes!}
 
 \begin{figure*}[p]
   \vspace*{-1em}
@@ -410,7 +371,7 @@ N rule Plus(S(#1), #2) →  S(Plus(#1, #2)) ;  // $(1+x)+y=1+(x+y)$
   \caption{Untyped λ calculus.}
   \label{fig:lambda}
   %%
-  \vspace{1em}\small
+  \vspace{1em}
   \begin{hacs}[numbers=right,texcl]
 List[α] data Nil; List[α] data Cons(α, List[α]); List[α] variable;
 List[α] scheme Append(List[α], List[α]);
@@ -424,7 +385,7 @@ List[α] rule Map([x]#[x], Cons(#1, #2)) →  Cons(#[#1], Map([x]#[x], #2));
   \caption{Polymorphic lists.}
   \label{fig:list}
   %%
-  \begin{hacs}
+  \begin{hacs}[numbers=right,texcl]
 // Abstract Syntax.
 Program[α,β] data Block(α, β, Program[α,β]);
 Program[α,β] data Then(Program[α,β], Program[α,β]);
@@ -561,18 +522,42 @@ Program[α,β] data Stat(α);
   %%
 \end{example}
 
-
-
-\begin{example}[maps]
+\begin{example}[environment handling]\label{ex:te}
+  %%
+  Figure~\ref{fig:te} shows sorts and rules for 
   %%
 \CK{This example is interesting, because it combines two catchers in
 the same association set on the right! I wonder how that's defined.
 (Although it's easily avoided if undesirable, by simply replacing the
 ``union'' by an ``add''.)}
-  %%
+\KR{Indeed! I think Lionel has it implemented as ``add''…but here we should describe the ideal as
+  long as it allows for add, I thiink.}
 \end{example}
 
-\TBD{Summarize unexplained features, like default rules.}
+\begin{figure}[h]
+  \begin{hacs}[numbers=right,texcl]
+// Booleans with conditional.
+Bool data True; Bool data False; α scheme If(Bool, α, α);
+
+// Pick number.
+Int scheme Pick(List[Int], [Int,Int]Bool);
+Int rule Pick(#, [x,y]#pick[x,y]) → Pick2(#, [x,y]#pick[x,y], N);
+
+Int scheme Pick2(List[Int], [Int,Int]Bool, Int);
+Int rule Pick2(Nil, [x,y]#pick[x,y], #n) → #n;
+Int rule Pick2(Cons(#1, #rest), [x,y]#pick[x,y], #n)
+  → Pick2(#rest, [x,y]#pick[x,y], #pick[#1,#n]);
+  \end{hacs}
+  \caption{Find largest element of list of integers.}
+  \label{fig:pick}
+\end{figure}
+
+\begin{example}[]\label{ex:pick}
+  %%
+  Figure~\ref{fig:pick} shows a simple ``pick a number from a list'' program (assuming the "List"
+  sort from Example~\ref{ex:list}).
+  %%
+\end{example}
 
 %------------------------------------------------------------------------
 
@@ -833,9 +818,60 @@ In this section we provide proofs for several standard rewrite properties of~\ha
 
 In this section we give notes on how we see \hax implemented.
 
-\TBD{Struct for nodes, reference counting, lazy free variable lists…Lionel?}
+The basic \hax implementation consists of a term representation and a main ``progress loop.''
+
+\begin{definition}[identifiers]
+  %%
+  In the implementation we keep track of the following \emph{identifiers}:
+  %%
+  \begin{itemize}
+
+  \item \emph{Variable identifiers}. A variable identifier is globally unique.
+
+  \item \emph{Constructor identifiers}. A constructor identifier is globally unique. From the
+    constructor identifier one can derive the kind and signature of the constructor:
+    \begin{itemize}
+    \item Is it a function or data constructor?
+    \item How many scope-formed formal arguments (declared as $[S^*]S$) does the constructor take,
+      and how many local variables are bound by each?
+    \item How many association-formed formal arguments (declared as $\{S:S\}$) does the constructor
+      take?
+    \end{itemize}
+    Note that everything is assumed to be well-sorted.
+
+  \end{itemize}
+  %%
+  In addition, both forms of identifiers support \emph{printing} the identifier in an identifiable
+  fashion [sic].
+  %%
+\end{definition}
+
+\begin{structure}[term representation]
+  %%
+  Terms are maintained as a graph structure with nodes containing:
+  %%
+  \begin{itemize}
+  \item Constructor identifier.
+  \item Reference count.
+  \item Pointer to cached free variable set (more on this below).
+  \item Array of free variable identifiers (with length as required by constructor to cover all
+    scopes).
+  \item Array of pointers to scoped subterms (with length as required by the constructor).
+  \item Array of association sets (with length as required by the constructor).
+  \end{itemize}
+  %%
+\end{structure}
+
+\begin{structure}[association set]
+  
+\end{structure}
+
+
 
 \TBD{What about dispatchification…Maria?}
+
+
+
 
 %------------------------------------------------------------------------
 
