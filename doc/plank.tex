@@ -199,8 +199,7 @@ In this section we outline the \hax calculus, and give several examples.
       If so, I may argue, that the distinction is easily computable and is maybe not core?  } \KR{A:
       Yes, one can argue this. Not sure what the right answer is.}  \MS{I'd go for simpler. Maybe we
       can discuss this on the call?}  \MS{Conclusion: For implementation it is easier to declare
-      it. It is computable though.}
-    %% 
+      it. It is computable though.} \KR{You can see it in the type rules, now.}
 
   \item Argument ``pieces'' $P$ of constructions take one of two forms: \emph{scopes}
     $[v_1,…,v_n]T$, which introduce new local variables $v_1,…,v_n$ along with a term $T$ wherein
@@ -228,9 +227,10 @@ In this section we outline the \hax calculus, and give several examples.
   %%
   A term is called a \emph{pattern fragment} if all contained meta-applications are pattern
   meta-applications, and a \emph{pattern} if it is also a function construction. \KR{Yes, this needs
-    to say that otherwise only data constructors are there.} \CK{This is somehwat tricky to
-    work with recursively, for it makes $Z[x]$ not a pattern fragment if $Z$ is a
-    meta-variable, giving problems with induction for a term like $f(x.g(Z[x]))$.}
+    to say that otherwise only data constructors are there.} \CK{This is somehwat tricky to work
+    with recursively, for it makes $Z[x]$ not a pattern fragment if $Z$ is a meta-variable, giving
+    problems with induction for a term like $f(x.g(Z[x]))$.}  \KR{I reintroduced checks for this in
+    the sort rules (Definition~\ref{def:sort}). If you agree, we can clean up here.}
 \end{definition}
 
 We distinguish three different ways to brace elements (cf.\ Figure~\ref{fig:syntax}). For
@@ -289,10 +289,49 @@ it's a very good example, though: it doesn't make it clear why you would
   Γ⟨α,β⟩ scheme Union(Γ⟨α,β⟩, Γ⟨α,β⟩);
   Γ⟨α,β⟩ rule Union(Env({:#1}), Env({:#2})) →  Env({:#1,:#2});
 \end{hacs}
+\KR{Modified syntax below.}
+\begin{figure}[h!t]
+  \begin{align}
+    \tag{\hax{}Script}
+    H &::= D^* 
+    \\
+    \tag{Declaration}
+    D &::= S~\kw{data}~d\,\kw(\,F^{*\kw,}\,\kw)\,\kw;
+    \bigm| S~\kw{scheme}~f\,\kw(\,F^{*\kw,}\,\kw)\,\kw;
+    \bigm| S~\kw{variable}\,\kw;
+    \bigm| S~\kw{rule}~T~\kw{$→$}~T\,\kw;
+    \\
+    \tag{Form}
+    F &::= \kw[\,S^{*\kw,}\,\kw]\,S
+    \bigm| \kwm\{\, S:S \,\kwm\}
+    \\
+    \tag{Sort}
+    S &::= s\,\kwm{⟨}\,S^{*\kw,}\,\kwm{⟩}
+    \bigm| α
+    \\[\jot]
+    \tag{Term}
+    T &::= c\,\kw(\,P^{*\kw,}\,\kw)
+    \bigm| v
+    \bigm| M\,\kw(\,T^{*\kw,}\,\kw)
+    \\
+    \tag{Piece}
+    P &::= \kw[\,v^{*\kw,}\,\kw]\,T
+    \bigm| \kwm\{\, A^{*\kw,} \,\kwm\}
+    \\
+    \tag{Association}
+    A &::= T\,\kw:\,T
+    \bigm| \kw{$¬$}\,T
+    \bigm| \kw:\,M
+  \end{align}
+  \vspace*{-2em}
+  \caption{\hax syntax, Java Style.}
+\end{figure}
+
 \KR{Note: any suggestions for something other than \{:\#1\} are welcome!\\
   Just for fun: here is ``bra-ket'' notation (from physics), also kind of cool (note empty $⟨|$ and
   $|⟩$ can be omitted)…I'd love this, and it would be different and make us associate even more to
-  the \hax symbol…}
+  the \hax symbol. The explanation then associates a \emph{bra} with a binder state and a \emph{ket} with
+  a substitution of it.}
 \begin{hacs}
   List[α] scheme Map(⟨β|α, List[β]);
   List[α] rule Map(⟨x|#|x⟩, Nil) →  Nil;
@@ -300,6 +339,44 @@ it's a very good example, though: it doesn't make it clear why you would
   Int scheme Pick(List[Int], ⟨Int,Int|Bool);
   Int rule Pick(#, ⟨x,y|#p|x,y⟩) → If(#p|#,#⟩, Pick(#, ⟨x,y|#p|x,y⟩), #);
 \end{hacs}
+\KR{Modified syntax in Figure~\ref{fig:bra-ket} below.}
+\begin{figure}[h!t]
+  \begin{align}
+    \tag{\hax{}Script}
+    H &::= D^* 
+    \\
+    \tag{Declaration}
+    D &::= S~\kw{data}~d\,\kw(\,F^{*\kw,}\,\kw)\,\kw;
+    \bigm| S~\kw{scheme}~f\,\kw(\,F^{*\kw,}\,\kw)\,\kw;
+    \bigm| S~\kw{variable}\,\kw;
+    \bigm| S~\kw{rule}~T~\kw{$→$}~T\,\kw;
+    \\
+    \tag{Form}
+    F &::= \kwm{⟨}\,S^{*\kw,}\,\kwm|\,S
+    \bigm| \kwm\{\, S:S \,\kwm\}
+    \\
+    \tag{Sort}
+    S &::= s\,\kw[\,S^{*\kw,}\,\kw]
+    \bigm| α
+    \\[\jot]
+    \tag{Term}
+    T &::= c\,\kw(\,P^{*\kw,}\,\kw)
+    \bigm| v
+    \bigm| M\,\kwm|\,T^{*\kw,}\,\kwm{⟩}
+    \\
+    \tag{Piece}
+    P &::= \kwm{⟨}\,v^{*\kw,}\,\kwm|\,T
+    \bigm| \kwm\{\, A^{*\kw,} \,\kwm\}
+    \\
+    \tag{Association}
+    A &::= T\,\kw:\,T
+    \bigm| \kw{$¬$}\,T
+    \bigm| \kw:\,M
+  \end{align}
+  \vspace*{-2em}
+  \caption{\hax syntax, Bra-Ket Style.}
+  \label{fig:bra-ket}
+\end{figure}
 \KR{P.S. The notation can be done with ⟨⟩ and [] reversed.}
 
 \begin{example}
@@ -645,19 +722,19 @@ addition attribute set inside an attribute set.}
     %
     &\dfrac
     {}
-    { Γ ⊢ s[\ov{S}]~\kw{data}~d\kw( \ov{F} \kw)\,\kw; }
-    && Γ_{\op{cons}}(d) = \left⟨ s[\ov{S}], d, \ov{F} \right⟩
+    { Γ ⊢ S~\kw{data}~d\kw( \ov{F} \kw)\,\kw; }
+    && Γ_{\op{cons}}(d) = \left⟨ S, \ov{F} \right⟩
     \tag{S-D-Data}
     %
-    \\[1ex]
+    \\[\jot]
     %
     &\dfrac
     {}
-    { Γ ⊢ s[\ov{S}]~\kw{scheme}~f\kw( \ov{F} \kw)\,\kw; }
-    && Γ_{\op{cons}}(f) = \left⟨ s[\ov{S}], f, \ov{F} \right⟩
+    { Γ ⊢ S~\kw{scheme}~f\kw( \ov{F} \kw)\,\kw; }
+    && Γ_{\op{cons}}(f) = \left⟨ S, \ov{F} \right⟩,~f∈Γ_{\op{fun}}
     \tag{S-D-Scheme}
     %
-    \\[1ex]
+    \\[\jot]
     %
     &\dfrac
     {}
@@ -665,24 +742,27 @@ addition attribute set inside an attribute set.}
     && s ∈ Γ_{\op{hasvar}}
     \tag{S-D-Var}
     %
-    \\[1ex]
+    \\[\jot]
     %
     &\dfrac
-    { Γ,Δ,\op{Pattern} ⊢ T_1 : s[\ov{S}]  \qquad Γ,Δ,\op{Contract} ⊢ T_2 : s[\ov{S}] }
-    { Γ ⊢ s[\ov{S}]~\kw{rule}~T_1~\kw{→}~T_2\,\kw; }
-    && (∃Δ; T_1\text{~must be a pattern})
+    { Γ,Δ,\op{Pat} ⊢ f(\ov{F}) : S  \qquad Γ,Δ,\op{Con} ⊢ T : S }
+    { Γ ⊢ S~\kw{rule}~f(\ov{F})~\kw{→}~T\,\kw; }
+    && (∃Δ),~f∈Γ_{\op{fun}}
     \tag{S-D-Rule}
     %
     \\
-    \intertext{\shoveright{Sorting of Terms\hfil\smash{\fbox{$ Γ,Δ,RS ⊢ T : S $}}}}
+    \intertext{\shoveright{Sorting of Term\hfil\smash{\fbox{$ Γ,Δ,RS ⊢ T : S $}}}}
     %
     &\dfrac
     { Γ,Δ,RS ⊢ P_1 : F_1 \quad\cdots\quad Γ,Δ,RS ⊢ P_n : F_n }
-    { Γ,Δ,RS ⊢ c\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : s[\ov{S}] }
-    && Γ_{\op{cons}}(c) = \left⟨ s[\ov{S}], c, (F_1\kw,…\kw,F_n) \right⟩
+    { Γ,Δ,RS ⊢ c\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : S }
+    &&\Cases{
+      Γ_{\op{cons}}(c) = \left⟨ S, (F_1\kw,…\kw,F_n) \right⟩\\
+      c∉Γ_{\op{fun}} ∨ RS=\op{Con}
+    }
     \tag{S-T-Cons}
     % 
-    \\[1ex]
+    \\[\jot]
     %
     &\dfrac
     { }
@@ -690,23 +770,32 @@ addition attribute set inside an attribute set.}
     && Δ_{\op{var}}(v) = s[\ov{S}], ~s∈Γ_{\op{hasvar}}
     \tag{S-T-Var}
     % 
-    \\[1ex]
+    \\[\jot]
     %
     &\dfrac
-    { Γ,Δ,RS ⊢ T_1 : S_1 \quad\cdots\quad  Γ,Δ,RS ⊢ T_n : S_n }
-    { Γ,Δ,RS ⊢ M\,\kw[\,T_1\kw,…\kw,T_n\,\kw] : S }
+    { Γ,Δ,\op{Pat} ⊢ v_1 : S_1 \quad\cdots\quad  Γ,Δ,\op{Pat} ⊢ v_n : S_n }
+    { Γ,Δ,\op{Pat} ⊢ M\,\kw[\,v_1\kw,…\kw,v_n\,\kw] : S }
     && Δ_{\op{meta}}(M) = [(S_1,…,S_n)⇒S]
-    \tag{S-T-Meta}
+    \tag{S-T-MetaP}
+    % 
+    \\[\jot]
+    %
+    &\dfrac
+    { Γ,Δ,\op{Con} ⊢ T_1 : S_1 \quad\cdots\quad  Γ,Δ,\op{Con} ⊢ T_n : S_n }
+    { Γ,Δ,\op{Con} ⊢ M\,\kw[\,T_1\kw,…\kw,T_n\,\kw] : S }
+    && Δ_{\op{meta}}(M) = [(S_1,…,S_n)⇒S]
+    \tag{S-T-MetaC}
     %
     \\
     \intertext{\shoveright{Sorting of Piece\hfil\smash{\fbox{$ Γ,Δ,RS ⊢ P : F $}}}}
     %
     &\dfrac
-    { Γ,Δ[\ov{v}↦\ov{S}],RS ⊢ T : S }
+    { Γ,Δ',RS ⊢ T : S }
     { Γ,Δ,RS ⊢ \kw[\,\ov{v}\,\kw]\,T : \kw[\,\ov{S}\,\kw]\,S }
+    && (∃Δ'⊇Δ),~ Δ'_{\op{var}}(\ov{v}) = \ov{S}
     \tag{S-P-Bind}
     %
-    \\[1ex]
+    \\[\jot]
     %
     &\dfrac
     { Γ,Δ,RS ⊢ A_1 : \{S_1{:}S_2\} \quad\cdots\quad Γ,Δ,RS ⊢ A_n : \{S_1{:}S_2\} }
@@ -721,14 +810,14 @@ addition attribute set inside an attribute set.}
     { Γ,Δ,RS ⊢ T_1\kw:T_2 : \{S_1{:}S_2\} } 
     \tag{S-A-Map}
     % 
-    \\[1ex]
+    \\[\jot]
     %
     &\dfrac
     { Γ,Δ,\op{Pattern} ⊢ T : S_1 }
     { Γ,Δ,\op{Pattern} ⊢ \kwm{¬}T : \{S_1{:}S_2\} }
     \tag{S-A-Not}
     % 
-    \\[1ex]
+    \\[\jot]
     %
     &\dfrac
     { }
@@ -741,12 +830,12 @@ addition attribute set inside an attribute set.}
   \label{fig:sortrules}
 \end{figure*}
 
-\begin{definition}
+\begin{definition}[well-sorted]\label{def:sort}
   Given a \hax script $H$, a sort $\op{Void}∈S$ which does not occur in $H$, and a sort environment
   $Γ$, and define the additional pseudo-syntax rules
   %%
   \begin{align}
-    RS &::= \op{Pattern} \mid \op{Contract} \tag{RuleSide} \\
+    RS &::= \op{Pat} \mid \op{Con} \tag{RuleSide} \\
     MF &::= [\ov{S}⇒S] \mid \{S_1{:}S_2\} \tag{MetaForm}
   \end{align}
   %% 
@@ -763,8 +852,11 @@ addition attribute set inside an attribute set.}
 
   \item $Γ_{\op{hasvar}}\colon 2^{\mathcal{C}}$ is a set of sorts names (the sorts that allow variables).
 
-  \item $Γ_{\op{cons}}\colon \mathcal{C} → S×\mathcal{C}×F^*$ from constructor name to triples of a
-    sort, a constructor name, and a list of forms.
+  \item $Γ_{\op{cons}}\colon \mathcal{C} → S×F^*$ from constructor name to pairs of a sort and a
+    list of forms.
+
+    
+  \item $Γ_{\op{fun}}\colon 2^{\mathcal{C}}$ is a set of constructor names (those declared as schemes).
 
   \end{itemize}
   %%
