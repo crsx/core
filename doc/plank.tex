@@ -283,17 +283,24 @@ it's a very good example, though: it doesn't make it clear why you would
   want to be conventional then even using angles $⟨\,⟩$ for sort arguments as is common (Java, C++;
   Scala uses []).  Here are some samples of that:}
 \begin{hacs}[numbers=right,texcl]
+  List⟨α⟩ scheme Map([β]α, List⟨β⟩);
   List⟨α⟩ rule Map([x]#(x), Nil) →  Nil;
   List⟨Int⟩ rule Map([x]#(x), Cons(#1, #2)) →  Cons(#(#1), Map([x]#(x), #2));
   Γ⟨α,β⟩ scheme Union(Γ⟨α,β⟩, Γ⟨α,β⟩);
   Γ⟨α,β⟩ rule Union(Env({:#1}), Env({:#2})) →  Env({:#1,:#2});
 \end{hacs}
 \KR{Note: any suggestions for something other than \{:\#1\} are welcome!\\
-  Just for fun: here is ``bra-ket'' notation (from physics), also kind of cool:}
+  Just for fun: here is ``bra-ket'' notation (from physics), also kind of cool (note empty $⟨|$ and
+  $|⟩$ can be omitted)…I'd love this, and it would be different and make us associate even more to
+  the \hax symbol…}
 \begin{hacs}
+  List[α] scheme Map(⟨β|α, List[β]);
   List[α] rule Map(⟨x|#|x⟩, Nil) →  Nil;
-  List[Int] rule Map(⟨x|#|x⟩, Cons(#1, #2)) →  Cons(⟨|#|#1⟩, Map(⟨x|#|x⟩, #2));
+  List[Int] rule Map(⟨x|#|x⟩, Cons(#1, #2)) →  Cons(#|#1⟩, Map(⟨x|#|x⟩, #2));
+  Int scheme Pick(List[Int], ⟨Int,Int|Bool);
+  Int rule Pick(#, ⟨x,y|#p|x,y⟩) → If(#p|#,#⟩, Pick(#, ⟨x,y|#pick|x,y⟩), #);
 \end{hacs}
+\KR{P.S. The notation can be done with ⟨⟩ and [] reversed.}
 
 \begin{example}
   Example terms without Associations are: 
