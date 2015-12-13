@@ -93,7 +93,7 @@ and finally Section~\ref{sec:conc} concludes and compares to related work.
 
 In this section we outline the \hax calculus, and give several examples.
 
-\begin{figure*}[ht]
+\begin{figure}[ht]
   \begin{align}
     \tag{\hax{}Script}
     H &::= D^* 
@@ -129,7 +129,7 @@ In this section we outline the \hax calculus, and give several examples.
   \vspace*{-2em}
   \caption{\hax syntax.}
   \label{fig:syntax}
-\end{figure*}
+\end{figure}
 
 \MS{$S~\kw{variable}\,\kw;$ \ldots What does this keyword indicate now?}
 
@@ -152,13 +152,13 @@ In this section we outline the \hax calculus, and give several examples.
 
 \CK{They really shouldn't be.}
 
-\KR{Why not? Is there a problem with the new Example~\ref{ex:pick}.}
+\KR{Why not? Is there a problem with the new Example~\ref{ex:pick}?}
 
 \begin{definition}[\hax syntax]\label{def:syntax}
   %%
-  The \hax syntax is shown in Figure~\ref{fig:syntax}. The top level of a \hax script is a sequence
-  of declarations $D^*$ and the grammar assumes that we have three categories of identifier tokens
-  defined:
+  The \hax syntax is shown in Figure~\ref{fig:syntax}, except we will also allow omission of empty
+  "()" and "[]". The top level of a \hax script is a sequence of declarations $D^*$ and the grammar
+  assumes that we have three categories of identifier tokens defined:
   %%
   \begin{itemize}
 
@@ -279,6 +279,22 @@ compiler error if you try to use it on a list of strings.  I'm not convinced
 it's a very good example, though: it doesn't make it clear why you would
 \emph{want} the rule to be limited to integer lists!}
 
+\KR{I have no problem with switching the argument brackets to round, if you all prefer that.  If we
+  want to be conventional then even using angles $⟨\,⟩$ for sort arguments as is common (Java, C++;
+  Scala uses []).  Here are some samples of that:}
+\begin{hacs}[numbers=right,texcl]
+  List⟨α⟩ rule Map([x]#(x), Nil) →  Nil;
+  List⟨Int⟩ rule Map([x]#(x), Cons(#1, #2)) →  Cons(#(#1), Map([x]#(x), #2));
+  Γ⟨α,β⟩ scheme Union(Γ⟨α,β⟩, Γ⟨α,β⟩);
+  Γ⟨α,β⟩ rule Union(Env({:#1}), Env({:#2})) →  Env({:#1,:#2});
+\end{hacs}
+\KR{Note: any suggestions for something other than \{:\#1\} are welcome!\\
+  Just for fun: here is ``bra-ket'' notation (from physics), also kind of cool:}
+\begin{hacs}
+  List[α] rule Map(⟨x|#|x⟩, Nil) →  Nil;
+  List[Int] rule Map(⟨x|#|x⟩, Cons(#1, #2)) →  Cons(⟨|#|#1⟩, Map(⟨x|#|x⟩, #2));
+\end{hacs}
+
 \begin{example}
   Example terms without Associations are: 
   %% 
@@ -342,9 +358,7 @@ it's a very good example, though: it doesn't make it clear why you would
   figures on one page but use individual [ht] figures? I added one more example, as you can see, for
 even more interesting combinations…}
 
-\begin{figure*}[p]
-  \vspace*{-1em}
-  %%
+\begin{figure}[ht]
   \begin{hacs}[numbers=right,texcl]
 // N is natural number sort
 N data Z ;                                                       // zero
@@ -356,56 +370,7 @@ N rule Plus(S(#1), #2) →  S(Plus(#1, #2)) ;  // $(1+x)+y=1+(x+y)$
   \vspace*{-1em}
   \caption{Peano numerals.}
   \label{fig:peano}
-  %%
-  \vspace{1em}
-  \begin{hacs}[numbers=right,texcl]
-// Λ is sort of λ terms
-Λ variable ;                                                      // permit variables
-Λ data Lm([Λ]Λ) ;                                            // abstraction
-Λ scheme Ap(Λ, Λ) ;                                      // application
-Λ rule Ap(Lm([x]#body[x]), #arg) → #body[#arg] ;   // β-reduction
-  \end{hacs}
-  \vspace*{-1em}
-  \caption{Untyped λ calculus.}
-  \label{fig:lambda}
-  %%
-  \vspace{1em}
-  \begin{hacs}[numbers=right,texcl]
-List[α] data Nil; List[α] data Cons(α, List[α]); List[α] variable;
-List[α] scheme Append(List[α], List[α]);
-List[α] rule Append(Nil, #2) →  #2;
-List[α] rule Append(Cons(#11, #12), #2) →  Cons(#11, Append(#12, #2));
-List[α] scheme Map([β]α, List[β]);
-List[α] rule Map([x]#[x], Nil) →  Nil;
-List[α] rule Map([x]#[x], Cons(#1, #2)) →  Cons(#[#1], Map([x]#[x], #2));
-  \end{hacs}
-  \vspace*{-1em}
-  \caption{Polymorphic lists.}
-  \label{fig:list}
-  %%
-  \begin{hacs}[numbers=right,texcl]
-// Abstract Syntax.
-Program[α,β] data Block(α, β, Program[α,β]);
-Program[α,β] data Then(Program[α,β], Program[α,β]);
-Program[α,β] data Stat(α);
-
-// Type Environment.
-Γ[α,β] data Env({α:β});
-
-// Create environment from Program
-Γ[α,β] scheme Mk(Program[α,β]);
-Γ[α,β] rule Mk(Stat(#)) → Env({});
-Γ[α,β] rule Mk(Then(#1, #2)) → Union(Mk(#1), Mk(#2));
-Γ[α,β] rule Mk(Block(#x, #t, #)) → Union(Env({#x:#t), Mk(#));
-
-// Helper to create union of two environments.
-Γ[α,β] scheme Union(Γ[α,β], Γ[α,β]);
-Γ[α,β] rule Union(Env({:#1}), Env({:#2})) → Env({:#1,:#2});
-  \end{hacs}
-  \caption{Type environment over simple AST.}
-  \label{fig:te}
-  %%
-\end{figure*}
+\end{figure}
 
 \begin{example}[Peano]\label{ex:peano}
   The classical first order Peano arithmetic rules are a simple \hax system, shown in
@@ -443,7 +408,7 @@ Program[α,β] data Stat(α);
 %%
 \MS{May I drop the empty parenthesis in Example~\ref{ex:peano}, Figure~\ref{fig:peano},
   Figure~\ref{fig:lambda}, and Figure~\ref{fig:list}? They create a lot of noise.}
-\KR{A: The current presentation has \emph{all} sugar later. Can be discussed.} 
+\KR{Yes, done.}
 
 \begin{remark}
   One difference between the CRSX family, including \hax, and other higher order rewriting
@@ -508,6 +473,33 @@ Program[α,β] data Stat(α);
   %%
 \end{example}
 
+\begin{figure}[ht]
+  \begin{hacs}[numbers=right,texcl]
+// Λ is sort of λ terms
+Λ variable ;                                                      // permit variables
+Λ data Lm([Λ]Λ) ;                                            // abstraction
+Λ scheme Ap(Λ, Λ) ;                                      // application
+Λ rule Ap(Lm([x]#body[x]), #arg) → #body[#arg] ;   // β-reduction
+  \end{hacs}
+  \vspace*{-1em}
+  \caption{Untyped λ calculus.}
+  \label{fig:lambda}
+  %%
+  \vspace{1em}
+  \begin{hacs}[numbers=right,texcl]
+List[α] data Nil; List[α] data Cons(α, List[α]); List[α] variable;
+List[α] scheme Append(List[α], List[α]);
+List[α] rule Append(Nil, #2) →  #2;
+List[α] rule Append(Cons(#11, #12), #2) →  Cons(#11, Append(#12, #2));
+List[α] scheme Map([β]α, List[β]);
+List[α] rule Map([x]#[x], Nil) →  Nil;
+List[α] rule Map([x]#[x], Cons(#1, #2)) →  Cons(#[#1], Map([x]#[x], #2));
+  \end{hacs}
+  \vspace*{-1em}
+  \caption{Polymorphic lists.}
+  \label{fig:list}
+\end{figure}
+
 \begin{example}[lists]\label{ex:list}
   Figure~\ref{fig:list} shows a standard definition of polymorphic lists over an arbitrary element
   sort.  The target sort is "List[α]" which is a usual polymorphic way to express a list of members
@@ -519,6 +511,30 @@ Program[α,β] data Stat(α);
   \TBD{Example evaluation.}
   %%
 \end{example}
+
+\begin{figure}[ht]
+  \begin{hacs}[numbers=right,texcl]
+// Abstract Syntax.
+Program[α,β] data Block(α, β, Program[α,β]);
+Program[α,β] data Then(Program[α,β], Program[α,β]);
+Program[α,β] data Stat(α);
+
+// Type Environment.
+Γ[α,β] data Env({α:β});
+
+// Create environment from Program
+Γ[α,β] scheme Mk(Program[α,β]);
+Γ[α,β] rule Mk(Stat(#)) → Env({});
+Γ[α,β] rule Mk(Then(#1, #2)) → Union(Mk(#1), Mk(#2));
+Γ[α,β] rule Mk(Block(#x, #t, #)) → Union(Env({#x:#t), Mk(#));
+
+// Helper to create union of two environments.
+Γ[α,β] scheme Union(Γ[α,β], Γ[α,β]);
+Γ[α,β] rule Union(Env({:#1}), Env({:#2})) → Env({:#1,:#2});
+  \end{hacs}
+  \caption{Type environment over simple AST.}
+  \label{fig:te}
+\end{figure}
 
 \begin{example}[environment handling]\label{ex:te}
   %%
