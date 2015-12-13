@@ -368,11 +368,11 @@ even more interesting combinations…}
 \begin{figure}[h!t]
   \begin{hacs}[numbers=right,texcl]
 // N is natural number sort
-N data Z ;                                                       // zero
-N data S(N) ;                                                 // successor
-N scheme Plus(N, N) ;                                    // $+$ operator
-N rule Plus(Z, #2) →  #2 ;                             // $0+x = x$
-N rule Plus(S(#1), #2) →  S(Plus(#1, #2)) ;  // $(1+x)+y=1+(x+y)$
+N data Z ;                                            // zero
+N data S(N) ;                                         // successor
+N scheme Plus(N, N) ;                                // $+$ operator
+N rule Plus(Z, #2) →  #2 ;                           // $0+x = x$
+N rule Plus(S(#1), #2) →  S(Plus(#1, #2)) ;          // $(1+x)+y=1+(x+y)$
   \end{hacs}
   \vspace*{-1em}
   \caption{Peano numerals.}
