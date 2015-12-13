@@ -298,7 +298,7 @@ it's a very good example, though: it doesn't make it clear why you would
   List[α] rule Map(⟨x|#|x⟩, Nil) →  Nil;
   List[Int] rule Map(⟨x|#|x⟩, Cons(#1, #2)) →  Cons(#|#1⟩, Map(⟨x|#|x⟩, #2));
   Int scheme Pick(List[Int], ⟨Int,Int|Bool);
-  Int rule Pick(#, ⟨x,y|#p|x,y⟩) → If(#p|#,#⟩, Pick(#, ⟨x,y|#pick|x,y⟩), #);
+  Int rule Pick(#, ⟨x,y|#p|x,y⟩) → If(#p|#,#⟩, Pick(#, ⟨x,y|#p|x,y⟩), #);
 \end{hacs}
 \KR{P.S. The notation can be done with ⟨⟩ and [] reversed.}
 
