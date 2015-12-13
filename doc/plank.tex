@@ -93,7 +93,7 @@ and finally Section~\ref{sec:conc} concludes and compares to related work.
 
 In this section we outline the \hax calculus, and give several examples.
 
-\begin{figure}[ht]
+\begin{figure}[h!t]
   \begin{align}
     \tag{\hax{}Script}
     H &::= D^* 
@@ -362,10 +362,10 @@ it's a very good example, though: it doesn't make it clear why you would
   this or do you want me to kick them out at all?}  \KR{A: I think we should give terms in
   connection with the examples below, and make sure to explain that some are incorrectly sorted.}
 \MS{Okay, I am on it!} \KR{Looking forward to it: if it works we should perhaps not collect all the
-  figures on one page but use individual [ht] figures? I added one more example, as you can see, for
+  figures on one page but use individual [h!t] figures? I added one more example, as you can see, for
 even more interesting combinations…}
 
-\begin{figure}[ht]
+\begin{figure}[h!t]
   \begin{hacs}[numbers=right,texcl]
 // N is natural number sort
 N data Z ;                                                       // zero
@@ -427,6 +427,21 @@ N rule Plus(S(#1), #2) →  S(Plus(#1, #2)) ;  // $(1+x)+y=1+(x+y)$
     and we use square brackets instead of round for meta-application arguments.}
 \end{remark}
 
+\begin{figure}[h!t]
+  \begin{hacs}[numbers=right,texcl]
+// Λ is sort of λ terms
+Λ variable ;                                              // permit variables
+Λ data Lm([Λ]Λ) ;                                        // abstraction
+Λ scheme Ap(Λ, Λ) ;                                      // application
+Λ rule Ap(Lm([x]#body[x]), #arg) → #body[#arg] ;     // β-reduction
+  \end{hacs}
+  \vspace*{-1em}
+  \caption{Untyped λ calculus.}
+  \label{fig:lambda}
+  %%
+  \vspace{1em}
+\end{figure}
+
 \begin{example}[untyped λ calculus]\label{ex:lambda}
   The untyped λ calculus is shown in Figure~\ref{fig:lambda} in \hax.  The declarations can be
   explained as follows:
@@ -480,19 +495,7 @@ N rule Plus(S(#1), #2) →  S(Plus(#1, #2)) ;  // $(1+x)+y=1+(x+y)$
   %%
 \end{example}
 
-\begin{figure}[ht]
-  \begin{hacs}[numbers=right,texcl]
-// Λ is sort of λ terms
-Λ variable ;                                                      // permit variables
-Λ data Lm([Λ]Λ) ;                                            // abstraction
-Λ scheme Ap(Λ, Λ) ;                                      // application
-Λ rule Ap(Lm([x]#body[x]), #arg) → #body[#arg] ;   // β-reduction
-  \end{hacs}
-  \vspace*{-1em}
-  \caption{Untyped λ calculus.}
-  \label{fig:lambda}
-  %%
-  \vspace{1em}
+\begin{figure}[h!t]
   \begin{hacs}[numbers=right,texcl]
 List[α] data Nil; List[α] data Cons(α, List[α]); List[α] variable;
 List[α] scheme Append(List[α], List[α]);
@@ -519,7 +522,7 @@ List[α] rule Map([x]#[x], Cons(#1, #2)) →  Cons(#[#1], Map([x]#[x], #2));
   %%
 \end{example}
 
-\begin{figure}[ht]
+\begin{figure}[h!t]
   \begin{hacs}[numbers=right,texcl]
 // Abstract Syntax.
 Program[α,β] data Block(α, β, Program[α,β]);
@@ -555,7 +558,7 @@ the same association set on the right! I wonder how that's defined.
   long as it allows for add, I thiink.}
 \end{example}
 
-\begin{figure}[h]
+\begin{figure}[h!t]
   \begin{hacs}[numbers=right,texcl]
 // Booleans with conditional.
 Bool data True; Bool data False; α scheme If(Bool, α, α);
