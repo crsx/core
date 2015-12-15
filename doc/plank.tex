@@ -109,13 +109,13 @@ In this section we outline the \hax calculus, and give several examples.
     \bigm| \kwm\{\, S:S \,\kwm\}
     \\
     \tag{Sort}
-    S &::= s\,\kw[\,S^{*\kw,}\,\kw]
+    S &::= s\,\kwm{⟨}\,S^{*\kw,}\,\kwm{⟩}
     \bigm| α
     \\[\jot]
     \tag{Term}
     T &::= c\,\kw(\,P^{*\kw,}\,\kw)
     \bigm| v
-    \bigm| M\,\kw[\,T^{*\kw,}\,\kw]
+    \bigm| M\,\kw(\,T^{*\kw,}\,\kw)
     \\
     \tag{Piece}
     P &::= \kw[\,v^{*\kw,}\,\kw]\,T
@@ -137,7 +137,7 @@ In this section we outline the \hax calculus, and give several examples.
   \begin{itemize}
   \item variables of that sort may occur unbound in the terms whose reduction
     you consider (others will only occur bound);
-  \item you can \emph{match} on a variable (either bound or free) of one of
+  \item you can \emph{match} on an explicit variable (either bound or free) of one of
     these sorts;
   \item variables of these sorts may occur free in the right-hand side of a
     rule;
@@ -147,6 +147,7 @@ In this section we outline the \hax calculus, and give several examples.
   (Kris may be able to indicate the exact truth factor of each of these
   properties and whether I missed a bit.)
 }
+\KR{You can only substitute ``variables for variables'' when they can be syntactic, I think.}
 
 \MS{About $F ::= \kw[\,S_1^{*\kw,}\,\kw]\,S_2$. Can $S_1$ actually be something different than a sort variable?}
 
@@ -156,9 +157,9 @@ In this section we outline the \hax calculus, and give several examples.
 
 \begin{definition}[\hax syntax]\label{def:syntax}
   %%
-  The \hax syntax is shown in Figure~\ref{fig:syntax}, except we will also allow omission of empty
-  "()" and "[]". The top level of a \hax script is a sequence of declarations $D^*$ and the grammar
-  assumes that we have three categories of identifier tokens defined:
+  The \hax syntax is shown in Figure~\ref{fig:syntax}. The top level of a \hax script is a sequence
+  of declarations $D^*$ and the grammar assumes that we have three categories of identifier tokens
+  defined:
   %%
   \begin{itemize}
 
@@ -192,14 +193,14 @@ In this section we outline the \hax calculus, and give several examples.
     \emph{data construction}. If $n=0$, i.e., the function or data symbol does not take any
       arguments, we usually drop the $()$. That is, we write $0$ instead of $0()$.
     
-    \MS{Here comes a really general question: How do data and function constructors/constructions
-      relate to constructor and defined symbols in term rewriting (To clarify: A symbol is
-      \emph{defined} wrt to a set of rules, if it occurs at the root of a left-hand side of a
-      rule. The other symbols are constructors.) I have a feeling, that this is actually similar?
-      If so, I may argue, that the distinction is easily computable and is maybe not core?  } \KR{A:
-      Yes, one can argue this. Not sure what the right answer is.}  \MS{I'd go for simpler. Maybe we
-      can discuss this on the call?}  \MS{Conclusion: For implementation it is easier to declare
-      it. It is computable though.} \KR{You can see it in the type rules, now.}
+%%    \MS{Here comes a really general question: How do data and function constructors/constructions
+%%      relate to constructor and defined symbols in term rewriting (To clarify: A symbol is
+%%      \emph{defined} wrt to a set of rules, if it occurs at the root of a left-hand side of a
+%%      rule. The other symbols are constructors.) I have a feeling, that this is actually similar?
+%%      If so, I may argue, that the distinction is easily computable and is maybe not core?  } \KR{A:
+%%      Yes, one can argue this. Not sure what the right answer is.}  \MS{I'd go for simpler. Maybe we
+%%      can discuss this on the call?}  \MS{Conclusion: For implementation it is easier to declare
+%%      it. It is computable though.} \KR{You can see it in the type rules, now.}
 
   \item Argument ``pieces'' $P$ of constructions take one of two forms: \emph{scopes}
     $[v_1,…,v_n]T$, which introduce new local variables $v_1,…,v_n$ along with a term $T$ wherein
@@ -209,50 +210,33 @@ In this section we outline the \hax calculus, and give several examples.
     no new variables introduced in the scope, we usually drop the $[]$. That is, we write $S(0)$
     instead of $S([]0)$, and also $S(x)$ instead of $S([]x)$, where $x$ is unbound in this scope.
 
+    \KR{Note: any suggestions for something other than \{:\#1\} for catchers are welcome!}
+
   \item A term of the form $v$ is a \emph{variable occurrence}; if the variable $v$ occurs contained
     in a scope $[…v…]T$ then the variable occurrence is \emph{bound}.
 
-  \item A term of the form $M[T_1,…,T_n]$ ($n≥0$) is a \emph{meta-application}; if the terms $T_i$
-    are distinct bound variable occurrences then this is a \emph{pattern
-      meta-application}. \KR{Notice that this means one \emph{cannot} substitute a variable by an
-      association!}
-
-  \item  \MS{E.g., in KR thesis, TeReSe, a distinction between meta term and term (i.e., a meta term without
-     meta variables) is made. Do we also want to do this?}
-     \CK{I'd say it's certainly desirable to do so, as we don't really want to have to
-     deal with rewriting meta-terms, just terms.  Moreover, the difference is larger
-     here than in TeReSe, as I'd also expect that terms have no exclusions.}
+  \item A term of the form $M(T_1,…,T_n)$ ($n≥0$) is a \emph{meta-application}.
 
   \end{itemize}
-  %%
-  A term is called a \emph{pattern fragment} if all contained meta-applications are pattern
-  meta-applications, and a \emph{pattern} if it is also a function construction. \KR{Yes, this needs
-    to say that otherwise only data constructors are there.} \CK{This is somehwat tricky to work
-    with recursively, for it makes $Z[x]$ not a pattern fragment if $Z$ is a meta-variable, giving
-    problems with induction for a term like $f(x.g(Z[x]))$.}  \KR{I reintroduced checks for this in
-    the sort rules (Definition~\ref{def:sort}). If you agree, we can clean up here.}
+
+  \MS{E.g., in KR thesis, TeReSe, a distinction between meta term and term (i.e., a meta term
+    without meta variables) is made. Do we also want to do this?}  \CK{I'd say it's certainly
+    desirable to do so, as we don't really want to have to deal with rewriting meta-terms, just
+    terms.  Moreover, the difference is larger here than in TeReSe, as I'd also expect that terms
+    have no exclusions.} \KR{Open to suggestions. Pattern constraint now in type rules.}
 \end{definition}
 
-We distinguish three different ways to brace elements (cf.\ Figure~\ref{fig:syntax}). For
-\emph{term}, \emph{data}, and \emph{scheme arguments} we use $\kw{( )}$, to brace the
-\emph{variables} and the \emph{sort variables} we use $\kw{[ ]}$, \MS{also for args of meta
-  variables}, and for \emph{associations} we use $\kwm\{ \kwm\}$.
-
-
-\MS{I am unsure about is the brackets in: $M\,\kw[\,T^{*\kw,}\,\kw]$. Why $\kw[\kw]$ and not
-  $\kw(\kw)$? Fragment from Figure~\ref{fig:list} with  $\kw(\kw)$:}
-  %% 
-  \begin{hacs}[numbers=right,texcl]
-    List[α] scheme Map([β]α, List[β]);
-    List[α] rule Map([x]#(x), Nil) →  Nil;
-    List[α] rule Map([x]#(x), Cons(#1, #2)) →  Cons(#(#1), Map([x]#(x), #2));
-  \end{hacs}
-\MS{I prefer the $\kw(\kw)$. You? Do you want me to change the examples throughout the document?}
+We distinguish four different ways to brace elements (cf.\ Figure~\ref{fig:syntax}). For data and
+scheme \emph{subterms}, and for \emph{meta-variable arguments} we use $\kw{( )}$.
+For \emph{binders} we use $\kw{[ ]}$.
+For \emph{associations} we use $\kwm{\{\,\}}$.
+For \emph{sort parameters} we use $\kwm{⟨\,⟩}$.
+\KR{Changed the brackets! Like it?}
 
 \CK{I actually think the greater objection is with bracing sort arguments by
   square brackets: sort constructors are far closer to function symbols than to
   binders, and this isn't just about variables: $\kw{list[list[nat]]}$ is a
-  sort.  So why the square brackets?}
+  sort.  So why the square brackets?} \KR{A: Is it better as suggested (easy to change, still).}
 
 \CK{As for meta-variables: while I quite like giving them separate brackets
   from function applications because the arguments to meta-variables function
@@ -262,7 +246,7 @@ We distinguish three different ways to brace elements (cf.\ Figure~\ref{fig:synt
   strongly, but I'm not opposed to it despite my own preference for square
   meta-variable brackets and corresponding use in my thesis), or alternatively,
   changing abstractions to have the (more common!) form $\vec{x}.s$ or
-  $\lambda \vec{x}.s$ rather than $[\vec{x}]s$.}
+  $\lambda \vec{x}.s$ rather than $[\vec{x}]s$.} \KR{This is still open.}
 
 In Figure~\ref{fig:syntax}, the $S$ in $S~\kw{rule}~T~\kw{$→$}~T\,\kw;$ is not superflous. Consider
 the following two rules:
@@ -279,68 +263,10 @@ compiler error if you try to use it on a list of strings.  I'm not convinced
 it's a very good example, though: it doesn't make it clear why you would
 \emph{want} the rule to be limited to integer lists!}
 
-\KR{I have no problem with switching the argument brackets to round, if you all prefer that.  If we
-  want to be conventional then even using angles $⟨\,⟩$ for sort arguments as is common (Java, C++;
-  Scala uses []).  Here are some samples of that:}
-\begin{hacs}[numbers=right,texcl]
-  List⟨α⟩ scheme Map([β]α, List⟨β⟩);
-  List⟨α⟩ rule Map([x]#(x), Nil) →  Nil;
-  List⟨Int⟩ rule Map([x]#(x), Cons(#1, #2)) →  Cons(#(#1), Map([x]#(x), #2));
-  Γ⟨α,β⟩ scheme Union(Γ⟨α,β⟩, Γ⟨α,β⟩);
-  Γ⟨α,β⟩ rule Union(Env({:#1}), Env({:#2})) →  Env({:#1,:#2});
-\end{hacs}
-\KR{Modified syntax below.}
-\begin{figure}[h!t]
-  \begin{align}
-    \tag{\hax{}Script}
-    H &::= D^* 
-    \\
-    \tag{Declaration}
-    D &::= S~\kw{data}~d\,\kw(\,F^{*\kw,}\,\kw)\,\kw;
-    \bigm| S~\kw{scheme}~f\,\kw(\,F^{*\kw,}\,\kw)\,\kw;
-    \bigm| S~\kw{variable}\,\kw;
-    \bigm| S~\kw{rule}~T~\kw{$→$}~T\,\kw;
-    \\
-    \tag{Form}
-    F &::= \kw[\,S^{*\kw,}\,\kw]\,S
-    \bigm| \kwm\{\, S:S \,\kwm\}
-    \\
-    \tag{Sort}
-    S &::= s\,\kwm{⟨}\,S^{*\kw,}\,\kwm{⟩}
-    \bigm| α
-    \\[\jot]
-    \tag{Term}
-    T &::= c\,\kw(\,P^{*\kw,}\,\kw)
-    \bigm| v
-    \bigm| M\,\kw(\,T^{*\kw,}\,\kw)
-    \\
-    \tag{Piece}
-    P &::= \kw[\,v^{*\kw,}\,\kw]\,T
-    \bigm| \kwm\{\, A^{*\kw,} \,\kwm\}
-    \\
-    \tag{Association}
-    A &::= T\,\kw:\,T
-    \bigm| \kw{$¬$}\,T
-    \bigm| \kw:\,M
-  \end{align}
-  \vspace*{-2em}
-  \caption{\hax syntax, Java Style.}
-\end{figure}
-
-\KR{Note: any suggestions for something other than \{:\#1\} are welcome!\\
-  Just for fun: here is ``bra-ket'' notation (from physics), also kind of cool (note empty $⟨|$ and
-  $|⟩$ can be omitted)…I'd love this, and it would be different and make us associate even more to
-  the \hax symbol. The explanation then associates a \emph{bra} with a binder state and a \emph{ket} with
-  a substitution of it.}
-\begin{hacs}
-  List[α] scheme Map(⟨β|α, List[β]);
-  List[α] rule Map(⟨x|#|x⟩, Nil) →  Nil;
-  List[Int] rule Map(⟨x|#|x⟩, Cons(#1, #2)) →  Cons(#|#1⟩, Map(⟨x|#|x⟩, #2));
-  Int scheme Pick(List[Int], ⟨Int,Int|Bool);
-  Int rule Pick(#, ⟨x,y|#p|x,y⟩) → If(#p|#,#⟩, Pick(#, ⟨x,y|#p|x,y⟩), #);
-\end{hacs}
-\KR{Modified syntax in Figure~\ref{fig:bra-ket} below.}
-\begin{figure}[h!t]
+\KR{Just for fun: here is ``bra-ket'' notation (from physics), also kind of cool (note empty $⟨|$
+  and $|⟩$ can be omitted)…I'd love this, and it would be different and make us associate even more
+  to the \hax symbol. The explanation then associates a \emph{bra} with a binder state and a
+  \emph{ket} with a substitution of it.
   \begin{align}
     \tag{\hax{}Script}
     H &::= D^* 
@@ -373,18 +299,21 @@ it's a very good example, though: it doesn't make it clear why you would
     \bigm| \kw{$¬$}\,T
     \bigm| \kw:\,M
   \end{align}
-  \vspace*{-2em}
-  \caption{\hax syntax, Bra-Ket Style.}
-  \label{fig:bra-ket}
-\end{figure}
-\KR{P.S. The notation can be done with ⟨⟩ and [] reversed.}
+  With this notation, the list example becomes the following.}
+\begin{hacs}
+  List[α] scheme Map(⟨β|α, List[β]);
+  List[α] rule Map(⟨x|#|x⟩, Nil) →  Nil;
+  List[Int] rule Map(⟨x|#|x⟩, Cons(#1, #2)) →  Cons(#|#1⟩, Map(⟨x|#|x⟩, #2));
+  Int scheme Pick(List[Int], ⟨Int,Int|Bool);
+  Int rule Pick(#, ⟨x,y|#p|x,y⟩) → If(#p|#,#⟩, Pick(#, ⟨x,y|#p|x,y⟩), #);
+\end{hacs}
 
 \begin{example}
   Example terms without Associations are: 
   %% 
   \begin{hacs}[numbers=right, texcl]
       Zero, Plus(#X, #Y), S(Zero), x, #X, S([x,y]#X[y,x,z]), #X[x], #F[Zero], #F[#X]
-      [x,y]#F[y,x]  // This pattern meta-application is not a Term. 
+      [x,y]#F[y,x]
     \end{hacs}
     \MS{So currently, a meta-application is (strictly speaking) not called a term (except for
       $\#X$). Do we want this?}
@@ -459,21 +388,20 @@ N rule Plus(S(#1), #2) →  S(Plus(#1, #2)) ;          // $(1+x)+y=1+(x+y)$
 \begin{example}[Peano]\label{ex:peano}
   The classical first order Peano arithmetic rules are a simple \hax system, shown in
   Figure~\ref{fig:peano}.  The example illustrates how a sort is defined with data constructors and
-  a scheme for rewriting, essentially following standard notations for many-sorted term rewriting,
-  except for the slightly unusual (meta)variable notation with "#"s. The example illustrates the
-  following points:
+  a scheme for rewriting. The example illustrates the following points:
   %%
   \begin{itemize}
 
-  \item The defined sort is "N". All the other declarations define artifacts of the "N" sort, so are
-    inside the \kw{sort} declaration's \kw{\{\}}s.
+  \item The defined sort is "N". All the other declarations define artifacts of sort~"N". (Notice
+    that we have omitted the empty sort parameter list, it is really "N⟨⟩".)
 
-  \item There are two \kw{data} constructors: "Z" with no parameters, and "S" with a single numeric
-    argument. The single numeric argument is specified as "[]N[]" because it has no locally scoped
-    binders ("[]"$_-$) and the "N" sort has no sort parameters ($_-$"[]").
-    \CK{This formulation (and likely some of the following ones) should be changed if the
-    more readable version of the figures is kept (which I think is a good idea!).  Could make that
-    something on the lines of explaining that N should be read []N[].}
+  \item There are two \kw{data} constructors declared: "Z" with no parameters, and "S" with a single numeric
+    argument.
+%% The single numeric argument is specified as "[]N[]" because it has no locally scoped
+%%    binders ("[]"$_-$) and the "N" sort has no sort parameters ($_-$"[]").
+%%    \CK{This formulation (and likely some of the following ones) should be changed if the
+%%    more readable version of the figures is kept (which I think is a good idea!).  Could make that
+%%    something on the lines of explaining that N should be read []N[].}
 
   \item There is a single function (\kw{scheme}) constructor, "Plus", with two numeric arguments.
 
@@ -484,9 +412,9 @@ N rule Plus(S(#1), #2) →  S(Plus(#1, #2)) ;          // $(1+x)+y=1+(x+y)$
   A sample rewrite sequence using this system, corresponding to the computation $1+1=2$, is
   %%
   \begin{displaymath}
-    "Plus([]S([]Z), []S([]Z))" →
-    "S([]Plus([]Z, []S([]Z)))" →
-    "S([]S([]Z))"
+    "Plus(S(Z), S(Z))" →
+    "S(Plus(Z, S(Z)))" →
+    "S(S(Z))"
   \end{displaymath}
 \end{example}
 %%
@@ -494,23 +422,22 @@ N rule Plus(S(#1), #2) →  S(Plus(#1, #2)) ;          // $(1+x)+y=1+(x+y)$
   Figure~\ref{fig:lambda}, and Figure~\ref{fig:list}? They create a lot of noise.}
 \KR{Yes, done.}
 
-\begin{remark}
-  One difference between the CRSX family, including \hax, and other higher order rewriting
-  formalisms, is that the binder mechanism is part of the parent construction, \eg, the sort of the
-  "S" constructor defines that instances must have the shape "S([]…)" with "…" being itself a Peano
-  number.  Otherwise, binding and substitution are in the style of CRS higher order rewrite
-  systems~\cite{Klop+:tcs1993}.\footnote{The notation does differ from the original CRS notation in
-    that we use ``\#'' as a marker for meta-variables instead of the original reserved use of $Z$,
-    and we use square brackets instead of round for meta-application arguments.}
-\end{remark}
+%%\begin{remark}
+%%  One difference between the CRSX family, including \hax, and other higher order rewriting
+%%  formalisms, is that the binder mechanism is part of the parent construction, \eg, the sort of the
+%%  "S" constructor defines that instances must have the shape "S([]…)" with "…" being itself a Peano
+%%  number.  Otherwise, binding and substitution are in the style of CRS higher order rewrite
+%%  systems~\cite{Klop+:tcs1993}.\footnote{The notation does differ from the original CRS notation in
+%%    that we use ``\#'' as a marker for meta-variables instead of the original reserved use of $Z$,
+%%    and we use square brackets instead of round for meta-application arguments.}
+%%\end{remark}
 
 \begin{figure}[h!t]
   \begin{hacs}[numbers=right,texcl]
 // Λ is sort of λ terms
-Λ variable ;                                              // permit variables
-Λ data Lm([Λ]Λ) ;                                        // abstraction
-Λ scheme Ap(Λ, Λ) ;                                      // application
-Λ rule Ap(Lm([x]#body[x]), #arg) → #body[#arg] ;     // β-reduction
+Λ  data Lm([Λ]Λ) ;                                        // abstraction
+Λ  scheme Ap(Λ, Λ) ;                                      // application
+Λ  rule Ap(Lm([x]#body(x)), #arg) → #body(#arg) ;     // β-reduction
   \end{hacs}
   \vspace*{-1em}
   \caption{Untyped λ calculus.}
@@ -525,25 +452,25 @@ N rule Plus(S(#1), #2) →  S(Plus(#1, #2)) ;          // $(1+x)+y=1+(x+y)$
   %%
   \begin{itemize}
 
-  \item The "Λ" sort includes a special "variable" case to indicate that variables can occur in
-    terms. \CK{Should there be a qualifier like ``unbound'' in this sentence?}
-    \KR{Perhaps---suggestions?} \MS{Wouldn't Figure~\ref{fig:list} then also require \kw{variable}?
-      It uses variables ($x, \beta, \alpha$) as well. However, neither Figure~\ref{fig:list} nor
-      Figure~\ref{fig:lambda} use unbound variables. What exactly do we want to express with the
-      \kw{variable}?} \KR{A: Fixed?} 
-    \CK{Definitely not! I think it became worse, actually. :)  The variable in this example is
-      of type $\alpha$, not of list type, so the variable indicator doesn't refer to it.  Also,
-      for what I've understood of syntactic, not every variable is syntactic!  If my attempted
-      explanation earlier is correct, I don't mind rephrasing this sentence, but would prefer to
-      do so only after we resolve whether to call terms and meta-terms something different. :)}
-
-  \item "Λ" also includes a usual case for application construction, which is a "scheme" because it
-    can (sometimes) be rewritten.
+%%  \item The "Λ" sort includes a special "variable" case to indicate that variables can occur in
+%%    terms. \CK{Should there be a qualifier like ``unbound'' in this sentence?}
+%%    \KR{Perhaps---suggestions?} \MS{Wouldn't Figure~\ref{fig:list} then also require \kw{variable}?
+%%      It uses variables ($x, \beta, \alpha$) as well. However, neither Figure~\ref{fig:list} nor
+%%      Figure~\ref{fig:lambda} use unbound variables. What exactly do we want to express with the
+%%      \kw{variable}?} \KR{A: Fixed?} 
+%%    \CK{Definitely not! I think it became worse, actually. :)  The variable in this example is
+%%      of type $\alpha$, not of list type, so the variable indicator doesn't refer to it.  Also,
+%%      for what I've understood of syntactic, not every variable is syntactic!  If my attempted
+%%      explanation earlier is correct, I don't mind rephrasing this sentence, but would prefer to
+%%      do so only after we resolve whether to call terms and meta-terms something different. :)}
 
   \item "Λ" includes an abstraction construction, which is a "data" case, and which includes a
     subterm with a single binder scoped over that subterm. The scoped subterm is written as
-    "[Λ[]]Λ[]", which should be read as ``a subterm with a locally bound variable of sort "Λ" and a
+    "[Λ]Λ", which should be read as ``a subterm with a locally bound variable of sort "Λ" and a
     body of sort "Λ" in which it can occur.''
+
+  \item "Λ" includes a usual case for application construction, which is a "scheme" because it
+    can (sometimes) be rewritten.
 
   \item We specify one rewrite "rule" for "Λ": β-reduction. As usual, the rule specifies how an
     application of an abstraction is simplified. The interesting aspect of the pattern is how the
@@ -552,21 +479,21 @@ N rule Plus(S(#1), #2) →  S(Plus(#1, #2)) ;          // $(1+x)+y=1+(x+y)$
     to the declaration of the subterm of the "Lm" constructor.
 
   \item Once an application of an abstraction is matched, the "rule" gives the result of
-    simplification as "#body[#arg[]]", which means that we construct a copy of "#body" except all
+    simplification as "#body[#arg]", which means that we construct a copy of "#body" except all
     occurrences of the variable we matched (and kept track of) in the pattern "#body[x]" are
-    substituted with what "#arg[]" matched.
+    substituted with what "#arg" matched.
 
   \end{itemize}
   %%
   A usual λ term like $(λx.x x)(λy.y)$ is represented as
   \begin{displaymath}
-    "Ap([]Lm([x]Ap([]x, []x)), []Lm([y]y))"    
+    "Ap(Lm([x]Ap(x, x)), Lm([y]y))"    
   \end{displaymath}
   and simplifies like this:
   %%
   \begin{displaymath}
-    "Ap([]Lm([x]Ap([]x, []x)), []Lm([y]y))" →
-    "Ap([]Lm([y]y), []Lm([y]y))" →
+    "Ap(Lm([x]Ap(x, x)), Lm([y]y))" →
+    "Ap(Lm([y]y), Lm([y]y))" →
     "Lm([y]y))"
   \end{displaymath}
   %%
@@ -574,13 +501,13 @@ N rule Plus(S(#1), #2) →  S(Plus(#1, #2)) ;          // $(1+x)+y=1+(x+y)$
 
 \begin{figure}[h!t]
   \begin{hacs}[numbers=right,texcl]
-List[α] data Nil; List[α] data Cons(α, List[α]); List[α] variable;
-List[α] scheme Append(List[α], List[α]);
-List[α] rule Append(Nil, #2) →  #2;
-List[α] rule Append(Cons(#11, #12), #2) →  Cons(#11, Append(#12, #2));
-List[α] scheme Map([β]α, List[β]);
-List[α] rule Map([x]#[x], Nil) →  Nil;
-List[α] rule Map([x]#[x], Cons(#1, #2)) →  Cons(#[#1], Map([x]#[x], #2));
+List⟨α⟩ data Nil; List⟨α⟩ data Cons(α, List⟨α⟩);
+List⟨α⟩ scheme Append(List⟨α⟩, List⟨α⟩);
+List⟨α⟩ rule Append(Nil, #2) →  #2;
+List⟨α⟩ rule Append(Cons(#11, #12), #2) →  Cons(#11, Append(#12, #2));
+List⟨α⟩ scheme Map([β]α, List⟨β⟩);
+List⟨α⟩ rule Map([x]#(x), Nil) →  Nil;
+List⟨α⟩ rule Map([x]#(x), Cons(#1, #2)) →  Cons(#(#1), Map([x]#(x), #2));
   \end{hacs}
   \vspace*{-1em}
   \caption{Polymorphic lists.}
@@ -589,11 +516,9 @@ List[α] rule Map([x]#[x], Cons(#1, #2)) →  Cons(#[#1], Map([x]#[x], #2));
 
 \begin{example}[lists]\label{ex:list}
   Figure~\ref{fig:list} shows a standard definition of polymorphic lists over an arbitrary element
-  sort.  The target sort is "List[α]" which is a usual polymorphic way to express a list of members
-  of an unspecified parameter sort~"α".  Inside the scope of the "sort" declaration, "α" denotes the
-  member sort of the result list of all constructs. So the declaration of "data Cons([]α,[]List[α])"
-  means that the "Cons" constructor takes one argument of the same sort as the member of the result
-  list, as well as an argument of the same sort as the result, "List[α]".
+  sort.  The target sort "List⟨α⟩" is a usual polymorphic way to express a list of members of an
+  unspecified parameter sort~"α".  Inside the scope of the "sort" declaration, "α" denotes the
+  member sort of the result list of all constructs.
 
   \TBD{Example evaluation.}
   %%
@@ -602,22 +527,22 @@ List[α] rule Map([x]#[x], Cons(#1, #2)) →  Cons(#[#1], Map([x]#[x], #2));
 \begin{figure}[h!t]
   \begin{hacs}[numbers=right,texcl]
 // Abstract Syntax.
-Program[α,β] data Block(α, β, Program[α,β]);
-Program[α,β] data Then(Program[α,β], Program[α,β]);
-Program[α,β] data Stat(α);
+Program⟨α,β⟩ data Block(α, β, Program⟨α,β⟩);
+Program⟨α,β⟩ data Then(Program⟨α,β⟩, Program⟨α,β⟩);
+Program⟨α,β⟩ data Stat(α);
 
 // Type Environment.
-Γ[α,β] data Env({α:β});
+Γ⟨α,β⟩ data Env({α:β});
 
 // Create environment from Program
-Γ[α,β] scheme Mk(Program[α,β]);
-Γ[α,β] rule Mk(Stat(#)) → Env({});
-Γ[α,β] rule Mk(Then(#1, #2)) → Union(Mk(#1), Mk(#2));
-Γ[α,β] rule Mk(Block(#x, #t, #)) → Union(Env({#x:#t), Mk(#));
+Γ⟨α,β⟩ scheme Mk(Program⟨α,β⟩);
+Γ⟨α,β⟩ rule Mk(Stat(#)) → Env({});
+Γ⟨α,β⟩ rule Mk(Then(#1, #2)) → Union(Mk(#1), Mk(#2));
+Γ⟨α,β⟩ rule Mk(Block(#x, #t, #)) → Union(Env({#x:#t), Mk(#));
 
 // Helper to create union of two environments.
-Γ[α,β] scheme Union(Γ[α,β], Γ[α,β]);
-Γ[α,β] rule Union(Env({:#1}), Env({:#2})) → Env({:#1,:#2});
+Γ⟨α,β⟩ scheme Union(Γ⟨α,β⟩, Γ⟨α,β⟩);
+Γ⟨α,β⟩ rule Union(Env({:#1}), Env({:#2})) → Env({:#1,:#2});
   \end{hacs}
   \caption{Type environment over simple AST.}
   \label{fig:te}
@@ -632,7 +557,7 @@ the same association set on the right! I wonder how that's defined.
 (Although it's easily avoided if undesirable, by simply replacing the
 ``union'' by an ``add''.)}
 \KR{Indeed! I think Lionel has it implemented as ``add''…but here we should describe the ideal as
-  long as it allows for add, I thiink.}
+  long as it allows for add, I think.}
 \end{example}
 
 \begin{figure}[h!t]
@@ -641,13 +566,13 @@ the same association set on the right! I wonder how that's defined.
 Bool data True; Bool data False; α scheme If(Bool, α, α);
 
 // Pick number.
-Int scheme Pick(List[Int], [Int,Int]Bool);
-Int rule Pick(#, [x,y]#pick[x,y]) → Pick2(#, [x,y]#pick[x,y], N);
+Int scheme Pick(List⟨Int⟩, [Int,Int]Bool);
+Int rule Pick(#, [x,y]#pick(x,y)) → Pick2(#, [x,y]#pick(x,y), N);
 
-Int scheme Pick2(List[Int], [Int,Int]Bool, Int);
-Int rule Pick2(Nil, [x,y]#pick[x,y], #n) → #n;
-Int rule Pick2(Cons(#1, #rest), [x,y]#pick[x,y], #n)
-  → Pick2(#rest, [x,y]#pick[x,y], #pick[#1,#n]);
+Int scheme Pick2(List⟨Int⟩, [Int,Int]Bool, Int);
+Int rule Pick2(Nil, [x,y]#pick(x,y), #n) → #n;
+Int rule Pick2(Cons(#1, #rest), [x,y]#pick(x,y), #n)
+  → Pick2(#rest, [x,y]#pick(x,y), #pick(#1,#n));
   \end{hacs}
   \caption{Find largest element of list of integers.}
   \label{fig:pick}
@@ -682,21 +607,21 @@ If you check with the examples, then you can see that the examples all satisfy t
 except Example~\ref{ex:bool}, which breaks the last of the above constraints. \TBD{Fix but how:
   patch example or rules?}
 
-\CK{About the TBD: the example breaks the rule only because some data terms are
-missing the $\mathit{val}$ attribute, right?  This ties in to my earlier
-comment below Figure 1, although only a little: the attribute here should be a
-catch-all meta-variable on the left, and the empty set on the right.  You can
-actually do that with the syntax as given, but it would be quite ugly. \\
-The most natural solution seems to be calling it syntactic sugar: we could
-point out that Example~\ref{ex:bool} \emph{seems} to violate the rule, but
-only due to syntactic sugar, as explained later?  Alternatively, we could
-change the example.  To make it a bit less ugly, a possibility is to add a
-sort $\mathtt{DecidedBool}$ with only true/false values, to be used as the
-values for the attribute; typically, you'd probably want to know that those
-values will in fact be true/false rather than a Not or Or.  This sort would
-not need to have an attribute, so would save you from having to write an
-addition attribute set inside an attribute set.}
-\KR{A: Attributes are now gone: only map subterms remain! Is this alright?}
+%% \CK{About the TBD: the example breaks the rule only because some data terms are
+%% missing the $\mathit{val}$ attribute, right?  This ties in to my earlier
+%% comment below Figure 1, although only a little: the attribute here should be a
+%% catch-all meta-variable on the left, and the empty set on the right.  You can
+%% actually do that with the syntax as given, but it would be quite ugly. \\
+%% The most natural solution seems to be calling it syntactic sugar: we could
+%% point out that Example~\ref{ex:bool} \emph{seems} to violate the rule, but
+%% only due to syntactic sugar, as explained later?  Alternatively, we could
+%% change the example.  To make it a bit less ugly, a possibility is to add a
+%% sort $\mathtt{DecidedBool}$ with only true/false values, to be used as the
+%% values for the attribute; typically, you'd probably want to know that those
+%% values will in fact be true/false rather than a Not or Or.  This sort would
+%% not need to have an attribute, so would save you from having to write an
+%% addition attribute set inside an attribute set.}
+%% \KR{A: Attributes are now gone: only map subterms remain! Is this alright?}
 
 \begin{notation}[vectors]
   We will use \emph{vector notation} with $\ov{X}$ denoting $X_1,…,X_n$ for some $n≥0$; $ε$ denotes
@@ -738,24 +663,24 @@ addition attribute set inside an attribute set.}
     %
     &\dfrac
     {}
-    { Γ ⊢ s[\ov{S}]~\kw{variable}\,\kw; }
+    { Γ ⊢ s⟨\ov{S}⟩~\kw{variable}\,\kw; }
     && s ∈ Γ_{\op{hasvar}}
     \tag{S-D-Var}
     %
     \\[\jot]
     %
     &\dfrac
-    { Γ,Δ,\op{Pat} ⊢ f(\ov{F}) : S  \qquad Γ,Δ,\op{Con} ⊢ T : S }
+    { Γ,Δ,\op{Pat},ε ⊢ f(\ov{F}) : S  \qquad Γ,Δ,\op{Con},ε ⊢ T : S }
     { Γ ⊢ S~\kw{rule}~f(\ov{F})~\kw{→}~T\,\kw; }
     && (∃Δ),~f∈Γ_{\op{fun}}
     \tag{S-D-Rule}
     %
     \\
-    \intertext{\shoveright{Sorting of Term\hfil\smash{\fbox{$ Γ,Δ,RS ⊢ T : S $}}}}
+    \intertext{\shoveright{Sorting of Term\hfil\smash{\fbox{$ Γ,Δ,RS,\ov{\mathcal{V}} ⊢ T : S $}}}}
     %
     &\dfrac
-    { Γ,Δ,RS ⊢ P_1 : F_1 \quad\cdots\quad Γ,Δ,RS ⊢ P_n : F_n }
-    { Γ,Δ,RS ⊢ c\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : S }
+    { Γ,Δ,RS,\ov{w} ⊢ P_1 : F_1 \quad\cdots\quad Γ,Δ,RS,\ov{w} ⊢ P_n : F_n }
+    { Γ,Δ,RS,\ov{w} ⊢ c\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : S }
     &&\Cases{
       Γ_{\op{cons}}(c) = \left⟨ S, (F_1\kw,…\kw,F_n) \right⟩\\
       c∉Γ_{\op{fun}} ∨ RS=\op{Con}
@@ -766,62 +691,65 @@ addition attribute set inside an attribute set.}
     %
     &\dfrac
     { }
-    { Γ,Δ,RS ⊢ v : s[\ov{S}] }
-    && Δ_{\op{var}}(v) = s[\ov{S}], ~s∈Γ_{\op{hasvar}}
+    { Γ,Δ,RS,\ov{w} ⊢ v : s⟨\ov{S}⟩ }
+    && Δ_{\op{var}}(v) = s⟨\ov{S}⟩, ~s∈Γ_{\op{hasvar}}
     \tag{S-T-Var}
     % 
     \\[\jot]
     %
     &\dfrac
-    { Γ,Δ,\op{Pat} ⊢ v_1 : S_1 \quad\cdots\quad  Γ,Δ,\op{Pat} ⊢ v_n : S_n }
-    { Γ,Δ,\op{Pat} ⊢ M\,\kw[\,v_1\kw,…\kw,v_n\,\kw] : S }
-    && Δ_{\op{meta}}(M) = [(S_1,…,S_n)⇒S]
+    { Γ,Δ,\op{Pat},\ov{w} ⊢ v_1 : S_1 \quad\cdots\quad  Γ,Δ,\op{Pat},\ov{w} ⊢ v_n : S_n }
+    { Γ,Δ,\op{Pat},\ov{w} ⊢ M\,\kw(\,v_1\kw,…\kw,v_n\,\kw) : S }
+    &&\Cases{
+      ∀i\colon v_i∈\ov{w} \\
+      Δ_{\op{meta}}(M) = [(S_1,…,S_n)⇒S]
+    }
     \tag{S-T-MetaP}
     % 
     \\[\jot]
     %
     &\dfrac
-    { Γ,Δ,\op{Con} ⊢ T_1 : S_1 \quad\cdots\quad  Γ,Δ,\op{Con} ⊢ T_n : S_n }
-    { Γ,Δ,\op{Con} ⊢ M\,\kw[\,T_1\kw,…\kw,T_n\,\kw] : S }
+    { Γ,Δ,\op{Con},\ov{w} ⊢ T_1 : S_1 \quad\cdots\quad  Γ,Δ,\op{Con},\ov{w} ⊢ T_n : S_n }
+    { Γ,Δ,\op{Con},\ov{w} ⊢ M\,\kw(\,T_1\kw,…\kw,T_n\,\kw) : S }
     && Δ_{\op{meta}}(M) = [(S_1,…,S_n)⇒S]
     \tag{S-T-MetaC}
     %
     \\
-    \intertext{\shoveright{Sorting of Piece\hfil\smash{\fbox{$ Γ,Δ,RS ⊢ P : F $}}}}
+    \intertext{\shoveright{Sorting of Piece\hfil\smash{\fbox{$ Γ,Δ,RS,\ov{\mathcal{V}} ⊢ P : F $}}}}
     %
     &\dfrac
-    { Γ,Δ',RS ⊢ T : S }
-    { Γ,Δ,RS ⊢ \kw[\,\ov{v}\,\kw]\,T : \kw[\,\ov{S}\,\kw]\,S }
+    { Γ,Δ',RS,(\ov{w}\,\ov{v}) ⊢ T : S }
+    { Γ,Δ,RS,\ov{w} ⊢ \kw[\,\ov{v}\,\kw]\,T : \kw[\,\ov{S}\,\kw]\,S }
     && (∃Δ'⊇Δ),~ Δ'_{\op{var}}(\ov{v}) = \ov{S}
     \tag{S-P-Bind}
     %
     \\[\jot]
     %
     &\dfrac
-    { Γ,Δ,RS ⊢ A_1 : \{S_1{:}S_2\} \quad\cdots\quad Γ,Δ,RS ⊢ A_n : \{S_1{:}S_2\} }
-    { Γ,Δ,RS ⊢ \kwm\{\,A_1\kw,…\kw,A_n\,\kwm\} : \kwm\{S_1\kw:S_2\kwm\} }
+    { Γ,Δ,RS,\ov{w} ⊢ A_1 : \{S_1{:}S_2\} \quad\cdots\quad Γ,Δ,RS,\ov{w} ⊢ A_n : \{S_1{:}S_2\} }
+    { Γ,Δ,RS,\ov{w} ⊢ \kwm\{\,A_1\kw,…\kw,A_n\,\kwm\} : \kwm\{S_1\kw:S_2\kwm\} }
     \tag{S-P-Assoc}
     %
     \\
-    \intertext{\shoveright{Sorting of Association\hfil\smash{\fbox{$ Γ,Δ,RS ⊢ A : \{S{:}S\} $}}}}
+    \intertext{\shoveright{Sorting of Association\hfil\smash{\fbox{$ Γ,Δ,RS,\ov{\mathcal{V}} ⊢ A : \{S{:}S\} $}}}}
     %
     &\dfrac
-    { Γ,Δ,RS ⊢ T_1 : S_1 \qquad Γ,Δ,RS ⊢ T_2 : S_2 }
-    { Γ,Δ,RS ⊢ T_1\kw:T_2 : \{S_1{:}S_2\} } 
+    { Γ,Δ,RS,\ov{w} ⊢ T_1 : S_1 \qquad Γ,Δ,RS,\ov{w} ⊢ T_2 : S_2 }
+    { Γ,Δ,RS,\ov{w} ⊢ T_1\kw:T_2 : \{S_1{:}S_2\} } 
     \tag{S-A-Map}
     % 
     \\[\jot]
     %
     &\dfrac
-    { Γ,Δ,\op{Pattern} ⊢ T : S_1 }
-    { Γ,Δ,\op{Pattern} ⊢ \kwm{¬}T : \{S_1{:}S_2\} }
+    { Γ,Δ,\op{Pat},\ov{w} ⊢ T : S_1 }
+    { Γ,Δ,\op{Pat},\ov{w} ⊢ \kwm{¬}T : \{S_1{:}S_2\} }
     \tag{S-A-Not}
     % 
     \\[\jot]
     %
     &\dfrac
     { }
-    { Γ,Δ,RS ⊢ \kw:M : \{S_1{:}S_2\} }
+    { Γ,Δ,RS,\ov{w} ⊢ \kw:M : \{S_1{:}S_2\} }
     && Δ_{\op{meta}}(M) = \{S_1{:}S_2\}
     \tag{S-A-All}
     %
@@ -846,7 +774,10 @@ addition attribute set inside an attribute set.}
     ⊢ H
   \end{displaymath}
   %%
-  Each proof will need to invent a \emph{global sort environment} $Γ$, a structure that combines
+  using the rules of Figure~\ref{fig:sortrules}.
+
+  Each proof will need to invent a \emph{global sort environment} witness $Γ$, a structure that
+  combines
   %% 
   \begin{itemize}
 
@@ -860,7 +791,7 @@ addition attribute set inside an attribute set.}
 
   \end{itemize}
   %%
-  and one \emph{rule sort environment} $Δ$ per rule, a structure that combines
+  and one \emph{rule sort environment} witness $Δ$ per rule, a structure that combines
   %% 
   \begin{itemize}
 
@@ -873,7 +804,7 @@ addition attribute set inside an attribute set.}
   %%
 \end{definition}
 
-Note…
+Notes.
 %%
 \begin{itemize}
 
@@ -932,7 +863,8 @@ In this section we provide proofs for several standard rewrite properties of~\ha
 \section{Implementing \hax}
 \label{sec:implement}
 
-In this section we give notes on how we see \hax implemented.
+In this section we give notes on how we see \hax implemented. The implementation uses classic term
+graph rewriting extended to handle binders and associations.
 
 The basic \hax implementation consists of a term representation and a main ``progress loop.''
 
@@ -942,12 +874,15 @@ The basic \hax implementation consists of a term representation and a main ``pro
   %%
   \begin{itemize}
 
-  \item \emph{Variable identifiers}. A variable identifier is globally unique.
+  \item \emph{Variable identifiers}. A variable identifier is globally unique. It should be suitable
+    for \emph{comparison} and \emph{hashing}.
 
-  \item \emph{Constructor identifiers}. A constructor identifier is globally unique. From the
-    constructor identifier one can derive the kind and signature of the constructor:
+  \item \emph{Constructor identifiers}. A constructor identifier is globally unique and suitable for
+    hashing. From the constructor identifier one can derive the kind and signature of the
+    constructor:
     \begin{itemize}
-    \item Is it a function or data constructor?
+    \item Is it a function or data constructor? Data constructors should be suitable for use as C
+      switch keys.
     \item How many scope-formed formal arguments (declared as $[S^*]S$) does the constructor take,
       and how many local variables are bound by each?
     \item How many association-formed formal arguments (declared as $\{S:S\}$) does the constructor
