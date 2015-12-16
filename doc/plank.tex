@@ -542,7 +542,7 @@ Program⟨α,β⟩ data Stat(α);
 Γ⟨α,β⟩ scheme Mk(Program⟨α,β⟩);
 Γ⟨α,β⟩ rule Mk(Stat(#)) → Env({});
 Γ⟨α,β⟩ rule Mk(Then(#1, #2)) → Union(Mk(#1), Mk(#2));
-Γ⟨α,β⟩ rule Mk(Block(#x, #t, #)) → Union(Env({#x:#t), Mk(#));
+Γ⟨α,β⟩ rule Mk(Block(#x, #t, #)) → Union(Env({#x:#t}, Mk(#)));
 
 // Helper to create union of two environments.
 Γ⟨α,β⟩ scheme Union(Γ⟨α,β⟩, Γ⟨α,β⟩);
@@ -565,6 +565,8 @@ the same association set on the right! I wonder how that's defined.
 \CK{So what \emph{should} the semantics be?  If there are conflicting
   pairs in \#1 and \#2, what happens? Does the first or the second take
   priority, or should it crash?}
+\LV{Yes it's implemented as add. In this case the semantic could
+be #2 is added to #1. Entries in #2 override entries in #1.}
 \end{example}
 
 \begin{figure}[h!t]
