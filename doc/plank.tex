@@ -34,7 +34,6 @@
 \newcommand{\LV}[1]{\textcolor{green}{LV: #1}}
 \newcommand{\MS}[1]{\textcolor{violet}{MS: #1}}
 
-
 \begin{document}
 \maketitle
 
@@ -131,62 +130,76 @@ In this section we outline the \hax calculus, and give several examples.
   \label{fig:syntax}
 \end{figure}
 
-\begin{figure}[h!t]
-  \KR{Just for fun: This figure shows ``bra-ket'' notation (from physics), also kind of cool. I'd
-    love this, and it would be different and make us associate even more to the \hax symbol. The
-    explanation then associates a \emph{bra} with a binder state and a \emph{ket} with a
-    substitution of it.} \CK{That's\dots\ very weird to me. But then, I never did physics
-    after high school! But in general, I think this notation is unlikely to appeal to rewriters.}
-  \begin{align}
-    \tag{\hax{}Script}
-    H &::= D^* 
-    \\
-    \tag{Declaration}
-    D &::= S~\kw{data}~d\,\kw(\,F^{*\kw,}\,\kw)\,\kw;
-    \bigm| S~\kw{scheme}~f\,\kw(\,F^{*\kw,}\,\kw)\,\kw;
-    \bigm| S~\kw{variable}\,\kw;
-    \bigm| S~\kw{rule}~T~\kw{$→$}~T\,\kw;
-    \\
-    \tag{Form}
-    F &::= \kwm{⟨}\,S^{*\kw,}\,\kwm|\,S
-    \bigm| \kwm\{\, S:S \,\kwm\}
-    \\
-    \tag{Sort}
-    S &::= s\,\kw[\,S^{*\kw,}\,\kw]
-    \bigm| α
-    \\[\jot]
-    \tag{Term}
-    T &::= c\,\kw(\,P^{*\kw,}\,\kw)
-    \bigm| v
-    \bigm| M\,\kwm|\,T^{*\kw,}\,\kwm{⟩}
-    \\
-    \tag{Piece}
-    P &::= \kwm{⟨}\,v^{*\kw,}\,\kwm|\,T
-    \bigm| \kwm\{\, A^{*\kw,} \,\kwm\}
-    \\
-    \tag{Association}
-    A &::= T\,\kw:\,T
-    \bigm| \kw{$¬$}\,T
-    \bigm| \kw:\,M
-  \end{align}
-  \KR{We now distinguish \emph{five} different ways to brace elements; all empty can be omitted
-    except associations.
-    For data and scheme \emph{subterms}, we use $\kw{( )}$.
-    For \emph{binders} we use $\kwm{⟨~|}$.
-    For \emph{meta-application arguments} we use $\kwm{|~⟩}$.
-    For \emph{associations} we use $\kwm{\{\,\}}$.
-    For \emph{sort parameters} we use $\kwm{⟨\,⟩}$.}
-  \CK{Except in the example, you use square brackets for sorts.}
-  \begin{hacs}
-  List[α] scheme Map(⟨β|α, List[β]);
-  List[α] rule Map(⟨x|#|x⟩, Nil) →  Nil;
-  List[Int] rule Map(⟨x|#|x⟩, Cons(#1, #2)) →  Cons(#|#1⟩, Map(⟨x|#|x⟩, #2));
-  Int scheme Pick(List[Int], ⟨Int,Int|Bool);
-  Int rule Pick(#, ⟨x,y|#p|x,y⟩) → If(#p|#,#⟩, Pick(#, ⟨x,y|#p|x,y⟩), #);
-  \end{hacs}
-  \caption{Bra-ket syntax.}
-  \label{fig:bra-ket}
-\end{figure}
+\begin{definition}[\hax syntax]\label{def:syntax}
+  %%
+  The \hax syntax is shown in Figure~\ref{fig:syntax}. The top level of a \hax script is $H$ and the
+  grammar assumes that we have three categories of identifier tokens defined:
+  %%
+  \begin{itemize}
+  \item $c,s,d,f ∈ \mathcal{C}$ stand for \emph{constructor} tokens, which are capitalized words
+    like "Integer" or "A" or "CamelCaseWord". They are used for sort, function symbol, and data
+    symbol names. By convention, we use $s$/$d$/$f$ for sort/data/function names, respectively, and
+    $c$ when either a data or function constructor makes sense.  
+  \item $v,α ∈ \mathcal{V}$ stand for \emph{variable} tokens, which are lower case words like "x" or
+    "foo" or even "lowWord", used for term variables and sort variables (respectively). 
+  \item $M ∈ \mathcal{M}$ stands for \emph{meta-variable} tokens, which are tokens that start with
+    "#" like "#arg" or "#BigFoot" or even just "#1" or merely~"#".
+  \end{itemize}
+  %%
+  The ``$A^{*\kw,}$'' 
+  %%
+  %%\MS{We mix a bit notation here, sometimes ``$A^{*\kw,}$'', but also e.g., $c(P_1,…,P_n)$. I
+  %%  personally prefer the latter, but I would stick to one. Or am I missing something?}
+  %%\KR{A: The former is \emph{concrete} syntax (``the commas must be there''), the latter abstract.} 
+  %%\MS{Hmmm... Could you give me an intution, when to use which?}
+  %%\KR{A: Use the more convenient one on each occasion. This is meant to be an example of
+  %%  ``non-confusing sloppiness.''}
+  %%
+  notation means zero or more $A$s separated by commas.
+  %%
+\end{definition}
+
+We shall use the following terminology:
+%% 
+\begin{itemize}
+
+\item A term of the form $c(P_1,…,P_n)$, for $n≥0$, is called a \emph{construction}; if furthermore
+  the top symbol $c$ is declared with a "scheme c {…}" declaration then it is called a
+  \emph{function construction}, and if it is declared with "data d {…}" then it is called a
+  \emph{data construction}. If $n=0$, i.e., the function or data symbol does not take any arguments,
+  we usually drop the $()$. That is, we write $0$ instead of $0()$.
+    
+%%    \MS{Here comes a really general question: How do data and function constructors/constructions
+%%      relate to constructor and defined symbols in term rewriting (To clarify: A symbol is
+%%      \emph{defined} wrt to a set of rules, if it occurs at the root of a left-hand side of a
+%%      rule. The other symbols are constructors.) I have a feeling, that this is actually similar?
+%%      If so, I may argue, that the distinction is easily computable and is maybe not core?  } \KR{A:
+%%      Yes, one can argue this. Not sure what the right answer is.}  \MS{I'd go for simpler. Maybe we
+%%      can discuss this on the call?}  \MS{Conclusion: For implementation it is easier to declare
+%%      it. It is computable though.} \KR{You can see it in the type rules, now.}
+
+\item Argument ``pieces'' $P$ of constructions take one of two forms: \emph{scopes} $[v_1,…,v_n]T$,
+  $n≥0$, which introduce new local variables $v_1,…,v_n$ along with a term $T$ wherein they can
+  occur, and \emph{associations} $\{A_1,…,A_n\}$, $n≥0$, where each $A$ is either an \emph{entry}
+  $T:T$, an \emph{exclusion} $¬T$, or a \emph{catcher} ${:}M$. Again, if $n=0$, \ie, there are no
+  new variables introduced in the scope $[]$ can be omitted. That is, we write $S(0)$ instead of
+  $S([]0)$, and also $S(x)$ instead of $S([]x)$, where $x$ is unbound in this scope.
+
+  \KR{Note: any suggestions for something other than \{:\#1\} for catchers are welcome!}
+
+  \CK{Well, I still like the idea of \{ \#1 | conditions \} or \{ \#1 + key/values \}, but this
+    would of course give more expansive syntax, as you can't use the same notation on both sides
+    of the rule.  Also, I think you might actually need \{ \#1(x1,...,xn) | conditions \} and
+    \{ \#1(s1,...,sn) + key/values \}, otherwise you cannot capture a meta-variable set below an
+    abstraction (do you want to do that? It probably \emph{should} be possible\dots)}
+
+  \CK{For an entirely different suggestion, you could use different non-metavariable notation
+    for the catcher metavariables, e.g.~$\sharp$1 or \&1.}
+
+\item A term of the form $M(T_1,…,T_n)$, $n≥0$, is a \emph{meta-application}.
+
+\item A term of the form $v$ is a \emph{variable occurrence}; if the variable $v$ occurs contained
+  in a scope $[…v…]T$ then the variable occurrence is \emph{bound}.
 
 \MS{$S~\kw{variable}\,\kw;$ \ldots What does this keyword indicate now?}
 
@@ -215,78 +228,7 @@ In this section we outline the \hax calculus, and give several examples.
 \CK{My mistake, they can be of course. I was thinking of $S\langle S\rangle$, and even then, we
 only really want to limit the inner $S$ to sort variables when defining data (e.g.~it's allowed
 to have a scheme with sort $\mathtt{list}\langle\mathtt{nat}\rangle$, but not to define a data
-constructor with this as output type).}
-
-\begin{definition}[\hax syntax]\label{def:syntax}
-  %%
-  The \hax syntax is shown in Figure~\ref{fig:syntax}. The top level of a \hax script is $H$ and the
-  grammar assumes that we have three categories of identifier tokens defined:
-  %%
-  \begin{itemize}
-  \item $c,s,d,f ∈ \mathcal{C}$ stand for \emph{constructor} tokens, which are capitalized words
-    like "Integer" or "A" or "CamelCaseWord". They are used for sort, function symbol, and data
-    symbol names. By convention, we use $s$/$d$/$f$ for sort/data/function names, respectively, and
-    $c$ when either a data or function constructor makes sense.  
-  \item $v,α ∈ \mathcal{V}$ stand for \emph{variable} tokens, which are lower case words like "x" or
-    "foo" or even "lowWord", used for term variables and sort variables (respectively). 
-  \item $M ∈ \mathcal{M}$ stands for \emph{meta-variable} tokens, which are tokens that start with
-    "#" like "#arg" or "#BigFoot" or even just "#1" or merely~"#".
-  \end{itemize}
-  %%
-  The ``$A^{*\kw,}$'' 
-  %%
-  \MS{We mix a bit notation here, sometimes ``$A^{*\kw,}$'', but also e.g., $c(P_1,…,P_n)$. I
-    personally prefer the latter, but I would stick to one. Or am I missing something?}
-  \KR{A: The former is \emph{concrete} syntax (``the commas must be there''), the latter abstract.} 
-  \MS{Hmmm... Could you give me an intution, when to use which?}
-  \KR{A: Use the more convenient one on each occasion. This is meant to be an example of
-    ``non-confusing sloppiness.''}
-  %%
-  notation means zero or more $A$s separated by commas.
-  %%
-\end{definition}
-
-We shall use the following terminology:
-%% 
-\begin{itemize}
-
-\item A term of the form $c(P_1,…,P_n)$ ($n≥0$) is called a \emph{construction}; if furthermore the
-  top symbol $c$ is declared with a "scheme c {…}" declaration then it is called a \emph{function
-    construction}, and if it is declared with "data d {…}" then it is called a \emph{data
-    construction}. If $n=0$, i.e., the function or data symbol does not take any arguments, we
-  usually drop the $()$. That is, we write $0$ instead of $0()$.
-    
-%%    \MS{Here comes a really general question: How do data and function constructors/constructions
-%%      relate to constructor and defined symbols in term rewriting (To clarify: A symbol is
-%%      \emph{defined} wrt to a set of rules, if it occurs at the root of a left-hand side of a
-%%      rule. The other symbols are constructors.) I have a feeling, that this is actually similar?
-%%      If so, I may argue, that the distinction is easily computable and is maybe not core?  } \KR{A:
-%%      Yes, one can argue this. Not sure what the right answer is.}  \MS{I'd go for simpler. Maybe we
-%%      can discuss this on the call?}  \MS{Conclusion: For implementation it is easier to declare
-%%      it. It is computable though.} \KR{You can see it in the type rules, now.}
-
-\item Argument ``pieces'' $P$ of constructions take one of two forms: \emph{scopes} $[v_1,…,v_n]T$
-  ($n≥0$), which introduce new local variables $v_1,…,v_n$ along with a term $T$ wherein they can
-  occur, and \emph{associations} $\{A_1,…,A_n\}$ ($n≥0$), where each $A$ is either an \emph{entry}
-  $T:T$, an \emph{exclusion} $¬T$, or a \emph{catcher} ${:}M$. Again, if $n=0$, \ie, there are no
-  new variables introduced in the scope $[]$ can be omitted. That is, we write $S(0)$ instead of
-  $S([]0)$, and also $S(x)$ instead of $S([]x)$, where $x$ is unbound in this scope.
-
-  \KR{Note: any suggestions for something other than \{:\#1\} for catchers are welcome!}
-
-  \CK{Well, I still like the idea of \{ \#1 | conditions \} or \{ \#1 + key/values \}, but this
-    would of course give more expansive syntax, as you can't use the same notation on both sides
-    of the rule.  Also, I think you might actually need \{ \#1(x1,...,xn) | conditions \} and
-    \{ \#1(s1,...,sn) + key/values \}, otherwise you cannot capture a meta-variable set below an
-    abstraction (do you want to do that? It probably \emph{should} be possible\dots)}
-
-  \CK{For an entirely different suggestion, you could use different non-metavariable notation
-    for the catcher metavariables, e.g.~$\sharp$1 or \&1.}
-
-\item A term of the form $v$ is a \emph{variable occurrence}; if the variable $v$ occurs contained
-  in a scope $[…v…]T$ then the variable occurrence is \emph{bound}.
-
-\item A term of the form $M(T_1,…,T_n)$ ($n≥0$) is a \emph{meta-application}.
+constructor with this as output type).}\KR{A: Well stated. We should capture this in the text.}
 
 \end{itemize}
 
@@ -313,8 +255,11 @@ We shall use the following terminology:
     \tag{Association}
     A' &::= T\,\kw:\,T
   \end{align}
-  (By the way, is there any reason for the commas before all the closing brackets?)
 }
+\KR{I agree. Needs to rename $M$ as used now to $m$ or something.}
+
+\CK{(By the way, is there any reason for the commas before all the closing brackets?)}
+\KR{A: This is concrete syntax notation; can be omitted.}
 
 
 We distinguish four different ways to brace elements (cf.\ Figure~\ref{fig:syntax}). For data and
@@ -1112,6 +1057,60 @@ EU-funded Marie Skłodowska-Curie ``HORIP'' action collaboration with Cynthia Ko
 
 %------------------------------------------------------------------------
 \appendix
+
+\section{Bra-Ket}
+
+\KR{Just for fun: Here is ``bra-ket'' notation (from physics), also kind of cool. I'd love this, and
+  it would be different and make us associate even more to the \hax symbol. The explanation then
+  associates a \emph{bra} with a binder state and a \emph{ket} with a substitution of it.}
+\CK{That's\dots\ very weird to me. But then, I never did physics after high school! But in general,
+  I think this notation is unlikely to appeal to rewriters.}
+\begin{align}
+  \tag{\hax{}Script}
+  H &::= D^* 
+  \\
+  \tag{Declaration}
+  D &::= S~\kw{data}~d\,\kw(\,F^{*\kw,}\,\kw)\,\kw;
+  \bigm| S~\kw{scheme}~f\,\kw(\,F^{*\kw,}\,\kw)\,\kw;
+  \bigm| S~\kw{variable}\,\kw;
+  \bigm| S~\kw{rule}~T~\kw{$→$}~T\,\kw;
+  \\
+  \tag{Form}
+  F &::= \kwm{⟨}\,S^{*\kw,}\,\kwm|\,S
+  \bigm| \kwm\{\, S:S \,\kwm\}
+  \\
+  \tag{Sort}
+  S &::= s\,\kw[\,S^{*\kw,}\,\kw]
+  \bigm| α
+  \\[\jot]
+  \tag{Term}
+  T &::= c\,\kw(\,P^{*\kw,}\,\kw)
+  \bigm| v
+  \bigm| M\,\kwm|\,T^{*\kw,}\,\kwm{⟩}
+  \\
+  \tag{Piece}
+  P &::= \kwm{⟨}\,v^{*\kw,}\,\kwm|\,T
+  \bigm| \kwm\{\, A^{*\kw,} \,\kwm\}
+  \\
+  \tag{Association}
+  A &::= T\,\kw:\,T
+  \bigm| \kw{$¬$}\,T
+  \bigm| \kw:\,M
+\end{align}
+\KR{We now distinguish \emph{five} different ways to brace elements; all empty can be omitted
+  except associations.
+  For data and scheme \emph{subterms}, we use $\kw{( )}$.
+  For \emph{binders} we use $\kwm{⟨~|}$.
+  For \emph{meta-application arguments} we use $\kwm{|~⟩}$.
+  For \emph{associations} we use $\kwm{\{\,\}}$.
+  For \emph{sort parameters} we use $\kwm{[\,]}$.}
+\begin{hacs}
+  List[α] scheme Map(⟨β|α, List[β]);
+  List[α] rule Map(⟨x|#|x⟩, Nil) →  Nil;
+  List[Int] rule Map(⟨x|#|x⟩, Cons(#1, #2)) →  Cons(#|#1⟩, Map(⟨x|#|x⟩, #2));
+  Int scheme Pick(List[Int], ⟨Int,Int|Bool);
+  Int rule Pick(#, ⟨x,y|#p|x,y⟩) → If(#p|#,#⟩, Pick(#, ⟨x,y|#p|x,y⟩), #);
+\end{hacs}
 
 \section{Sugar}
 
