@@ -600,6 +600,68 @@ Int rule Pick2(Cons(#1, #rest), [x,y]#pick(x,y), #n)
   %%
 \end{example}
 
+\KR{Below are new examples for consideration.}
+
+\begin{example}
+  %%
+  Another example from the literature: $λ$x. Changes the λ calculus from Example~\ref{ex:lambda} in
+  two ways:
+  %%
+  \begin{enumerate}
+
+  \item Variables are made \emph{syntactic}: they are declared with "variable", so they can be
+    matched in rules but only substituted by variables.
+
+  \item The β-reduction rule is replaced with a new scheme "Ex", which performs the substitution
+    explicitly, without referring to the primitive substitution of \hax except for renaming.
+
+  \end{enumerate}
+  %%
+  \begin{hacs}
+    Λx variable; // explicit variable
+    Λx data Lm([Λx]Λx); // abstraction
+
+    Λx scheme Ap(Λx,Λx); // application
+    Λx rule Ap(Lm([x]#(x)),#x) → Ex([x]#(x),#x);  //(b)
+
+    Λx scheme Ex([Λx]Λx,Λx); // explicit substitution
+    Λx rule Ex([x]x,#x) → #x;  // (xv)
+    Λx rule Ex([x]y,#x) → y;   // (xvgc)
+    Λx rule Ex([x]Ap(#f(x), #a(x)), #x) →  Ap(Ex([x]#f(x),#x), Ex([x]#a(x),#x));  // (xap)
+    Λx rule Ex([x]Lm([y]#(x,y)), #x) →  Lm([y]Ex([x]#(x,y), #x));                 // (xab)
+  \end{hacs}
+  %%
+  \KR{Example shows that we need a way to ensure that (xv) is selected before (xvgc), \ie, in the
+    original formalism all the rules are mutually exclusive. This is essentially saying that \hax
+    fully contains the CRSx systes from Kris' thesis…}
+  %%
+\end{example}
+
+\begin{example}
+  %%
+  Variation: evaluator with a proper environment.
+  %%
+  \begin{hacs}
+    Λρ  variable; // explicit variable
+    Λρ  data Lm([Λρ]Λρ); // abstraction
+    Λρ  data Ap(Λρ,Λρ); // application
+
+    Λρ  scheme Ec(Λρ, {Λρ:Λρ}); // evaluation context
+
+    Λρ  rule Ec(x,{x : #x}) → #x;
+    Λρ  rule Ec(x,{¬x}) → x;
+    Λρ  rule Ec(Lm([y]#(y)), {:#}) →  Lm([y]Ec(#(y), {:#}));
+
+    Λρ  rule Ec(Ap(x, #a), {:#}) →  Ap(x, Ec(#a, {:#}));
+    Λρ  rule Ec(Ap(Ap(#f, #1), #2), {:#}) →
+    Λρ  rule Ec(Ap(Lm([x]#(x)), #a), {:#}) →
+  \end{hacs}
+  %%
+  Notice how application is now data
+  %%
+  \KR{Finish it…the idea is one starts with Ec(term, \{\})…}
+  %%
+\end{example}
 
 
 %------------------------------------------------------------------------
