@@ -136,14 +136,18 @@ In this section we outline the \hax calculus, and give several examples.
   grammar assumes that we have three categories of identifier tokens defined:
   %%
   \begin{itemize}
+
   \item $c,s,d,f ∈ \mathcal{C}$ stand for \emph{constructor} tokens, which are capitalized words
     like "Integer" or "A" or "CamelCaseWord". They are used for sort, function symbol, and data
     symbol names. By convention, we use $s$/$d$/$f$ for sort/data/function names, respectively, and
     $c$ when either a data or function constructor makes sense.  
+
   \item $v,α ∈ \mathcal{V}$ stand for \emph{variable} tokens, which are lower case words like "x" or
     "foo" or even "lowWord", used for plain variables and sort variables (respectively).
+
   \item $m ∈ \mathcal{M}$ stands for \emph{meta-variable} tokens, which are tokens that start with
     "#" like "#arg" or "#BigFoot" or even just "#1" or merely~"#".
+
   \end{itemize}
   %%
   The ``$A^{*\kw,}$'' 
