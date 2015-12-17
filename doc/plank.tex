@@ -92,38 +92,49 @@ and finally Section~\ref{sec:conc} concludes and compares to related work.
 
 In this section we outline the \hax calculus, and give several examples.
 
+\begin{notation}[vectors]
+  We will use \emph{vector notation} with $\ov{X}$ denoting $X_1,…,X_n$ for some $n≥0$. Inside
+  brackets we'll allow use of ``nothing'' as the empty vector, elsewhere we use the explicit
+  symbol~$ε$.  Vectors are combined by simple concatenation with ``$,$'' (comma) if needed. We will
+  freely abuse this notation and, for example, write $\ov{[\ov{x}]x}$ as an abbreviation of
+  $[x_{11}…x_{1m_1}]x_1…[x_{n1}…x_{nm_n}]x_n$ for suitable $n,m_1,…,m_n ≥ 0$. We further abuse the
+  notation by letting $\ov{\mathcal{S}}$ denote the set of all vectors from any base
+  set~$\mathcal{S}$.
+  \KR{With this all Kleene stars (with ``optional commas'') are gone!}
+\end{notation}
+
 \begin{figure}[h!t]
   \begin{align}
     \tag{\hax{}Script}
-    H &::= D^* 
+    H &::= \ov{D} 
     \\
     \tag{Declaration}
-    D &::= S~\kw{data}~d\,\kw(\,F^{*\kw,}\,\kw)\,\kw;
-    \bigm| S~\kw{scheme}~f\,\kw(\,F^{*\kw,}\,\kw)\,\kw;
+    D &::= S~\kw{data}~d\,\kw(\,\ov{F}\,\kw)\,\kw;
+    \bigm| S~\kw{scheme}~f\,\kw(\,\ov{F}\,\kw)\,\kw;
     \bigm| S~\kw{variable}\,\kw;
     \bigm| S~\kw{rule}~M~\kw{$→$}~M\,\kw;
     \\
     \tag{Form}
-    F &::= \kw[\,S^{*\kw,}\,\kw]\,S
+    F &::= \kw[\,\ov{S}\,\kw]\,S
     \bigm| \kwm\{\, S:S \,\kwm\}
     \\
     \tag{Sort}
-    S &::= s\,\kwm{⟨}\,S^{*\kw,}\,\kwm{⟩}
+    S &::= s\,\kwm{⟨}\,\ov{S}\,\kwm{⟩}
     \bigm| α
     \\[\jot]
     \tag{Meta-Term}
-    M &::= c\,\kw(\,P^{*\kw,}\,\kw)
+    M &::= c\,\kw(\,\ov{P}\,\kw)
     \bigm| v
-    \bigm| m\,\kw(\,M^{*\kw,}\,\kw)
+    \bigm| m\,\kw(\,\ov{M}\,\kw)
     \\
     \tag{Piece}
-    P &::= \kw[\,v^{*\kw,}\,\kw]\,M
-    \bigm| \kwm\{\, A^{*\kw,} \,\kwm\}
+    P &::= \kw[\,\ov{v}\,\kw]\,M
+    \bigm| \kwm\{\, \ov{A} \,\kwm\}
     \\
     \tag{Association}
     A &::= M\,\kw:\,M
     \bigm| \kw{$¬$}\,M
-    \bigm| \kw:\,m
+    \bigm| \kw\,m\,\kw(\,\ov{v}\,\kw)
   \end{align}
   \vspace*{-2em}
   \caption{\hax syntax.}
@@ -138,7 +149,7 @@ In this section we outline the \hax calculus, and give several examples.
   \begin{itemize}
 
   \item $c,s,d,f ∈ \mathcal{C}$ stand for \emph{constructor} tokens, which are capitalized words
-    like "Integer" or "A" or "CamelCaseWord". They are used for sort, function symbol, and data
+    like "Integer" or "A" or "CamelCaseWord" or "Λρ". They are used for sort, function symbol, and data
     symbol names. By convention, we use $s$/$d$/$f$ for sort/data/function names, respectively, and
     $c$ when either a data or function constructor makes sense.  
 
@@ -149,17 +160,6 @@ In this section we outline the \hax calculus, and give several examples.
     "#" like "#arg" or "#BigFoot" or even just "#1" or merely~"#".
 
   \end{itemize}
-  %%
-  The ``$A^{*\kw,}$'' 
-  %%
-  %%\MS{We mix a bit notation here, sometimes ``$A^{*\kw,}$'', but also e.g., $c(P_1,…,P_n)$. I
-  %%  personally prefer the latter, but I would stick to one. Or am I missing something?}
-  %%\KR{A: The former is \emph{concrete} syntax (``the commas must be there''), the latter abstract.} 
-  %%\MS{Hmmm... Could you give me an intution, when to use which?}
-  %%\KR{A: Use the more convenient one on each occasion. This is meant to be an example of
-  %%  ``non-confusing sloppiness.''}
-  %%
-  notation means zero or more $A$s separated by commas.
   %%
 \end{definition}
 
@@ -185,7 +185,7 @@ We shall use the following terminology:
 \item Argument ``pieces'' $P$ of constructions take one of two forms: \emph{scopes} $[v_1,…,v_n]M$,
   $n≥0$, which introduce new local variables $v_1,…,v_n$ along with a meta-term $M$ wherein they can
   occur, and \emph{associations} $\{A_1,…,A_n\}$, $n≥0$, where each $A$ is either an \emph{entry}
-  $M:M$, an \emph{exclusion} $¬M$, or a \emph{catcher} ${:}m$.
+  $M:M$, an \emph{exclusion} $¬M$, or a \emph{catcher} $m(v_1,…,v_n)$, $n≥0$.
 
   For scopes, if $n=0$, \ie, there are no new variables introduced by the scope, then $[]$ can be
   omitted: we write $S(0)$ instead of $S([]0)$.
@@ -201,7 +201,12 @@ We shall use the following terminology:
   \KR{Your point that catchers need to be parametrized is true: we could use the form
     ${:}m(\ov{x})$.}
 
-  \LV{I'm not sure that the issue is. I would use \{\#\} as catcher, and \{\#:\} to match for key \#. \{:\#\} could match against the value(s). Obviously in both cases \# must appear somewhere else.} 
+  \LV{I'm not sure that the issue is. I would use \{\#\} as catcher, and \{\#:\} to match for key
+    \#. \{:\#\} could match against the value(s). Obviously in both cases \# must appear somewhere
+    else.} 
+
+  \KR{Love Lionel's idea! Implemented!}
+
 
   \CK{For an entirely different suggestion, you could use different non-metavariable notation
     for the catcher metavariables, e.g.~$\sharp$1 or \&1.}
@@ -226,7 +231,7 @@ We shall use the following terminology:
     \bigm| v
     \\
     \tag{Piece}
-    P' &::= \kw[\,v^{*\kw,}\,\kw]\,T
+    P' &::= \kw[\,\ov{v}\,\kw]\,T
     \bigm| \kwm\{\, {A'}^{*\kw,} \,\kwm\}
     \\
     \tag{Association}
@@ -553,11 +558,11 @@ Program⟨α,β⟩ data Stat(α);
 Γ⟨α,β⟩ scheme Mk(Program⟨α,β⟩);
 Γ⟨α,β⟩ rule Mk(Stat(#)) → Env({});
 Γ⟨α,β⟩ rule Mk(Then(#1, #2)) → Union(Mk(#1), Mk(#2));
-Γ⟨α,β⟩ rule Mk(Block(#x, #t, #)) → Union(Env({#x:#t}, Mk(#)));
+Γ⟨α,β⟩ rule Mk(Block(#x, #t, #)) → Union(Env({#x : #t}, Mk(#)));
 
 // Helper to create union of two environments.
 Γ⟨α,β⟩ scheme Union(Γ⟨α,β⟩, Γ⟨α,β⟩);
-Γ⟨α,β⟩ rule Union(Env({:#1}), Env({:#2})) → Env({:#1,:#2});
+Γ⟨α,β⟩ rule Union(Env({#1}), Env({#2})) → Env({#1,#2});
   \end{hacs}
   \caption{Type environment over simple AST.}
   \label{fig:te}
@@ -618,8 +623,8 @@ Int rule Pick2(Cons(#1, #rest), [x,y]#pick(x,y), #n)
 
 \begin{example}
   %%
-  Another example from the literature: $λ$x~\cite{BlooRose:csn1995}. Changes the λ calculus from
-  Example~\ref{ex:lambda} in two ways:
+  Another example from the literature, $λ$x~\cite{BlooRose:csn1995}, which changes the λ calculus
+  from Example~\ref{ex:lambda} in two ways:
   %%
   \begin{enumerate}
 
@@ -664,11 +669,11 @@ Int rule Pick2(Cons(#1, #rest), [x,y]#pick(x,y), #n)
 
     Λρ  rule E(x, {x : #x}) → #x;
     Λρ  rule E(x, {¬x}) → x;
-    Λρ  rule E(Lm([y]#(y)), {:#}) →  Lm([y]E(#(y), {:#}));
+    Λρ  rule E(Lm([y]#(y)), {#}) →  Lm([y]E(#(y), {#}));
 
-    Λρ  rule E(Ap(x, #a), {:#}) →  E(Ap(E(x, {:#}), E(#a, {:#})), {:#});
-    Λρ  rule E(Ap(Ap(#f, #1), #2), {:#}) →   E(Ap(E(Ap(#f, #1), {:#}), E(#2, {:#})), {:#});
-    Λρ  rule E(Ap(Lm([x]#(x)), #a), {:#}) →  E(#(x), {:#, x : E(#a,{:#})});
+    Λρ  rule E(Ap(x, #a), {#}) →  E(Ap(E(x, {#}), E(#a, {#})), {#});
+    Λρ  rule E(Ap(Ap(#f, #1), #2), {#}) →   E(Ap(E(Ap(#f, #1), {#}), E(#2, {#})), {#});
+    Λρ  rule E(Ap(Lm([x]#(x)), #a), {#}) →  E(#(x), {#, x : E(#a,{#})});
   \end{hacs}
   %%
   Notice how application is now data
@@ -690,38 +695,8 @@ by only allowing sortable scripts. Informally, sorting ensures that
 \item the pattern and contraction restrictions are obeyed;
 \item binders are used in the shape declared for constructors;
 \item subterms (including variable and meta-variable occurrences) have the right sort;
-\item attributes are used with properly sorted values;
-\item attributes are used only on constructors for which they have been declared;
-\item the attributes are the same on all data constructors of a given sort;
-\item \emph{all} data terms of the same sort have the same attributes.
+\item association keys and values have the proper sorts.
 \end{itemize}
-%%
-If you check with the examples, then you can see that the examples all satisfy these restrictions
-except Example~\ref{ex:bool}, which breaks the last of the above constraints. \TBD{Fix but how:
-  patch example or rules?}
-
-%% \CK{About the TBD: the example breaks the rule only because some data terms are
-%% missing the $\mathit{val}$ attribute, right?  This ties in to my earlier
-%% comment below Figure 1, although only a little: the attribute here should be a
-%% catch-all meta-variable on the left, and the empty set on the right.  You can
-%% actually do that with the syntax as given, but it would be quite ugly. \\
-%% The most natural solution seems to be calling it syntactic sugar: we could
-%% point out that Example~\ref{ex:bool} \emph{seems} to violate the rule, but
-%% only due to syntactic sugar, as explained later?  Alternatively, we could
-%% change the example.  To make it a bit less ugly, a possibility is to add a
-%% sort $\mathtt{DecidedBool}$ with only true/false values, to be used as the
-%% values for the attribute; typically, you'd probably want to know that those
-%% values will in fact be true/false rather than a Not or Or.  This sort would
-%% not need to have an attribute, so would save you from having to write an
-%% addition attribute set inside an attribute set.}
-%% \KR{A: Attributes are now gone: only map subterms remain! Is this alright?}
-
-\begin{notation}[vectors]
-  We will use \emph{vector notation} with $\ov{X}$ denoting $X_1,…,X_n$ for some $n≥0$; $ε$ denotes
-  all empty vectors. Vectors are combined by simple concatenation, and will freely abuse this
-  notation and, for example, write $\ov{[\ov{x}]x}$ as an abbreviation of
-  $[x_{11}…x_{1m_1}]x_1…[x_{n1}…x_{nm_n}]x_n$ for suitable $n,m_1,…,m_n ≥ 0$.
-\end{notation}
 
 \begin{figure*}[p]
   \vspace*{-3em}
@@ -795,7 +770,7 @@ except Example~\ref{ex:bool}, which breaks the last of the above constraints. \T
     { Γ,Δ,\op{Pat},\ov{w} ⊢ m\,\kw(\,v_1\kw,…\kw,v_n\,\kw) : S }
     &&\Cases{
       ∀i\colon v_i∈\ov{w} \\
-      Δ_{\op{meta}}(m) = [(S_1,…,S_n)⇒S]
+      Δ_{\op{meta}}(m) = \left( (S_1,…,S_n)⇒S \right)
     }
     \tag{S-M-MetaP}
     % 
@@ -804,7 +779,7 @@ except Example~\ref{ex:bool}, which breaks the last of the above constraints. \T
     &\dfrac
     { Γ,Δ,\op{Con},\ov{w} ⊢ M_1 : S_1 \quad\cdots\quad  Γ,Δ,\op{Con},\ov{w} ⊢ M_n : S_n }
     { Γ,Δ,\op{Con},\ov{w} ⊢ m\,\kw(\,M_1\kw,…\kw,M_n\,\kw) : S }
-    && Δ_{\op{meta}}(m) = [(S_1,…,S_n)⇒S]
+    && Δ_{\op{meta}}(m) = \left( (S_1,…,S_n)⇒S \right)
     \tag{S-M-MetaC}
     %
     \\
@@ -827,26 +802,30 @@ except Example~\ref{ex:bool}, which breaks the last of the above constraints. \T
     \intertext{\shoveright{Sorting of Association\hfil\smash{\fbox{$ Γ,Δ,RS,\ov{\mathcal{V}} ⊢ A : \{S{:}S\} $}}}}
     %
     &\dfrac
-    { Γ,Δ,RS,\ov{w} ⊢ M_1 : S_1 \qquad Γ,Δ,RS,\ov{w} ⊢ M_2 : S_2 }
-    { Γ,Δ,RS,\ov{w} ⊢ M_1\kw:M_2 : \{S_1{:}S_2\} } 
+    { Γ,Δ,RS,\ov{w} ⊢ M : S \qquad Γ,Δ,RS,\ov{w} ⊢ M' : S' }
+    { Γ,Δ,RS,\ov{w} ⊢ M\kw:M' : \{S{:}S'\} } 
     \tag{S-A-Map}
     % 
     \\[\jot]
     %
     &\dfrac
-    { Γ,Δ,\op{Pat},\ov{w} ⊢ M : S_1 }
-    { Γ,Δ,\op{Pat},\ov{w} ⊢ \kwm{¬}M : \{S_1{:}S_2\} }
+    { Γ,Δ,\op{Pat},\ov{w} ⊢ M : S }
+    { Γ,Δ,\op{Pat},\ov{w} ⊢ \kwm{¬}M : \{S{:}S'\} }
     \tag{S-A-Not}
     % 
     \\[\jot]
     %
     &\dfrac
-    { }
-    { Γ,Δ,RS,\ov{w} ⊢ \kw:m : \{S_1{:}S_2\} }
-    && Δ_{\op{meta}}(m) = \{S_1{:}S_2\}
+    { Γ,Δ,\op{Pat},\ov{w} ⊢ v_1 : S_1 \quad\cdots\quad  Γ,Δ,\op{Pat},\ov{w} ⊢ v_n : S_n }
+    { Γ,Δ,RS,\ov{w} ⊢ m\,\kw(\,v_1\kw,…\kw,v_n\,\kw) : \{S{:}S'\} }
+    &&\Cases{
+      ∀i\colon v_i∈\ov{w} \\
+      Δ_{\op{meta}}(m) = \left( (S_1,…,S_n)⇒\{S{:}S'\} \right)
+    }
     \tag{S-A-All}
     %
   \end{align}
+  \vspace*{-2em}
   \caption{\hax sorting rules.}
   \label{fig:sortrules}
 \end{figure*}
@@ -857,7 +836,7 @@ except Example~\ref{ex:bool}, which breaks the last of the above constraints. \T
   %%
   \begin{align}
     RS &::= \op{Pat} \mid \op{Con} \tag{RuleSide} \\
-    MF &::= [\ov{S}⇒S] \mid \{S_1{:}S_2\} \tag{MetaForm}
+    MF &::= \ov{S}⇒S \mid \ov{S}⇒\{S_1{:}S_2\} \tag{MetaForm}
   \end{align}
   %% 
   The \hax script is \emph{well-sorted for $Γ$} if $Γ$ is the smallest sort environment for which we
@@ -868,34 +847,34 @@ except Example~\ref{ex:bool}, which breaks the last of the above constraints. \T
   \end{displaymath}
   %%
   using the rules of Figure~\ref{fig:sortrules}.
-
-  Each proof will need to invent a \emph{global sort environment} witness $Γ$, a structure that
-  combines
-  %% 
-  \begin{itemize}
-
-  \item $Γ_{\op{hasvar}}\colon 2^{\mathcal{C}}$ is a set of sorts names (the sorts that allow variables).
-
-  \item $Γ_{\op{cons}}\colon \mathcal{C} → S×F^*$ from constructor name to pairs of a sort and a
-    list of forms.
-
-    
-  \item $Γ_{\op{fun}}\colon 2^{\mathcal{C}}$ is a set of constructor names (those declared as schemes).
-
-  \end{itemize}
-  %%
-  and one \emph{rule sort environment} witness $Δ$ per rule, a structure that combines
-  %% 
-  \begin{itemize}
-
-  \item $Δ_{\op{var}}\colon \mathcal{V} → S$ from variable names to sorts.
-
-  \item $Δ_{\op{meta}}\colon \mathcal{M} → MF$ from meta-variable names to to 
-    names to ``meta-forms'' 
-
-  \end{itemize}
   %%
 \end{definition}
+
+Each proof will need to invent a \emph{global sort environment} witness $Γ$, a structure that
+combines
+%% 
+\begin{itemize}
+
+\item $Γ_{\op{hasvar}}\colon 2^{\mathcal{C}}$ is a set of sorts names (the sorts that allow variables).
+
+\item $Γ_{\op{cons}}\colon \mathcal{C} → S×F^*$ from constructor name to pairs of a sort and a
+  list of forms.
+
+  
+\item $Γ_{\op{fun}}\colon 2^{\mathcal{C}}$ is a set of constructor names (those declared as schemes).
+
+\end{itemize}
+%% 
+and one \emph{rule sort environment} witness $Δ$ per rule, a structure that combines
+%% 
+\begin{itemize}
+
+\item $Δ_{\op{var}}\colon \mathcal{V} → S$ from variable names to sorts.
+
+\item $Δ_{\op{meta}}\colon \mathcal{M} → MF$ from meta-variable names to to 
+  names to ``meta-forms'' 
+
+\end{itemize}
 
 Notes.
 %%
@@ -904,11 +883,11 @@ Notes.
 \item $MF$ captures the difference between regular meta-variables and ``$\kw:m$'' ones:
   \begin{itemize}
 
-  \item The shape $[\ov{S}⇒S]$ is used for meta-variables that need to be meta-applied to
+  \item The shape $\ov{S}⇒S$ is used for meta-variables that need to be meta-applied to
     arguments with the sorts $\ov{S}$ to then form a term of the sort~$S$.
       
-  \item The shape $\{S_1{:}S_2\}$ used for meta-variables that ``catch'' all the associations in
-    an association list from $S_1$ to~$S_2$.
+  \item The shape $\ov{S}⇒\{S_1{:}S_2\}$ used for meta-variables that ``catch'' all the associations
+    in an association list from $S_1$ to~$S_2$.
     
   \end{itemize}
 
@@ -1146,27 +1125,27 @@ EU-funded Marie Skłodowska-Curie ``HORIP'' action collaboration with Cynthia Ko
   H &::= D^* 
   \\
   \tag{Declaration}
-  D &::= S~\kw{data}~d\,\kw(\,F^{*\kw,}\,\kw)\,\kw;
-  \bigm| S~\kw{scheme}~f\,\kw(\,F^{*\kw,}\,\kw)\,\kw;
+  D &::= S~\kw{data}~d\,\kw(\,\ov{F}\,\kw)\,\kw;
+  \bigm| S~\kw{scheme}~f\,\kw(\,\ov{F}\,\kw)\,\kw;
   \bigm| S~\kw{variable}\,\kw;
   \bigm| S~\kw{rule}~M~\kw{$→$}~M\,\kw;
   \\
   \tag{Form}
-  F &::= \kwm{⟨}\,S^{*\kw,}\,\kwm|\,S
+  F &::= \kwm{⟨}\,\ov{S}\,\kwm|\,S
   \bigm| \kwm\{\, S:S \,\kwm\}
   \\
   \tag{Sort}
-  S &::= s\,\kw[\,S^{*\kw,}\,\kw]
+  S &::= s\,\kw[\,\ov{S}\,\kw]
   \bigm| α
   \\[\jot]
   \tag{Term}
-  M &::= c\,\kw(\,P^{*\kw,}\,\kw)
+  M &::= c\,\kw(\,\ov{P}\,\kw)
   \bigm| v
-  \bigm| m\,\kwm|\,M^{*\kw,}\,\kwm{⟩}
+  \bigm| m\,\kwm|\,\ov{M}\,\kwm{⟩}
   \\
   \tag{Piece}
-  P &::= \kwm{⟨}\,v^{*\kw,}\,\kwm|\,M
-  \bigm| \kwm\{\, A^{*\kw,} \,\kwm\}
+  P &::= \kwm{⟨}\,\ov{v}\,\kwm|\,M
+  \bigm| \kwm\{\, \ov{A} \,\kwm\}
   \\
   \tag{Association}
   A &::= M\,\kw:\,M
@@ -1236,7 +1215,7 @@ EU-funded Marie Skłodowska-Curie ``HORIP'' action collaboration with Cynthia Ko
     must include an $A_i$ instance for every attribute defined by some $\set{AI}_i$.  The system
     automatically includes missing inherited attributes as follows:
     \begin{itemize}
-    \item In patterns, a missing attribute is inserted as "↓a(#a)" or "↓a{:#a}" as appropriate.
+    \item In patterns, a missing attribute is inserted as "↓a(#a)" or "↓a{#a}" as appropriate.
     \item Missing attributes that were defined in the pattern are inserted the same.
     \item Remaining missing attributes must be of a map sort and are inserted as~"↓a{}".
     \end{itemize}
