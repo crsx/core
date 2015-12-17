@@ -101,7 +101,7 @@ In this section we outline the \hax calculus, and give several examples.
     D &::= S~\kw{data}~d\,\kw(\,F^{*\kw,}\,\kw)\,\kw;
     \bigm| S~\kw{scheme}~f\,\kw(\,F^{*\kw,}\,\kw)\,\kw;
     \bigm| S~\kw{variable}\,\kw;
-    \bigm| S~\kw{rule}~T~\kw{$→$}~T\,\kw;
+    \bigm| S~\kw{rule}~M~\kw{$→$}~M\,\kw;
     \\
     \tag{Form}
     F &::= \kw[\,S^{*\kw,}\,\kw]\,S
@@ -111,19 +111,19 @@ In this section we outline the \hax calculus, and give several examples.
     S &::= s\,\kwm{⟨}\,S^{*\kw,}\,\kwm{⟩}
     \bigm| α
     \\[\jot]
-    \tag{Term}
-    T &::= c\,\kw(\,P^{*\kw,}\,\kw)
+    \tag{Meta-Term}
+    M &::= c\,\kw(\,P^{*\kw,}\,\kw)
     \bigm| v
-    \bigm| M\,\kw(\,T^{*\kw,}\,\kw)
+    \bigm| m\,\kw(\,M^{*\kw,}\,\kw)
     \\
     \tag{Piece}
-    P &::= \kw[\,v^{*\kw,}\,\kw]\,T
+    P &::= \kw[\,v^{*\kw,}\,\kw]\,M
     \bigm| \kwm\{\, A^{*\kw,} \,\kwm\}
     \\
     \tag{Association}
-    A &::= T\,\kw:\,T
-    \bigm| \kw{$¬$}\,T
-    \bigm| \kw:\,M
+    A &::= M\,\kw:\,M
+    \bigm| \kw{$¬$}\,M
+    \bigm| \kw:\,m
   \end{align}
   \vspace*{-2em}
   \caption{\hax syntax.}
@@ -141,8 +141,8 @@ In this section we outline the \hax calculus, and give several examples.
     symbol names. By convention, we use $s$/$d$/$f$ for sort/data/function names, respectively, and
     $c$ when either a data or function constructor makes sense.  
   \item $v,α ∈ \mathcal{V}$ stand for \emph{variable} tokens, which are lower case words like "x" or
-    "foo" or even "lowWord", used for term variables and sort variables (respectively). 
-  \item $M ∈ \mathcal{M}$ stands for \emph{meta-variable} tokens, which are tokens that start with
+    "foo" or even "lowWord", used for plain variables and sort variables (respectively).
+  \item $m ∈ \mathcal{M}$ stands for \emph{meta-variable} tokens, which are tokens that start with
     "#" like "#arg" or "#BigFoot" or even just "#1" or merely~"#".
   \end{itemize}
   %%
@@ -163,7 +163,7 @@ We shall use the following terminology:
 %% 
 \begin{itemize}
 
-\item A term of the form $c(P_1,…,P_n)$, for $n≥0$, is called a \emph{construction}; if furthermore
+\item A meta-term of the form $c(P_1,…,P_n)$, for $n≥0$, is called a \emph{construction}; if furthermore
   the top symbol $c$ is declared with a "scheme c {…}" declaration then it is called a
   \emph{function construction}, and if it is declared with "data d {…}" then it is called a
   \emph{data construction}. If $n=0$, i.e., the function or data symbol does not take any arguments,
@@ -178,12 +178,13 @@ We shall use the following terminology:
 %%      can discuss this on the call?}  \MS{Conclusion: For implementation it is easier to declare
 %%      it. It is computable though.} \KR{You can see it in the type rules, now.}
 
-\item Argument ``pieces'' $P$ of constructions take one of two forms: \emph{scopes} $[v_1,…,v_n]T$,
-  $n≥0$, which introduce new local variables $v_1,…,v_n$ along with a term $T$ wherein they can
+\item Argument ``pieces'' $P$ of constructions take one of two forms: \emph{scopes} $[v_1,…,v_n]M$,
+  $n≥0$, which introduce new local variables $v_1,…,v_n$ along with a meta-term $M$ wherein they can
   occur, and \emph{associations} $\{A_1,…,A_n\}$, $n≥0$, where each $A$ is either an \emph{entry}
-  $T:T$, an \emph{exclusion} $¬T$, or a \emph{catcher} ${:}M$. Again, if $n=0$, \ie, there are no
-  new variables introduced in the scope $[]$ can be omitted. That is, we write $S(0)$ instead of
-  $S([]0)$, and also $S(x)$ instead of $S([]x)$, where $x$ is unbound in this scope.
+  $M:M$, an \emph{exclusion} $¬M$, or a \emph{catcher} ${:}m$.
+
+  For scopes, if $n=0$, \ie, there are no new variables introduced by the scope, then $[]$ can be
+  omitted: we write $S(0)$ instead of $S([]0)$.
 
   \KR{Note: any suggestions for something other than \{:\#1\} for catchers are welcome!}
 
@@ -196,49 +197,19 @@ We shall use the following terminology:
   \CK{For an entirely different suggestion, you could use different non-metavariable notation
     for the catcher metavariables, e.g.~$\sharp$1 or \&1.}
 
-\item A term of the form $M(T_1,…,T_n)$, $n≥0$, is a \emph{meta-application}.
+  \KR{Your point that catchers need to be parametrized is true: we could use the form
+    ${:}m(\ov{x})$.}
 
-\item A term of the form $v$ is a \emph{variable occurrence}; if the variable $v$ occurs contained
-  in a scope $[…v…]T$ then the variable occurrence is \emph{bound}.
+\item A meta-term of the form $m(M_1,…,M_n)$, $n≥0$, is a \emph{meta-application}.
+  A meta-term that does not contain any meta-applications is called (simply) a \emph{term}.
 
-\MS{$S~\kw{variable}\,\kw;$ \ldots What does this keyword indicate now?}
+  \MS{E.g., in KR thesis, TeReSe, a distinction between meta term and term (i.e., a meta term
+    without meta variables) is made. Do we also want to do this?}
 
-\CK{By my understanding, there are several different properties to $\kw{variable}$:
-  \begin{itemize}
-  \item variables of that sort may occur unbound in the terms whose reduction
-    you consider (others will only occur bound);
-  \item you can \emph{match} on an explicit variable (either bound or free) of one of
-    these sorts;
-  \item variables of these sorts may occur free in the right-hand side of a
-    rule;
-  \end{itemize}
-  It may also be possible / needed to restrict instantiation, i.e.~you're not
-  allowed to ever substitute a variable of those sorts by a different variable. \\
-  (Kris may be able to indicate the exact truth factor of each of these
-  properties and whether I missed a bit.)
-}
-\KR{You can only substitute ``variables for variables'' when they can be syntactic, I think.}
-
-\MS{About $F ::= \kw[\,S_1^{*\kw,}\,\kw]\,S_2$. Can $S_1$ actually be something different than a sort variable?}
-
-\CK{They really shouldn't be.}
-
-\KR{Why not? Is there a problem with the new Example~\ref{ex:pick}?}
-
-\CK{My mistake, they can be of course. I was thinking of $S\langle S\rangle$, and even then, we
-only really want to limit the inner $S$ to sort variables when defining data (e.g.~it's allowed
-to have a scheme with sort $\mathtt{list}\langle\mathtt{nat}\rangle$, but not to define a data
-constructor with this as output type).}\KR{A: Well stated. We should capture this in the text.}
-
-\end{itemize}
-
-\MS{E.g., in KR thesis, TeReSe, a distinction between meta term and term (i.e., a meta term without
-  meta variables) is made. Do we also want to do this?}  \CK{I'd say it's certainly desirable to do
-  so, as we don't really want to have to deal with rewriting meta-terms, just terms.  Moreover, the
-  difference is larger here than in TeReSe, as I'd also expect that terms have no exclusions.}
-\KR{Open to suggestions. Pattern constraint now in type rules.}
-
-\CK{
+  \CK{I'd say it's certainly desirable to do so, as we don't really want to have to deal with
+    rewriting meta-terms, just terms.  Moreover, the difference is larger here than in TeReSe, as
+    I'd also expect that terms have no exclusions.
+    \\
   \textbf{\emph{Suggestion:}}
   In the syntax, replace ``Term'' by ``Meta-term'' (and perhaps the T by an M).  Then add
   something like: a \emph{term} is a meta-term without meta-variable tokens or exclusions; that
@@ -256,7 +227,41 @@ constructor with this as output type).}\KR{A: Well stated. We should capture thi
     A' &::= T\,\kw:\,T
   \end{align}
 }
-\KR{I agree. Needs to rename $M$ as used now to $m$ or something.}
+\KR{Done but no grammar needed---just the wording above.}
+
+\item A meta-term of the form $v$ is a \emph{variable occurrence}; if the variable $v$ occurs contained
+  in a scope $[…v…]M$ then the variable occurrence is \emph{bound}.
+
+\MS{$S~\kw{variable}\,\kw;$ \ldots What does this keyword indicate now?}
+
+\CK{By my understanding, there are several different properties to $\kw{variable}$:
+  \begin{itemize}
+  \item variables of that sort may occur unbound in the meta-terms whose reduction
+    you consider (others will only occur bound);
+  \item you can \emph{match} on an explicit variable (either bound or free) of one of
+    these sorts;
+  \item variables of these sorts may occur free in the right-hand side of a
+    rule;
+  \end{itemize}
+  It may also be possible / needed to restrict instantiation, i.e.~you're not
+  allowed to ever substitute a variable of those sorts by a different variable. \\
+  (Kris may be able to indicate the exact truth factor of each of these
+  properties and whether I missed a bit.)
+}
+\KR{You can only substitute ``variables for variables'' when they can be syntactic, I think.}
+
+\end{itemize}
+
+\MS{About $F ::= \kw[\,S_1^{*\kw,}\,\kw]\,S_2$. Can $S_1$ actually be something different than a sort variable?}
+
+\CK{They really shouldn't be.}
+
+\KR{Why not? Is there a problem with the new Example~\ref{ex:pick}?}
+
+\CK{My mistake, they can be of course. I was thinking of $S\langle S\rangle$, and even then, we
+only really want to limit the inner $S$ to sort variables when defining data (e.g.~it's allowed
+to have a scheme with sort $\mathtt{list}\langle\mathtt{nat}\rangle$, but not to define a data
+constructor with this as output type).}\KR{A: Well stated. We should capture this in the text.}
 
 \CK{(By the way, is there any reason for the commas before all the closing brackets?)}
 \KR{A: This is concrete syntax notation; can be omitted.}
@@ -288,7 +293,7 @@ For \emph{sort parameters} we use $\kwm{⟨\,⟩}$.
   $\lambda \vec{x}.s$ rather than $[\vec{x}]s$.} \KR{See also bra-ket proposal below!}
   \CK{Ew. :P}
 
-In Figure~\ref{fig:syntax}, the $S$ in $S~\kw{rule}~T~\kw{$→$}~T\,\kw;$ is not superflous. Consider
+In Figure~\ref{fig:syntax}, the $S$ in $S~\kw{rule}~M~\kw{$→$}~M\,\kw;$ is not superflous. Consider
 the following two rules:
 \begin{hacs}[numbers=right,texcl]
   List⟨α⟩ rule Map([x]#(x), Nil) →  Nil;
@@ -323,7 +328,7 @@ It is even possible to have function constructors that live in \emph{all} sorts:
     \emph{scopes} are not considered terms (I would propose not calling it
     a ``pattern meta-application'' as that is misleading, though).}
     
-    Example terms with Associations of the form $T \kw{:} T$, where the key is a variable or a
+    Example terms with Associations of the form $M \kw{:} M$, where the key is a variable or a
     constant, are
     %% 
     \begin{hacs}[numbers=right,texcl]
@@ -348,13 +353,13 @@ It is even possible to have function constructors that live in \emph{all} sorts:
 %     S( {x : y, x : Zero} )
 %     Plus( {x : y}, {x : Zero} )
 %   \end{hacs}
-   Example terms with Associations of the form $¬T$ are:
+   Example terms with Associations of the form $¬M$ are:
    \begin{hacs}[numbers=right,texcl]
      Plus(x, { ¬x }), Plus(x, { ¬Zero }), Plus(#X,{¬Zero}), S({ ¬#X }), 
      #Z[S({ ¬#Z[x] })], S({ ¬S([x]#X[x]) }), Plus(Zero,{¬S(Zero)}), Plus({ ¬x}, { ¬z})
    \end{hacs}
    
-   Finally, Example terms with Associations of the form $: M$ are:
+   Finally, Example terms with Associations of the form $: m$ are:
    \begin{hacs}[numbers=right,texcl]
      Plus(x, { : #X }), Plus( { : #X}, { : #X}), Plus( { : #X}, { : #Y})
      Plus( #X, { : #X })  // note, here \#X are distinct, the former is acutally []\#X
@@ -382,7 +387,7 @@ N scheme Plus(N, N) ;                                // $+$ operator
 N rule Plus(Z, #2) →  #2 ;                           // $0+x = x$
 N rule Plus(S(#1), #2) →  S(Plus(#1, #2)) ;          // $(1+x)+y=1+(x+y)$
   \end{hacs}
-  \vspace*{-1em}
+  \vspace*{-1ex}
   \caption{Peano numerals.}
   \label{fig:peano}
 \end{figure}
@@ -441,11 +446,9 @@ N rule Plus(S(#1), #2) →  S(Plus(#1, #2)) ;          // $(1+x)+y=1+(x+y)$
 Λ  scheme Ap(Λ, Λ) ;                                      // application
 Λ  rule Ap(Lm([x]#body(x)), #arg) → #body(#arg) ;     // β-reduction
   \end{hacs}
-  \vspace*{-1em}
+  \vspace*{-1ex}
   \caption{Untyped λ calculus.}
   \label{fig:lambda}
-  %%
-  \vspace{1em}
 \end{figure}
 
 \begin{example}[untyped λ calculus]\label{ex:lambda}
@@ -506,14 +509,16 @@ N rule Plus(S(#1), #2) →  S(Plus(#1, #2)) ;          // $(1+x)+y=1+(x+y)$
 \begin{figure}[h!t]
   \begin{hacs}[numbers=right,texcl]
 List⟨α⟩ data Nil; List⟨α⟩ data Cons(α, List⟨α⟩);
+
 List⟨α⟩ scheme Append(List⟨α⟩, List⟨α⟩);
 List⟨α⟩ rule Append(Nil, #2) →  #2;
 List⟨α⟩ rule Append(Cons(#11, #12), #2) →  Cons(#11, Append(#12, #2));
+
 List⟨α⟩ scheme Map([β]α, List⟨β⟩);
 List⟨α⟩ rule Map([x]#(x), Nil) →  Nil;
 List⟨α⟩ rule Map([x]#(x), Cons(#1, #2)) →  Cons(#(#1), Map([x]#(x), #2));
   \end{hacs}
-  \vspace*{-1em}
+  \vspace*{-1ex}
   \caption{Polymorphic lists.}
   \label{fig:list}
 \end{figure}
@@ -597,15 +602,16 @@ Int rule Pick2(Cons(#1, #rest), [x,y]#pick(x,y), #n)
   figure declares booleans and an if scheme, but does not use them.  Oh, and
   the second Pick2 rule is not well-typed (as the third argument of the RHS
   has type Bool rather than Int).}
+  \KR{Yep, its a bit sketchy. Anyone?}
   %%
 \end{example}
 
-\KR{Below are new examples for consideration.}
+\KR{Below are new examples for your consideration.}
 
 \begin{example}
   %%
-  Another example from the literature: $λ$x. Changes the λ calculus from Example~\ref{ex:lambda} in
-  two ways:
+  Another example from the literature: $λ$x~\cite{BlooRose:csn1995}. Changes the λ calculus from
+  Example~\ref{ex:lambda} in two ways:
   %%
   \begin{enumerate}
 
@@ -618,17 +624,17 @@ Int rule Pick2(Cons(#1, #rest), [x,y]#pick(x,y), #n)
   \end{enumerate}
   %%
   \begin{hacs}
-    Λx variable; // explicit variable
-    Λx data Lm([Λx]Λx); // abstraction
-
-    Λx scheme Ap(Λx,Λx); // application
-    Λx rule Ap(Lm([x]#(x)),#x) → Ex([x]#(x),#x);  //(b)
-
-    Λx scheme Ex([Λx]Λx,Λx); // explicit substitution
-    Λx rule Ex([x]x,#x) → #x;  // (xv)
-    Λx rule Ex([x]y,#x) → y;   // (xvgc)
-    Λx rule Ex([x]Ap(#f(x), #a(x)), #x) →  Ap(Ex([x]#f(x),#x), Ex([x]#a(x),#x));  // (xap)
-    Λx rule Ex([x]Lm([y]#(x,y)), #x) →  Lm([y]Ex([x]#(x,y), #x));                 // (xab)
+     Λx variable; // explicit variable
+     Λx data Lm([Λx]Λx); // abstraction
+ 
+     Λx scheme Ap(Λx,Λx); // application
+     Λx rule Ap(Lm([x]#(x)),#x) → Ex([x]#(x),#x);  //(b)
+ 
+     Λx scheme Ex([Λx]Λx,Λx); // explicit substitution
+     Λx rule Ex([x]x,#x) → #x;  // (xv)
+     Λx rule Ex([x]y,#x) → y;   // (xvgc)
+     Λx rule Ex([x]Ap(#f(x), #a(x)), #x) →  Ap(Ex([x]#f(x),#x), Ex([x]#a(x),#x));  // (xap)
+     Λx rule Ex([x]Lm([y]#(x,y)), #x) →  Lm([y]Ex([x]#(x,y), #x));                 // (xab)
   \end{hacs}
   %%
   \KR{Example shows that we need a way to ensure that (xv) is selected before (xvgc), \ie, in the
@@ -639,22 +645,22 @@ Int rule Pick2(Cons(#1, #rest), [x,y]#pick(x,y), #n)
 
 \begin{example}
   %%
-  Variation: evaluator with a proper environment.
+  Variation: evaluator with a proper environment. \TBD{Find proper reference.}
   %%
   \begin{hacs}
     Λρ  variable; // explicit variable
     Λρ  data Lm([Λρ]Λρ); // abstraction
     Λρ  data Ap(Λρ,Λρ); // application
 
-    Λρ  scheme Ec(Λρ, {Λρ:Λρ}); // evaluation context
+    Λρ  scheme E(Λρ, {Λρ:Λρ}); // evaluation context
 
-    Λρ  rule Ec(x,{x : #x}) → #x;
-    Λρ  rule Ec(x,{¬x}) → x;
-    Λρ  rule Ec(Lm([y]#(y)), {:#}) →  Lm([y]Ec(#(y), {:#}));
+    Λρ  rule E(x, {x : #x}) → #x;
+    Λρ  rule E(x, {¬x}) → x;
+    Λρ  rule E(Lm([y]#(y)), {:#}) →  Lm([y]E(#(y), {:#}));
 
-    Λρ  rule Ec(Ap(x, #a), {:#}) →  Ap(x, Ec(#a, {:#}));
-    Λρ  rule Ec(Ap(Ap(#f, #1), #2), {:#}) →
-    Λρ  rule Ec(Ap(Lm([x]#(x)), #a), {:#}) →
+    Λρ  rule E(Ap(x, #a), {:#}) →  E(Ap(E(x, {:#}), E(#a, {:#})), {:#});
+    Λρ  rule E(Ap(Ap(#f, #1), #2), {:#}) →   E(Ap(E(Ap(#f, #1), {:#}), E(#2, {:#})), {:#});
+    Λρ  rule E(Ap(Lm([x]#(x)), #a), {:#}) →  E(#(x), {:#, x : E(#a,{:#})});
   \end{hacs}
   %%
   Notice how application is now data
@@ -726,8 +732,8 @@ except Example~\ref{ex:bool}, which breaks the last of the above constraints. \T
     %
     &\dfrac
     {}
-    { Γ ⊢ S~\kw{data}~d\kw( \ov{F} \kw)\,\kw; }
-    && Γ_{\op{cons}}(d) = \left⟨ S, \ov{F} \right⟩
+    { Γ ⊢ s⟨\ov{α}⟩~\kw{data}~d\kw( \ov{F} \kw)\,\kw; }
+    && Γ_{\op{cons}}(d) = \left⟨ s⟨\ov{α}⟩, \ov{F} \right⟩
     \tag{S-D-Data}
     %
     \\[\jot]
@@ -736,26 +742,26 @@ except Example~\ref{ex:bool}, which breaks the last of the above constraints. \T
     {}
     { Γ ⊢ S~\kw{scheme}~f\kw( \ov{F} \kw)\,\kw; }
     && Γ_{\op{cons}}(f) = \left⟨ S, \ov{F} \right⟩,~f∈Γ_{\op{fun}}
-    \tag{S-D-Scheme}
+    \tag{S-D-Fun}
     %
     \\[\jot]
     %
     &\dfrac
     {}
-    { Γ ⊢ s⟨\ov{S}⟩~\kw{variable}\,\kw; }
+    { Γ ⊢ s⟨\ov{α}⟩~\kw{variable}\,\kw; }
     && s ∈ Γ_{\op{hasvar}}
     \tag{S-D-Var}
     %
     \\[\jot]
     %
     &\dfrac
-    { Γ,Δ,\op{Pat},ε ⊢ f(\ov{F}) : S  \qquad Γ,Δ,\op{Con},ε ⊢ T : S }
-    { Γ ⊢ S~\kw{rule}~f(\ov{F})~\kw{→}~T\,\kw; }
+    { Γ,Δ,\op{Pat},ε ⊢ f(\ov{F}) : S  \qquad Γ,Δ,\op{Con},ε ⊢ M : S }
+    { Γ ⊢ S~\kw{rule}~f(\ov{F})~\kw{→}~M\,\kw; }
     && (∃Δ),~f∈Γ_{\op{fun}}
     \tag{S-D-Rule}
     %
     \\
-    \intertext{\shoveright{Sorting of Term\hfil\smash{\fbox{$ Γ,Δ,RS,\ov{\mathcal{V}} ⊢ T : S $}}}}
+    \intertext{\shoveright{Sorting of Term\hfil\smash{\fbox{$ Γ,Δ,RS,\ov{\mathcal{V}} ⊢ M : S $}}}}
     %
     &\dfrac
     { Γ,Δ,RS,\ov{w} ⊢ P_1 : F_1 \quad\cdots\quad Γ,Δ,RS,\ov{w} ⊢ P_n : F_n }
@@ -764,7 +770,7 @@ except Example~\ref{ex:bool}, which breaks the last of the above constraints. \T
       Γ_{\op{cons}}(c) = \left⟨ S, (F_1\kw,…\kw,F_n) \right⟩\\
       c∉Γ_{\op{fun}} ∨ RS=\op{Con}
     }
-    \tag{S-T-Cons}
+    \tag{S-M-Cons}
     % 
     \\[\jot]
     %
@@ -772,33 +778,33 @@ except Example~\ref{ex:bool}, which breaks the last of the above constraints. \T
     { }
     { Γ,Δ,RS,\ov{w} ⊢ v : s⟨\ov{S}⟩ }
     && Δ_{\op{var}}(v) = s⟨\ov{S}⟩, ~s∈Γ_{\op{hasvar}}
-    \tag{S-T-Var}
+    \tag{S-M-Var}
     % 
     \\[\jot]
     %
     &\dfrac
     { Γ,Δ,\op{Pat},\ov{w} ⊢ v_1 : S_1 \quad\cdots\quad  Γ,Δ,\op{Pat},\ov{w} ⊢ v_n : S_n }
-    { Γ,Δ,\op{Pat},\ov{w} ⊢ M\,\kw(\,v_1\kw,…\kw,v_n\,\kw) : S }
+    { Γ,Δ,\op{Pat},\ov{w} ⊢ m\,\kw(\,v_1\kw,…\kw,v_n\,\kw) : S }
     &&\Cases{
       ∀i\colon v_i∈\ov{w} \\
-      Δ_{\op{meta}}(M) = [(S_1,…,S_n)⇒S]
+      Δ_{\op{meta}}(m) = [(S_1,…,S_n)⇒S]
     }
-    \tag{S-T-MetaP}
+    \tag{S-M-MetaP}
     % 
     \\[\jot]
     %
     &\dfrac
-    { Γ,Δ,\op{Con},\ov{w} ⊢ T_1 : S_1 \quad\cdots\quad  Γ,Δ,\op{Con},\ov{w} ⊢ T_n : S_n }
-    { Γ,Δ,\op{Con},\ov{w} ⊢ M\,\kw(\,T_1\kw,…\kw,T_n\,\kw) : S }
-    && Δ_{\op{meta}}(M) = [(S_1,…,S_n)⇒S]
-    \tag{S-T-MetaC}
+    { Γ,Δ,\op{Con},\ov{w} ⊢ M_1 : S_1 \quad\cdots\quad  Γ,Δ,\op{Con},\ov{w} ⊢ M_n : S_n }
+    { Γ,Δ,\op{Con},\ov{w} ⊢ m\,\kw(\,M_1\kw,…\kw,M_n\,\kw) : S }
+    && Δ_{\op{meta}}(m) = [(S_1,…,S_n)⇒S]
+    \tag{S-M-MetaC}
     %
     \\
     \intertext{\shoveright{Sorting of Piece\hfil\smash{\fbox{$ Γ,Δ,RS,\ov{\mathcal{V}} ⊢ P : F $}}}}
     %
     &\dfrac
-    { Γ,Δ',RS,(\ov{w}\,\ov{v}) ⊢ T : S }
-    { Γ,Δ,RS,\ov{w} ⊢ \kw[\,\ov{v}\,\kw]\,T : \kw[\,\ov{S}\,\kw]\,S }
+    { Γ,Δ',RS,(\ov{w}\,\ov{v}) ⊢ M : S }
+    { Γ,Δ,RS,\ov{w} ⊢ \kw[\,\ov{v}\,\kw]\,M : \kw[\,\ov{S}\,\kw]\,S }
     && (∃Δ'⊇Δ),~ Δ'_{\op{var}}(\ov{v}) = \ov{S}
     \tag{S-P-Bind}
     %
@@ -813,23 +819,23 @@ except Example~\ref{ex:bool}, which breaks the last of the above constraints. \T
     \intertext{\shoveright{Sorting of Association\hfil\smash{\fbox{$ Γ,Δ,RS,\ov{\mathcal{V}} ⊢ A : \{S{:}S\} $}}}}
     %
     &\dfrac
-    { Γ,Δ,RS,\ov{w} ⊢ T_1 : S_1 \qquad Γ,Δ,RS,\ov{w} ⊢ T_2 : S_2 }
-    { Γ,Δ,RS,\ov{w} ⊢ T_1\kw:T_2 : \{S_1{:}S_2\} } 
+    { Γ,Δ,RS,\ov{w} ⊢ M_1 : S_1 \qquad Γ,Δ,RS,\ov{w} ⊢ M_2 : S_2 }
+    { Γ,Δ,RS,\ov{w} ⊢ M_1\kw:M_2 : \{S_1{:}S_2\} } 
     \tag{S-A-Map}
     % 
     \\[\jot]
     %
     &\dfrac
-    { Γ,Δ,\op{Pat},\ov{w} ⊢ T : S_1 }
-    { Γ,Δ,\op{Pat},\ov{w} ⊢ \kwm{¬}T : \{S_1{:}S_2\} }
+    { Γ,Δ,\op{Pat},\ov{w} ⊢ M : S_1 }
+    { Γ,Δ,\op{Pat},\ov{w} ⊢ \kwm{¬}M : \{S_1{:}S_2\} }
     \tag{S-A-Not}
     % 
     \\[\jot]
     %
     &\dfrac
     { }
-    { Γ,Δ,RS,\ov{w} ⊢ \kw:M : \{S_1{:}S_2\} }
-    && Δ_{\op{meta}}(M) = \{S_1{:}S_2\}
+    { Γ,Δ,RS,\ov{w} ⊢ \kw:m : \{S_1{:}S_2\} }
+    && Δ_{\op{meta}}(m) = \{S_1{:}S_2\}
     \tag{S-A-All}
     %
   \end{align}
@@ -887,7 +893,7 @@ Notes.
 %%
 \begin{itemize}
 
-\item $MF$ captures the difference between regular meta-variables and ``$\kw:M$'' ones:
+\item $MF$ captures the difference between regular meta-variables and ``$\kw:m$'' ones:
   \begin{itemize}
 
   \item The shape $[\ov{S}⇒S]$ is used for meta-variables that need to be meta-applied to
@@ -1135,7 +1141,7 @@ EU-funded Marie Skłodowska-Curie ``HORIP'' action collaboration with Cynthia Ko
   D &::= S~\kw{data}~d\,\kw(\,F^{*\kw,}\,\kw)\,\kw;
   \bigm| S~\kw{scheme}~f\,\kw(\,F^{*\kw,}\,\kw)\,\kw;
   \bigm| S~\kw{variable}\,\kw;
-  \bigm| S~\kw{rule}~T~\kw{$→$}~T\,\kw;
+  \bigm| S~\kw{rule}~M~\kw{$→$}~M\,\kw;
   \\
   \tag{Form}
   F &::= \kwm{⟨}\,S^{*\kw,}\,\kwm|\,S
@@ -1146,18 +1152,18 @@ EU-funded Marie Skłodowska-Curie ``HORIP'' action collaboration with Cynthia Ko
   \bigm| α
   \\[\jot]
   \tag{Term}
-  T &::= c\,\kw(\,P^{*\kw,}\,\kw)
+  M &::= c\,\kw(\,P^{*\kw,}\,\kw)
   \bigm| v
-  \bigm| M\,\kwm|\,T^{*\kw,}\,\kwm{⟩}
+  \bigm| m\,\kwm|\,M^{*\kw,}\,\kwm{⟩}
   \\
   \tag{Piece}
-  P &::= \kwm{⟨}\,v^{*\kw,}\,\kwm|\,T
+  P &::= \kwm{⟨}\,v^{*\kw,}\,\kwm|\,M
   \bigm| \kwm\{\, A^{*\kw,} \,\kwm\}
   \\
   \tag{Association}
-  A &::= T\,\kw:\,T
-  \bigm| \kw{$¬$}\,T
-  \bigm| \kw:\,M
+  A &::= M\,\kw:\,M
+  \bigm| \kw{$¬$}\,M
+  \bigm| \kw:\,m
 \end{align}
 \KR{We now distinguish \emph{five} different ways to brace elements; all empty can be omitted
   except associations.
@@ -1194,8 +1200,8 @@ EU-funded Marie Skłodowska-Curie ``HORIP'' action collaboration with Cynthia Ko
 
   \item An additional SortCase contruct is allowed:
     \begin{displaymath}
-      \kw{template}~P~\kw{$→$}~T\,\kw;  \quad⇒\quad
-      \kw{scheme}~P'\,\kw; ~ \kw{\texttt{|}} ~ \kw{data} ~ T'\,\kw; ~ \kw{rule} ~ P~\kw{$→$}~T\,\kw;
+      \kw{template}~P~\kw{$→$}~M\,\kw;  \quad⇒\quad
+      \kw{scheme}~P'\,\kw; ~ \kw{\texttt{|}} ~ \kw{data} ~ T'\,\kw; ~ \kw{rule} ~ P~\kw{$→$}~M\,\kw;
     \end{displaymath}
     where $P'$ and $T'$ are variants of $P$ and $P$ that have been cleared of "#"s.
 
@@ -1286,7 +1292,7 @@ A set of of inference rules is ...
   A \HAX \emph{ground sequential inference rule} has the form
   %%
   \begin{equation}
-    \dfrac{ T_1 ⇒ P_1 \quad\cdots\quad T_n ⇒ P_n }{ P_0 ⇒ T_{n+1} }
+    \dfrac{ M_1 ⇒ P_1 \quad\cdots\quad M_n ⇒ P_n }{ P_0 ⇒ M_{n+1} }
     \label{eq:infer}
   \end{equation}
   %%
@@ -1294,14 +1300,14 @@ A set of of inference rules is ...
   %%
   \begin{enumerate}
   \item $P_0$ (the \emph{initial} pattern) can be any \HAX pattern.
-  \item $T_i$ (the \emph{tests}, $1≤i≤n$) are \HAX terms, and are allowed occurrences of meta-variables from $P_0…P_{i-1}$.
+  \item $M_i$ (the \emph{tests}, $1≤i≤n$) are \HAX terms, and are allowed occurrences of meta-variables from $P_0…P_{i-1}$.
   \item $P_i$ (the \emph{constraints}, $i>0$) must be \HAX subpatterns.
-  \item $T_{n+1}$ (the \emph{conclusion}) is allowed occurrences of all meta-variables.
+  \item $M_{n+1}$ (the \emph{conclusion}) is allowed occurrences of all meta-variables.
   \end{enumerate}
   %%
   An inference rule with $n=0$ is called an \emph{axiom}, with $n>0$ a \emph{proper inference}.
   %%
-  The $T_i⇒P_i$ over the line are called \emph{premise judgments}. The $P_0⇒T_{n+1}$ under the line
+  The $M_i⇒P_i$ over the line are called \emph{premise judgments}. The $P_0⇒M_{n+1}$ under the line
   is called the \emph{conclusion judgment}.
   %%
   Below we will vary the indexing scheme to capture various enumerations of sets of inference rules.
@@ -1311,7 +1317,7 @@ A set of of inference rules is ...
   Consider a set of ground sequential inference rules.  Such a set can obviously be indexed by the
   distinct initial patterns into families of rules
   \begin{displaymath}
-    \dfrac{ T_{ij1} ⇒ P_{ij1} \cdots T_{ijn_{ij}} ⇒ P_{ijn_{ij}} }{ P_i ⇒ T_{ij} } ~(L_{ij})
+    \dfrac{ M_{ij1} ⇒ P_{ij1} \cdots M_{ijn_{ij}} ⇒ P_{ijn_{ij}} }{ P_i ⇒ M_{ij} } ~(L_{ij})
   \end{displaymath}
   where all the $P_i$ used to index the family are pairwise distinct.  The groups obtained in this
   way are a \emph{pattern family}.
@@ -1330,7 +1336,7 @@ A set of of inference rules is ...
 %% Sub-index each non-axiom $P_i$-group by leftmost premise construction into sub-families of
 %%    the form
 %%    \begin{displaymath}
-%%      \dfrac{ T_{ij} ⇒ P_{ijk1} \quad T_{ijk2} ⇒ P_{ijk2} \quad\cdots\quad T_{ijkn_{ijk}} ⇒ P_{ijkn_{ijk}} }{ P_i ⇒ T_{ijk} }
+%%      \dfrac{ M_{ij} ⇒ P_{ijk1} \quad M_{ijk2} ⇒ P_{ijk2} \quad\cdots\quad M_{ijkn_{ijk}} ⇒ P_{ijkn_{ijk}} }{ P_i ⇒ T_{ijk} }
 %%    \end{displaymath}
 %%    where all the $T_{ij}$ used to index the sub-family within a $P_i$-group are pairwise disjoint.
 
@@ -1431,7 +1437,7 @@ To finish the transform from inference rules to \HAX rules we need two additiona
   \begin{displaymath}
     c\biggl(\cdots \vcenter{\txt{
           $c_i({\cdots})\,{{↑}a_i\{{\cdots}\}}$\\
-          $M_i[{\cdots}]\,{{↑}a_i\{{\cdots}\}}$
+          $m_i[{\cdots}]\,{{↑}a_i\{{\cdots}\}}$
         }}\cdots\biggr)
     ~{{↑}a\{{\cdots}\}}
   \end{displaymath}
@@ -1445,27 +1451,27 @@ To finish the transform from inference rules to \HAX rules we need two additiona
     \op{Needs}_a\Biggl(
     c\biggl(\cdots \vcenter{\txt{
         $c_i({\cdots})$\\
-        $M_i[{\cdots}]$
+        $m_i[{\cdots}]$
       }}\cdots\biggr)
     \Biggr)
     &→
     \op{Collect}\Biggl(
     c\biggl(\cdots \vcenter{\txt{
         $\op{Needs}_{{a_i}}(c_i({\cdots}))$\\
-        $\op{Needs}_{{a_i}}(M_i[{\cdots}])$
+        $\op{Needs}_{{a_i}}(m_i[{\cdots}])$
       }}\cdots\biggr)    
     \Biggr)
     \\[1em]
     \op{Collect}\Biggl(
     c\biggl(\cdots \vcenter{\txt{
           $c_i({\cdots})\,{↑}a_i\{{\cdots}\}$\\
-          $M_i[{\cdots}]\,{↑}a_i\{{\cdots}\}$
+          $m_i[{\cdots}]\,{↑}a_i\{{\cdots}\}$
       }}\cdots\biggr)
     \Biggr)
     &→
     c\biggl(\cdots \vcenter{\txt{
           $c_i({\cdots})\,{↑}a_i\{{\cdots}\}$\\
-          $M_i[{\cdots}]\,{↑}a_i\{{\cdots}\}$
+          $m_i[{\cdots}]\,{↑}a_i\{{\cdots}\}$
         }}\cdots\biggr)
     ~{↑}a\{{\cdots}\}
   \end{align*}
