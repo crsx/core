@@ -194,11 +194,13 @@ We shall use the following terminology:
     \{ \#1(s1,...,sn) + key/values \}, otherwise you cannot capture a meta-variable set below an
     abstraction (do you want to do that? It probably \emph{should} be possible\dots)}
 
-  \CK{For an entirely different suggestion, you could use different non-metavariable notation
-    for the catcher metavariables, e.g.~$\sharp$1 or \&1.}
-
   \KR{Your point that catchers need to be parametrized is true: we could use the form
     ${:}m(\ov{x})$.}
+
+  \LV{I'm not sure that the issue is. I would use \{\#\} as catcher, and \{\#:\} to match for key \#. \{:\#\} could match against the value(s). Obviously in both cases \# must appear somewhere else.} 
+
+  \CK{For an entirely different suggestion, you could use different non-metavariable notation
+    for the catcher metavariables, e.g.~$\sharp$1 or \&1.}
 
 \item A meta-term of the form $m(M_1,…,M_n)$, $n≥0$, is a \emph{meta-application}.
   A meta-term that does not contain any meta-applications is called (simply) a \emph{term}.
@@ -547,7 +549,7 @@ Program⟨α,β⟩ data Stat(α);
 Γ⟨α,β⟩ scheme Mk(Program⟨α,β⟩);
 Γ⟨α,β⟩ rule Mk(Stat(#)) → Env({});
 Γ⟨α,β⟩ rule Mk(Then(#1, #2)) → Union(Mk(#1), Mk(#2));
-Γ⟨α,β⟩ rule Mk(Block(#x, #t, #)) → Union(Env({#x:#t), Mk(#));
+Γ⟨α,β⟩ rule Mk(Block(#x, #t, #)) → Union(Env({#x:#t}, Mk(#)));
 
 // Helper to create union of two environments.
 Γ⟨α,β⟩ scheme Union(Γ⟨α,β⟩, Γ⟨α,β⟩);
@@ -570,6 +572,8 @@ the same association set on the right! I wonder how that's defined.
 \CK{So what \emph{should} the semantics be?  If there are conflicting
   pairs in \#1 and \#2, what happens? Does the first or the second take
   priority, or should it crash?}
+\LV{Yes it's implemented as add. In this case the semantic could
+be \#2 is added to \#1. Entries in \#2 override entries in \#1.}
 \end{example}
 
 \begin{figure}[h!t]
