@@ -196,6 +196,7 @@ We shall use the following terminology:
   does not contain any meta-applications is called (simply) a \emph{term}.
   %%
   \KR{This takes care of the distinction between meta-term and term.}
+  \CK{Would it be acceptable to replace ``any meta-applications'' by ``any meta-applications or exclusions'' in that reformulation?}
 
 %%  \MS{E.g., in KR thesis, TeReSe, a distinction between meta term and term (i.e., a meta term
 %%    without meta variables) is made. Do we also want to do this?}
@@ -377,8 +378,20 @@ data constructors).
 \end{example}
 
 \hax also includes traditional higher-order rewriting systems (again with distinct defined symbols).
-Indeed, \hax includes \KR{Cynthia: please insert proper designation and reference (Inductive Pattern
-  Systems?!?).}
+Indeed, \hax includes
+%\KR{Cynthia: please insert proper designation and reference (Inductive Pattern
+%  Systems?!?).}
+Aczel's \emph{Contraction Schemes}~\cite{Aczel:1978}, and Klop's \emph{Combinatory
+Reduction Systems}~\cite{Klop+:tcs1993} when a simple typing is imposed (which can also
+be seen as the second-order limitation of Blanqui's \emph{Inductive Data Type
+Systems}~\cite{BlanquiJouannaudOkada:tcs2002}).
+\CK{Inserted the references, feel free to refomulate.  Basically, IDTSs are
+simply-typed CRSs where any typing is permitted, and what we're doing is
+second-order simply-typed CRSs plus association lists.  Contraction schemes are
+second-order simply-typed CRSs with some unnecessary additional restrictions, so
+closest to what we're doing, but it's a not-exactly-published paper that is
+somewhat doomed to live in obscurity (although for a nice extra, they share our
+notational convention that an abstraction is not considered a term).}
 
 \begin{example}\label{ex:lambda}
   %%
@@ -520,6 +533,10 @@ rules, with some restrictions. This is what the \kw{variable} declaration is for
   by the \emph{variable convention}: ``all free and bound variables in any context must be
   distinct'' which implies $x≠y$ in the (xvgc) rule…}
 
+\CK{Are they not still mutually exclusive, even without the variable convention? $[x]x$ and $[x]y$
+are not unifiable, and I would always define matching in a way to ensure that a free variable
+cannot capture a bound one, regardless of its name.}
+
 Formally, when a sort has a \kw{variable} declaration then it is said to have \emph{syntactic
   variables}, which has some consequences:
 %%
@@ -575,17 +592,17 @@ Program⟨α,β⟩ data Stat(α);
   %%
   Figure~\ref{fig:te} shows sorts and rules for 
   %%
-\CK{This example is interesting, because it combines two catchers in
-the same association set on the right! I wonder how that's defined.
-(Although it's easily avoided if undesirable, by simply replacing the
-``union'' by an ``add''.)}
-\KR{Indeed! I think Lionel has it implemented as ``add''…but here we should describe the ideal as
-  long as it allows for add, I think.}
-\CK{So what \emph{should} the semantics be?  If there are conflicting
-  pairs in \#1 and \#2, what happens? Does the first or the second take
-  priority, or should it crash?}
-\LV{Yes it's implemented as add. In this case the semantic could
-be \#2 is added to \#1. Entries in \#2 override entries in \#1.}
+%\CK{This example is interesting, because it combines two catchers in
+%the same association set on the right! I wonder how that's defined.
+%(Although it's easily avoided if undesirable, by simply replacing the
+%``union'' by an ``add''.)}
+%\KR{Indeed! I think Lionel has it implemented as ``add''…but here we should describe the ideal as
+%  long as it allows for add, I think.}
+%\CK{So what \emph{should} the semantics be?  If there are conflicting
+%  pairs in \#1 and \#2, what happens? Does the first or the second take
+%  priority, or should it crash?}
+%\LV{Yes it's implemented as add. In this case the semantic could
+%be \#2 is added to \#1. Entries in \#2 override entries in \#1.}
 \end{example}
 
 \begin{figure}[h!t]
@@ -593,23 +610,28 @@ be \#2 is added to \#1. Entries in \#2 override entries in \#1.}
 // Booleans with conditional.
 Bool data True; Bool data False; α scheme If(Bool, α, α);
 
-// Pick number.
-Int scheme Pick(List⟨Int⟩, [Int,Int]Bool);
-Int rule Pick(#, [x,y]#pick(x,y)) → Pick2(#, [x,y]#pick(x,y), N);
+// If rules.
+α rule If(True, #1, #2) → #1;
+α rule If(False, #1, #2) → #2;
 
-Int scheme Pick2(List⟨Int⟩, [Int,Int]Bool, Int);
-Int rule Pick2(Nil, [x,y]#pick(x,y), #n) → #n;
-Int rule Pick2(Cons(#1, #rest), [x,y]#pick(x,y), #n)
-  → Pick2(#rest, [x,y]#pick(x,y), #pick(#1,#n));
+// Pick number.
+N scheme Pick(List⟨N⟩, [N,N]Bool);
+N rule Pick(#, [x,y]#greater(x,y)) → Pick2(#, [x,y]#pick(x,y), Zero);
+
+N scheme Pick2(List⟨N⟩, [N,N]Bool, N);
+N rule Pick2(Nil, [x,y]#greater(x,y), #n) → #n;
+N rule Pick2(Cons(#1, #rest), [x,y]#pick(x,y), #n)
+  → Pick2(#rest, [x,y]#greater(x,y), If(#greater(#1,#n),#1,#n));
   \end{hacs}
-  \caption{Find largest element of list of integers.}
+  \caption{Find largest element of a list of natural numbers.}
   \label{fig:pick}
 \end{figure}
 
 \begin{example}[]\label{ex:pick}
   %%
-  Figure~\ref{fig:pick} shows a simple ``pick a number from a list'' program (assuming the "List"
-  sort from Example~\ref{ex:list}).
+  Figure~\ref{fig:pick} shows a simple ``pick a number from a list'' program
+  (assuming the "N" sort from example~\ref{ex:peano}, and the "List" sort from
+  Example~\ref{ex:list}).
 
   \CK{This example seems incomplete.  For example, what's N? Is that meant to
   be 0? It's not declared; we have thus far only seen Z (of sort N, not Int).
@@ -619,6 +641,9 @@ Int rule Pick2(Cons(#1, #rest), [x,y]#pick(x,y), #n)
   the second Pick2 rule is not well-typed (as the third argument of the RHS
   has type Bool rather than Int).}
   \KR{Yep, its a bit sketchy. Anyone?}
+  \CK{Do you like it like this? I wasn't sure about adding the If rules (which
+  were given before, but not in an example that I could refer to), and whether
+  any rules for the comparison should be given.}
   %%
 \end{example}
 
@@ -834,7 +859,7 @@ combines
 %% 
 \begin{itemize}
 
-\item $Γ_{\op{hasvar}}\colon 2^{\mathcal{C}}$ is a set of sorts names (the sorts that allow variables).
+\item $Γ_{\op{hasvar}}\colon 2^{\mathcal{C}}$ is a set of sort names (the sorts that allow variables).
 
 \item $Γ_{\op{cons}}\colon \mathcal{C} → S×F^*$ from constructor name to pairs of a sort and a
   list of forms.
