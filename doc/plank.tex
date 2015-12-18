@@ -1092,6 +1092,70 @@ EU-funded Marie Skłodowska-Curie ``HORIP'' action collaboration with Cynthia Ko
 %------------------------------------------------------------------------
 \appendix
 
+\section{\bhax in \HAX}
+
+We encode \hax in \HAX…\KR{It may even work, eventually.}
+%
+\begin{hacs}[numbers=right,texcl]
+// HACS module for the \hax calculus.
+module org.crsx.hacs.Plank {
+
+// \textbf{Lexical.}
+
+// Spaces and comments.
+space " " | [\t\n] | "//" ([^/\n] | "/" [^/\n])*;
+
+// Identifiers (TODO: proper Unicode).
+token CON   | [A-Z] ⟨IDCHAR*⟩;   // $c$
+token VAR   | [a-z] ⟨IDCHAR*⟩;    // $v$
+token META  | "#" ⟨IDCHAR*⟩;     // $m$
+token fragment IDCHAR | [A-Za-z0-9_];
+
+// \textbf{Grammar.} Only captures syntax, not binding.
+
+sort H // \hax script.
+| ⟦ ⟨D*⟩ ⟧
+;
+
+sort D // Declaration.
+| ⟦ ⟨S⟩ data ⟨CON⟩ ( ⟨F*,⟩ ) ; ⟧
+| ⟦ ⟨S⟩ scheme ⟨CON⟩ ( ⟨F*,⟩ ) ; ⟧
+| ⟦ ⟨S⟩ variable ; ⟧
+| ⟦ ⟨S⟩ rule ⟨M⟩ → ⟨M⟩ ; ⟧
+;
+
+sort F // Form.
+| ⟦ [ ⟨S*,⟩ ] ⟨S⟩ ⟧  | sugar ⟦ ⟨S#⟩ ⟧ → ⟦ []⟨S#⟩ ⟧
+| ⟦ { ⟨S⟩ : ⟨S⟩ } ⟧
+;
+
+
+sort S // Sort.
+| ⟦ ⟨CON⟩ ⟨ ⟨S*,⟩ ⟩ ⟧  | sugar ⟦ ⟨CON#⟩ ⟧ → ⟦ ⟨CON#⟩ ⟨ ⟩ ⟧
+| ⟦ ⟨VAR⟩ ⟧
+;
+
+sort M // Meta-term.
+| ⟦ ⟨CON⟩ ( ⟨P*,⟩ ) ⟧  | sugar ⟦ ⟨CON#⟩ ⟧ → ⟦ ⟨CON#⟩() ⟧
+| ⟦ ⟨VAR⟩ ⟧
+| ⟦ ⟨META⟩ ( ⟨M*,⟩ ) ⟧  | sugar ⟦ ⟨META#⟩ ⟧ → ⟦ ⟨META#⟩() ⟧
+;
+
+sort P // Piece.
+| ⟦ { ⟨A*,⟩ } ⟧
+| ⟦ [ ⟨VAR*,⟩ ] ⟨M⟩ ⟧   | sugar ⟦ ⟨M#⟩ ⟧ → ⟦ []⟨M#⟩ ⟧
+;
+
+sort A // Association.
+| ⟦ ⟨M⟩ : ⟨M⟩ ⟧
+| ⟦ ¬ ⟨M⟩ ⟧
+| ⟦ ⟨M⟩ ⟧  // really only $m(v^*)$ but that's ambiguous
+;
+
+}
+\end{hacs}
+
+
 \section{Bra-Ket}
 
 \KR{Just for fun: Here is ``bra-ket'' notation (from physics), also kind of cool. I'd love this, and
