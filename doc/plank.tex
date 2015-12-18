@@ -33,6 +33,7 @@
 \newcommand{\KR}[1]{\textcolor{red}{KR: #1}}
 \newcommand{\LV}[1]{\textcolor{green}{LV: #1}}
 \newcommand{\MS}[1]{\textcolor{violet}{MS: #1}}
+\newcommand{\JN}[1]{\textcolor{orange!70!black}{JN: #1}}
 
 \begin{document}
 \maketitle
@@ -537,6 +538,9 @@ rules, with some restrictions. This is what the \kw{variable} declaration is for
 are not unifiable, and I would always define matching in a way to ensure that a free variable
 cannot capture a bound one, regardless of its name.}
 
+\JN{I agree. $[x]y$ should not match anything of the form $[x]M(x)$, i.e., a term that does contain
+  the bound $x$}
+
 Formally, when a sort has a \kw{variable} declaration then it is said to have \emph{syntactic
   variables}, which has some consequences:
 %%
@@ -592,17 +596,21 @@ Program⟨α,β⟩ data Stat(α);
   %%
   Figure~\ref{fig:te} shows sorts and rules for 
   %%
-%\CK{This example is interesting, because it combines two catchers in
-%the same association set on the right! I wonder how that's defined.
-%(Although it's easily avoided if undesirable, by simply replacing the
-%``union'' by an ``add''.)}
-%\KR{Indeed! I think Lionel has it implemented as ``add''…but here we should describe the ideal as
-%  long as it allows for add, I think.}
-%\CK{So what \emph{should} the semantics be?  If there are conflicting
-%  pairs in \#1 and \#2, what happens? Does the first or the second take
-%  priority, or should it crash?}
-%\LV{Yes it's implemented as add. In this case the semantic could
-%be \#2 is added to \#1. Entries in \#2 override entries in \#1.}
+\CK{This example is interesting, because it combines two catchers in
+the same association set on the right! I wonder how that's defined.
+(Although it's easily avoided if undesirable, by simply replacing the
+``union'' by an ``add''.)}
+\KR{Indeed! I think Lionel has it implemented as ``add''…but here we should describe the ideal as
+ long as it allows for add, I think.}
+\CK{So what \emph{should} the semantics be?  If there are conflicting
+ pairs in \#1 and \#2, what happens? Does the first or the second take
+ priority, or should it crash?}
+\LV{Yes it's implemented as add. In this case the semantic could
+be \#2 is added to \#1. Entries in \#2 override entries in \#1.}
+
+\JN{So, is the conclusion that we have a biased union? that seems a bit awkward though, doesn't it?
+  Since then the semantics of $Env(\{\#1,\#2\})$ and $Env(\{\#2,\#1\})$ would be different but it's
+  a set so \dots}
 \end{example}
 
 \begin{figure}[h!t]
@@ -908,6 +916,17 @@ Notes.
 
 In this section we formally define rewriting in the \hax calculus. We follow [\TBD{Cynthia?}] in
 defining rewriting in the context of a sort assignment.
+
+\JN{started thinking about how to define rewriting and wondered about inconsistent bindings in
+  association maps in general. My mental model so far was that of a partial mapping, but of course I
+  can easily write down a term (or even rule) that has inconsistent associations. Put differently:
+  are these things really mappings that are represented as sets of pairs, i.e., by their graph, or
+  are they actually sets of pairs that are usually used as mappings? Thinking a bit further: if
+  inconsistent assocs are possible then what happens when I have a term $t = f(\{x: T, x: F\})$ and
+  a rule $f(\{x : \#1, \#2\}) \to \#1$. My intuition would be that $t$ indeed has the two reducts,
+  $T$ and $F$. Also, what's the expected semantics of two catchers in the same assoc map in the lhs
+  of a rule, e.g.\ $f(\{\#1,\#2\}) \to \#1$. When I apply that rule, do I just get sub-map,
+  non-deterministically?}
 
 \begin{definition}[substitution]
   
