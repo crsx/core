@@ -332,7 +332,7 @@ It is even possible to have function constructors that live in \emph{all} sorts:
 even more interesting combinations…}
 
 The \hax formalism includes traditional ``constructor'' term rewriting systems, where there is a
-distinctin between \emph{defined} symbols (\hax function constructors) and undefined symbols (\hax
+distinction between \emph{defined} symbols (\hax function constructors) and undefined symbols (\hax
 data constructors).
 
 \begin{example}\label{ex:peano}
@@ -538,8 +538,16 @@ rules, with some restrictions. This is what the \kw{variable} declaration is for
 are not unifiable, and I would always define matching in a way to ensure that a free variable
 cannot capture a bound one, regardless of its name.}
 
-\JN{I agree. $[x]y$ should not match anything of the form $[x]M(x)$, i.e., a term that does contain
+\JN{I agree. $[x]y$ should not match anything of the form $[x]\#(x)$, i.e., a term that does contain
   the bound $x$}
+
+\KR{Hm: in \CRSX, both of the (sub)terms $A([x]y)$ and $A([x]x)$ match the pattern $A([x]\#(x))$:
+  the variable is \emph{allowed} but \emph{not required}. \CRSX3 includes a special notation
+  (introduced by the dispatchifier) such that the pattern $A([x]\#(!x))$ is matched only by
+  $A([x]x)$ but not by $A([x]y)$ because $x$ must be present. All the systems have that the pattern
+  $A([x]\#())$ matches $A([x]y)$ but not $A([x]x)$. One can argue that it makes sense to have only
+  the mutually exclusive forms $A([x]\#(!x))$ and $A([x]\#())$ but that would be a different kind of
+  system.}
 
 Formally, when a sort has a \kw{variable} declaration then it is said to have \emph{syntactic
   variables}, which has some consequences:
@@ -611,6 +619,11 @@ be \#2 is added to \#1. Entries in \#2 override entries in \#1.}
 \JN{So, is the conclusion that we have a biased union? that seems a bit awkward though, doesn't it?
   Since then the semantics of $Env(\{\#1,\#2\})$ and $Env(\{\#2,\#1\})$ would be different but it's
   a set so \dots}
+
+\KR{If we go with add/biased union then associations are indeed not sets. Maps are so fundamental in
+  semantics that I think any complications arising from the ``non-setness'' of them are a necessary
+  price to pay.}
+
 \end{example}
 
 \begin{figure}[h!t]
