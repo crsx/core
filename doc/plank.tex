@@ -97,8 +97,8 @@ In this section we outline the \hax calculus, and give several examples.
   We will use \emph{vector notation} with $\ov{X}$ denoting $X_1,…,X_n$ for some $n≥0$. Inside
   brackets we'll allow use of ``nothing'' as the empty vector, elsewhere we use the explicit
   symbol~$ε$.  Vectors are combined by simple concatenation with ``$,$'' (comma) if needed. We will
-  freely abuse this notation and, for example, write $\ov{[\ov{x}]x}$ as an abbreviation of
-  $[x_{11}…x_{1m_1}]x_1…[x_{n1}…x_{nm_n}]x_n$ for suitable $n,m_1,…,m_n ≥ 0$. We further abuse the
+  freely abuse this notation and, for example, write $\ov{[\ov{x}]x}$ as an abbreviation of the nested
+  $[x_{11}…x_{1m_1}]x_1,…,[x_{n1}…x_{nm_n}]x_n$ for suitable $n,m_1,…,m_n ≥ 0$. We further abuse the
   notation by letting $\ov{\mathcal{S}}$ denote the set of all vectors from any base
   set~$\mathcal{S}$.
   \KR{With this all Kleene stars (with ``optional commas'') are gone!}
@@ -198,6 +198,8 @@ We shall use the following terminology:
   %%
   \KR{This takes care of the distinction between meta-term and term.}
   \CK{Would it be acceptable to replace ``any meta-applications'' by ``any meta-applications or exclusions'' in that reformulation?}
+  \KR{No, term formation is more strict: only distinct keys in associations. We should probably wait
+    until the sort rules with a formal definition.}
 
 %%  \MS{E.g., in KR thesis, TeReSe, a distinction between meta term and term (i.e., a meta term
 %%    without meta variables) is made. Do we also want to do this?}
@@ -239,9 +241,9 @@ We shall use the following terminology:
 %%constructor with this as output type).}\KR{A: Well stated. We should capture this in the text.}
 
 In summary, we distinguish four different ways to brace elements. For data and scheme
-\emph{subterms}, and for \emph{meta-application arguments} we use $\kw{( )}$.  For \emph{binders} we
-use $\kw{[ ]}$.  For \emph{associations} we use $\kwm{\{\,\}}$.  For \emph{sort parameters} we use
-$\kwm{⟨\,⟩}$.
+\emph{subterms}, and for \emph{meta-application arguments} we use $\kw{(…)}$.  For \emph{binders} we
+use $\kw{[…]}$.  For \emph{associations} we use $\kwm{\{…\}}$.  For \emph{sort parameters} we use
+$\kwm{⟨…⟩}$.
 
 In Figure~\ref{fig:syntax}, the $S$ in $S~\kw{rule}~M~\kw{$→$}~M\,\kw;$ is not superflous. Consider
 the following two rules:
@@ -1025,11 +1027,7 @@ The basic \hax implementation consists of a term representation and a main ``pro
   
 \end{structure}
 
-
-
 \TBD{What about dispatchification…Maria?}
-
-
 
 
 %------------------------------------------------------------------------
@@ -1041,6 +1039,7 @@ In this section we outline how the core idioms of the full \CRSX and \HAX langua
 into~\hax.
 
 \KR{For \HAX I am developing these in crsx/hacs/doc/hacs2.tex.}
+
 
 %------------------------------------------------------------------------
 
@@ -1201,8 +1200,8 @@ sort A // Association.
 \KR{We now distinguish \emph{five} different ways to brace elements; all empty can be omitted
   except associations.
   For data and scheme \emph{subterms}, we use $\kw{( )}$.
-  For \emph{binders} we use $\kwm{⟨~|}$.
-  For \emph{meta-application arguments} we use $\kwm{|~⟩}$.
+  For \emph{binders} we use $\kwm{⟨~|}$ (``bra'').
+  For \emph{meta-application arguments} we use $\kwm{|~⟩}$ (``ket'').
   For \emph{associations} we use $\kwm{\{\,\}}$.
   For \emph{sort parameters} we use $\kwm{[\,]}$.}
 \begin{hacs}
@@ -1213,358 +1212,6 @@ sort A // Association.
   Int rule Pick(#, ⟨x,y|#p|x,y⟩) → If(#p|#,#⟩, Pick(#, ⟨x,y|#p|x,y⟩), #);
 \end{hacs}
 
-\section{Sugar}
-
-\begin{notation}
-  %% 
-  \HAX permits some additional syntactic sugar:
-  %% 
-  \begin{itemize}
-
-  \item Empty parenthesis and brackets can be omitted.
-
-  \item The \kw{data} and \kw{rule} keywords can be omitted.
-
-  \item \TBD{Update to simplified syntax.} Sort cases can be written with \kw{\texttt{|}} and without
-    \kw{\texttt{\{\}}}…
-
-  \item "attribute" declarations can be combined: $"attribute"~a_1~\set{AF}_1,…, a_n~\set{AF}_n ;$
-    is an abbreviation of $"attribute"~a_1~\set{AF}_1;…; "attribute"~a_n~\set{AF}_n;$.
-
-  \item An additional SortCase contruct is allowed:
-    \begin{displaymath}
-      \kw{template}~P~\kw{$→$}~M\,\kw;  \quad⇒\quad
-      \kw{scheme}~P'\,\kw; ~ \kw{\texttt{|}} ~ \kw{data} ~ T'\,\kw; ~ \kw{rule} ~ P~\kw{$→$}~M\,\kw;
-    \end{displaymath}
-    where $P'$ and $T'$ are variants of $P$ and $P$ that have been cleared of "#"s.
-
-  \item Finally, we rewrite special \emph{synthesis rules}:
-    \begin{displaymath}
-      c(\,\ov{\set{PB}}\,)~→~\ov{↑a~\set{V}}\,\kw;
-      \quad⇒\quad
-      \kw{rule}~c(\,\ov{\set{PB}}\,)~→~c(\,\ov{\set{PB}'}\,)~\ov{↑a~\set{V}}\,\kw;
-    \end{displaymath}
-    where $\set{PB}_i'$ is $\set{PB}_i$ with negative attribute patterns $\{¬{…}\}$ removed.
-
-  \item We rewrite special \emph{inheritance rules}:
-    \begin{displaymath}
-      c(\,\ov{\set{PB}}\,)~→~\ov{↓v~\set{V}}\,\kw;
-      \quad⇒\quad
-      \kw{rule}~c(\,\ov{\set{PB'}}\,)~\ov{↓v~\set{V}}~→~c(\,\ov{\set{PB}'}\,)\,\kw;
-    \end{displaymath}
-    where 
-
-  \item As defined below, every term $f(…)\ov{A}$ for a symbol $f$ defined with
-    \begin{displaymath}
-      \kw{\texttt{|} scheme}~f\,\kw(…\kw)~\ov{\set{AI}}
-    \end{displaymath}
-    must include an $A_i$ instance for every attribute defined by some $\set{AI}_i$.  The system
-    automatically includes missing inherited attributes as follows:
-    \begin{itemize}
-    \item In patterns, a missing attribute is inserted as "↓a(#a)" or "↓a{#a}" as appropriate.
-    \item Missing attributes that were defined in the pattern are inserted the same.
-    \item Remaining missing attributes must be of a map sort and are inserted as~"↓a{}".
-    \end{itemize}
-
-  \item We allow two more forms of \set{PA}:
-    \begin{displaymath}
-      \set{PA} ::= {…} \bigm| \kw{$↑$}\,m \bigm| \kw{$↓$}\,m
-    \end{displaymath}
-    They expand to all relevant synthesized and inherited attributes, respectively.
-
-  \end{itemize}
-\end{notation}
-
-\begin{example}
-  With syntactic sugar, we can simplify the Peano example to
-  %%
-  \begin{hacs}[numbers=right]
-    sort N | Z | S(N) | scheme Plus(N, N) ;
-    Plus(Z, S(#2)) → #2 ; 
-    Plus(S(#1), #2) → S(Plus(#1, #2)) ;
-  \end{hacs}
-\end{example}
-
-\begin{example}[untyped λ calculus]
-  The untyped λ calculus is specified as follows in \hax with syntactic sugar:
-  %%
-  \begin{hacs}
-    sort L | variable | Lm([x]Lam[x as L]) | scheme Ap(L, L) | x ;
-    rule Ap(Lm([x]#body(x)), #arg) →  #body(#arg) ;
-  \end{hacs}
-  %%
-  The example shows how binding is declared and used for substitution in the style of CRS
-  systems~\cite{Klop+:tcs1993}:\footnote{The notation differs from the original CRS notation in that
-    we use ``\#'' as a marker for meta-variables instead of the original reserved use of $Z$, and we
-    use square brackets for substitution variables instead of round.}
-  %%
-  (Note that the same example in the (non-raw) full \HAX notation can include a parser for the
-  native custom λ calculus syntax:
-  %%
-  \begin{hacs}
-    token ID | [a-z] [a-z0-9_]* ;
-    sort V | symbol ⟦⟨ID⟩⟧ ;
-    sort L | ⟦λ⟨V binds x⟩.⟨L[x as L]⟩⟧ | scheme ⟦⟨L@1⟩⟨L@2⟩⟧@1
-           | ⟦⟨V⟩⟧@2 | sugar ⟦(⟨L#⟩)⟧@2 →  #;
-    ⟦ (λx.⟨L#body(x)⟩) ⟨L#arg⟩ ⟧ →  #body(#arg) ;
-  \end{hacs}
-  %%
-  including precedence markers, syntactic sugar, \etc; for details see the full \HAX
-  manual. Essentially the syntax-rich example translates to a parser and the former.)
-\end{example}
-
-\section{Inference Systems}
-\label{sec:infer}
-
-A common notation for specifying program analysis and …
-
-A set of of inference rules is ...
-
-\begin{definition}
-  %%
-  A \HAX \emph{ground sequential inference rule} has the form
-  %%
-  \begin{equation}
-    \dfrac{ M_1 ⇒ P_1 \quad\cdots\quad M_n ⇒ P_n }{ P_0 ⇒ M_{n+1} }
-    \label{eq:infer}
-  \end{equation}
-  %%
-  where $n≥0$ and
-  %%
-  \begin{enumerate}
-  \item $P_0$ (the \emph{initial} pattern) can be any \HAX pattern.
-  \item $M_i$ (the \emph{tests}, $1≤i≤n$) are \HAX terms, and are allowed occurrences of meta-variables from $P_0…P_{i-1}$.
-  \item $P_i$ (the \emph{constraints}, $i>0$) must be \HAX subpatterns.
-  \item $M_{n+1}$ (the \emph{conclusion}) is allowed occurrences of all meta-variables.
-  \end{enumerate}
-  %%
-  An inference rule with $n=0$ is called an \emph{axiom}, with $n>0$ a \emph{proper inference}.
-  %%
-  The $M_i⇒P_i$ over the line are called \emph{premise judgments}. The $P_0⇒M_{n+1}$ under the line
-  is called the \emph{conclusion judgment}.
-  %%
-  Below we will vary the indexing scheme to capture various enumerations of sets of inference rules.
-\end{definition}
-
-\begin{definition}[pattern family]\label{def:patfam}
-  Consider a set of ground sequential inference rules.  Such a set can obviously be indexed by the
-  distinct initial patterns into families of rules
-  \begin{displaymath}
-    \dfrac{ M_{ij1} ⇒ P_{ij1} \cdots M_{ijn_{ij}} ⇒ P_{ijn_{ij}} }{ P_i ⇒ M_{ij} } ~(L_{ij})
-  \end{displaymath}
-  where all the $P_i$ used to index the family are pairwise distinct.  The groups obtained in this
-  way are a \emph{pattern family}.
-\end{definition}
-
-\begin{definition}[leftmost matching]
-  Consider a pattern family as in Definition~\ref{def:patfam}.  The family is said to be
-  \emph{leftmost matching} if the group of rules for each $P_i$ satisfies one of the following
-  conditions:
-  \begin{itemize}
-  \item either the family contains a single axiom, \ie, $1≤j≤1$ with $n_{ij}=0$,
-  \item or the family contains only proper inferences, \ie, $1≤j≤m_i$ with $n_{ij}>0$.
-  \end{itemize}
-\end{definition}
-
-%% Sub-index each non-axiom $P_i$-group by leftmost premise construction into sub-families of
-%%    the form
-%%    \begin{displaymath}
-%%      \dfrac{ M_{ij} ⇒ P_{ijk1} \quad M_{ijk2} ⇒ P_{ijk2} \quad\cdots\quad M_{ijkn_{ijk}} ⇒ P_{ijkn_{ijk}} }{ P_i ⇒ T_{ijk} }
-%%    \end{displaymath}
-%%    where all the $T_{ij}$ used to index the sub-family within a $P_i$-group are pairwise disjoint.
-
-\begin{definition}[left-operations]
-  Given a leftmost-matching pattern family. Each $P$-indexed group of proper inference rules will
-  have the following form:
-  \begin{displaymath}
-    \dfrac{ T_{j1} ⇒ P_{j1} \quad T_{j2} ⇒ P_{j2} \quad\cdots\quad T_{jn_j} ⇒ P_{jn_j} }{ P ⇒ T_j } ~ (L_j)
-  \end{displaymath}
-  with one $j$ per rule in the family, which is by definition non-empty ($1≤j≤n$) and contains only
-  proper inferences ($n_j≥1$).
-  %%
-  \begin{enumerate}
-
-  \item Given a label $L$, the \emph{left-flattening} rewrite rules of the group are
-    %% 
-    \begin{align*}
-      L(P) &→ L'(T_{11}, …,T_{n1}, P) \\[\jot]
-      L'(P_{11}, m_2, …, m_n, P) &→ L_1(P, P_{11}) \\[-\jot]
-      &~\vdots\\
-      L'(m_1, …, m_{n-1}, P_{n1}, P) &→ L_n(P, P_{n1})
-    \end{align*}
-    %% 
-    with $L'$ a fresh symbol associated with the group and the $m_j$ fresh meta-variables.
-
-  \item The \emph{left-eliminated} rules for the group are the rules
-    \begin{displaymath}
-      \dfrac{ T_{j2} ⇒ P_{j2} \quad\cdots\quad T_{jn_j} ⇒ P_{jn_j} }{ L_j(P, P_{j1}) ⇒ T_j } ~ (L'_j)
-    \end{displaymath}
-    with the $L'_j$ fresh labels derived from the $L_j$ labels.
-
-  \end{enumerate}
-\end{definition}
-
-\begin{definition}[left-unfolded]
-  Given a leftmost-matching pattern family and consider the proper inference rule group indexed by
-  $P$. The following system is the \emph{left-unfolded} inference system for the $P$-indexed group:
-  \begin{enumerate}
-
-  \item The left-flattening rewrite rules of the group for a fresh~$L$.
-
-  \item The new inference rule (which refers to the rewrite rules)
-    \begin{displaymath}
-      \dfrac{ L(P) → m \quad m ⇒ m' }{ P ⇒ m } ~ (L)
-    \end{displaymath}
-
-  \item The left-eliminated inference rules (which may be axioms or proper inferences).
-
-  \end{enumerate}
-\end{definition}
-
-\begin{proposition}
-  Given a set of ground sequential inference rules, which is a leftmost-matching pattern
-  family. Pick one group of proper inference rules, indexed by the initial pattern $P$. The original
-  system and the system where the group has been replaced with the left-unfolded group have the same
-  normal forms.
-\end{proposition}
-\begin{proof}
-  Easy: full proof tree before corresponds to proof tree after with simple conversion of the
-  eliminated eliminated premise to an application of the new rule and a single use of the rewrite
-  rule.
-\end{proof}
-
-Note that we can only prove that full ``big-step'' evaluations are equivalent: the new rules may
-``get stuck'' in interesting ways (\TBD{example with overlapping patterns}).
-
-\begin{lemma}
-  Start with any leftmost matching ground sequential inference rule system and apply left-unfolding
-  repeatedly except on axioms and the introduced inference rules
-  \begin{displaymath}
-    \dfrac{ L(P) → m \quad m ⇒ m' }{ P ⇒ m }
-  \end{displaymath}
-  The resulting system has the same normal forms as the original system.
-\end{lemma}
-
-To finish the transform from inference rules to \HAX rules we need two additional notions.
-
-\begin{definition}
-  An inference system is \emph{rooted} if it has one rule that occurs as the root rule of every
-  proof tree.
-\end{definition}
-
-\begin{definition}
-  A leftmost-matching ground sequential inference rule system is \emph{left deterministic} if the
-  left-flattening 
-\end{definition}
-
-\begin{theorem}
-  A rooted and leftmost matching ground sequential inference system can be implemented by a 
-\end{theorem}
-
-\section{Attributes}
-
-\begin{definition}[synthesized attributes]\label{def:synth}%
-  %%
-  A \emph{singleton synthesis rule} has the shape
-  %%
-  \begin{displaymath}
-    c\biggl(\cdots \vcenter{\txt{
-          $c_i({\cdots})\,{{↑}a_i\{{\cdots}\}}$\\
-          $m_i[{\cdots}]\,{{↑}a_i\{{\cdots}\}}$
-        }}\cdots\biggr)
-    ~{{↑}a\{{\cdots}\}}
-  \end{displaymath}
-  %%
-  (with the embedded subterms denoting all such subterms; the ``singleton'' restriction comes from
-  the single synthesized attribute on all subterms).
-
-  The \emph{synthesis simplification system} for the synthesis rule is
-  %%
-  \begin{align*}
-    \op{Needs}_a\Biggl(
-    c\biggl(\cdots \vcenter{\txt{
-        $c_i({\cdots})$\\
-        $m_i[{\cdots}]$
-      }}\cdots\biggr)
-    \Biggr)
-    &→
-    \op{Collect}\Biggl(
-    c\biggl(\cdots \vcenter{\txt{
-        $\op{Needs}_{{a_i}}(c_i({\cdots}))$\\
-        $\op{Needs}_{{a_i}}(m_i[{\cdots}])$
-      }}\cdots\biggr)    
-    \Biggr)
-    \\[1em]
-    \op{Collect}\Biggl(
-    c\biggl(\cdots \vcenter{\txt{
-          $c_i({\cdots})\,{↑}a_i\{{\cdots}\}$\\
-          $m_i[{\cdots}]\,{↑}a_i\{{\cdots}\}$
-      }}\cdots\biggr)
-    \Biggr)
-    &→
-    c\biggl(\cdots \vcenter{\txt{
-          $c_i({\cdots})\,{↑}a_i\{{\cdots}\}$\\
-          $m_i[{\cdots}]\,{↑}a_i\{{\cdots}\}$
-        }}\cdots\biggr)
-    ~{↑}a\{{\cdots}\}
-  \end{align*}
-  %%
-\end{definition}
-
-\begin{example}
-  \TBD{Example synthesis simplification.}
-\end{example}
-
-\TBD{Discuss multiple dependent and independent synthesized attributes, and proof sketch that the
-  simplification is correct; also the erasure of not-patterns, and check details from .}
-
-\begin{definition}[inherited attributes]\label{def:synth}%
-  %%
-  \begin{align*}
-    F\bigl(\cdots \vcenter{\txt{
-          $A({·})\,{↑}a({·})$\\
-          $X[{·}]\,{↑}x({·})$
-        }}\cdots\bigr)
-    {↓}c({·})
-    &→
-    \cdots\vcenter{\txt{
-        $B({·})\,{↑}b({·})$\\
-        $Y[{·}]\,{↑}y({·})$}}
-    \cdots\vcenter{\txt{
-        $G({·})\,{↓}g({·})$\\
-        $Z[{·}]\,{↓}z({·})$}}
-    \cdots
-    \\
-    \intertext{becomes}
-    %%
-    F\bigl(\cdots \vcenter{\txt{
-          $A({·})$\\
-          $X[{·}]$
-        }}\cdots\bigr)
-    {↓}c({·})
-    &→
-    F'\bigl(\cdots \vcenter{\txt{
-          $\op{Needs}_a(A({·}))$)\\
-          $\op{Needs}_x(X[{·}])$
-        }}\cdots\bigr)
-    {↓}c({·})
-    \\[1em]
-    F'\bigl(\cdots \vcenter{\txt{
-          $A({·})\,{↑}a({·})$\\
-          $X[{·}]\,{↑}x({·})$
-        }}\cdots\bigr)
-    {↓}c({·})
-    &→
-    \cdots\vcenter{\txt{
-        $B({·})\,{↑}b({·})$\\
-        $Y[{·}]\,{↑}y({·})$}}
-    \cdots\vcenter{\txt{
-        $G({·})\,{↓}g({·})$\\
-        $Z[{·}]\,{↓}z({·})$}}
-    \cdots
-  \end{align*}
-  %% 
-\end{definition}
 
 \end{document}
 
