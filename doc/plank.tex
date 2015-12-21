@@ -1037,64 +1037,10 @@ The basic \hax implementation consists of a term representation and a main ``pro
 \section{Supporting Compiler Paradigms}
 \label{sec:compiling}
 
-In this section we outline how the standard compiler construction idioms of the full \HAX language
-translate into~\hax.
+In this section we outline how the core idioms of the full \CRSX and \HAX languages translate
+into~\hax.
 
-\begin{definition}[higher order inference rule]\label{def:infer}%
-  %%
-  A (higher order) \emph{inference rule} has the form
-  %%
-  \begin{displaymath}
-    \dfrac
-    { ∀\,\ov{x} : (\, C_1⇒P_1 ~\cdots~ C_n⇒P_n \,) }
-    { P_0 ⇒ C_{n+1}}
-    ~(L)
-  \end{displaymath}
-  %%
-  where
-  %%
-  \begin{itemize}
-  \item $L$ is the unique name of the rule.
-  \item $P_0$ and all of $C_1,…,C_n$ are \emph{function constructions}.
-  \item $P_0$ is a \emph{pattern} and all of $P_1,…,P_n$ are \emph{pattern fragments}.
-  \item $∀i : \op{mv}(C_i) ⊆ \op{mv}(P_0…P_{i-1})$.
-  \end{itemize}
-  %%
-  The \emph{inference simplification system} for the above rule is the system
-  %%
-  \begin{align}
-    P_0 &→ L_1(P_0, [\ov{x}]C_1) \tag{$L_0$}\\
-    L_1(P_0, [\ov{x}]P_1) &→ L_2(P_0, [\ov{x}]P_1, [\ov{x}]C_2) \tag{$L_1$}\\[-\jot]
-    &~~\vdots\notag\\
-    L_{n-1}(P_0, [\ov{x}]P_1, …, [\ov{x}]P_{n-1}) &→ L_n(P_0, [\ov{x}]P_1, …, [\ov{x}]P_{n-1}, [\ov{x}]C_n) \tag{$L_{n-1}$}\\
-    L_n(P_0, [\ov{x}]P_1, …, [\ov{x}]P_n) &→ C_{n+1} \tag{$L_n$}
-  \end{align}
-  %%
-  (where all symbols, including the variables $\ov{x}$, are the same as in the initial rule). All
-  these rules need to be part of the "sort" declaration for the sort of $P_0$ and $C_{n+1}$, along
-  with "scheme" declarations for all the introduced $L_i$ symbols.
-  %%
-\end{definition}
-
-\begin{example}
-  \TBD{Example inference simplification.}
-\end{example}
-
-We can prove that the inference simplification system for an inference rule implements the same
-semantics for non-overlapping $P_0$s. Even with an identical prefix $P_0,\ov{x},C_1$ for two rules,
-the system can be generated: in that case the two $L_1$ symbols of the rules must be aliased to a
-common function symbol; in general $L_1…L_k$ must be collapsed for identical prefixes
-$P_0,\ov{x},C_1,P_1, C_2,…,P_{k-1}, C_k$. \TBD{Explain?}
-
-%------------------------------------------------------------------------
-
-\section{A Constraint Model}
-\label{sec:constraints}
-
-In this section, we introduce a notion of \emph{constraint associations} and primitives for
-\emph{constraint solving}.
-
-\TBD{Develop this…Eva?}
+\KR{For \HAX I am developing these in crsx/hacs/doc/hacs2.tex.}
 
 %------------------------------------------------------------------------
 
