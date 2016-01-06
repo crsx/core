@@ -976,7 +976,11 @@ In this section we provide proofs for several standard rewrite properties of~\ha
 In this section we give notes on how we see \hax implemented. The implementation uses classic term
 graph rewriting extended to handle binders and associations.
 
-The basic \hax implementation consists of a term representation and a main ``progress loop.''
+The basic \hax implementation consists of a term representation with sharing and a rewrite engine. Both are described
+in more details below.     
+
+
+\subsection{Term graph representation}
 
 \begin{definition}[identifiers]
   %%
@@ -1015,17 +1019,33 @@ The basic \hax implementation consists of a term representation and a main ``pro
   \item Constructor identifier.
   \item Reference count.
   \item Pointer to cached free variable set (more on this below).
-  \item Array of free variable identifiers (with length as required by constructor to cover all
-    scopes).
+  \item Two-dimensional array of bound variable identifiers (with length as required by constructor to cover all
+    scopes). 
   \item Array of pointers to scoped subterms (with length as required by the constructor).
-  \item Array of association sets (with length as required by the constructor).
+  \item Array of association sets (with length as required by the constructor). \LV{Plank shouldn't need this}
   \end{itemize}
   %%
 \end{structure}
 
+This structure allows for term sharing, similar to a Jungle \cite{Hoffmann91implementingterm}. Explain differences if any...
+
 \begin{structure}[association set]
+  %%
+  Association sets are implemented as a mix of linked list and hash map. Linked list are generally used when the association sets size is under a
+  configurable threshold, as well as when extending shared sets (see below). When the association set reaches a certain size, it is indexed 
+  and represented as hashmap. 
+  
+  Association sets can be shared by several different terms. Destructive update on hash map is performed when association set is uniquely owned. 
+  
+  Association sets can only be extended (see section...), any previous entries can be shadowed by a new entry. There is no attempt to
+  garbage collect shadowed entries. Only when the association set is a hash map, previous entries can be reclaimed.
   
 \end{structure}
+
+\subsection{Rewrite Engine}
+
+The reduction strategy follows a leftmost-outermost evaluation \cite{Toyama05reductionstrategies}. 
+ 
 
 \TBD{What about dispatchification…Maria?}
 
