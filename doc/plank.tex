@@ -51,7 +51,7 @@
   how the central constructs of the much richer \HAX and \CRSX formalisms can be represented in
   \hax. We also outline how \hax can be implemented, and summarize central properties of the system.
 
-  \CK{Cynthia!} \KR{Kris!} \LV{Lionel!} \MS{Maria!}
+  \CK{Cynthia!} \KR{Kris!} \LV{Lionel!} \MS{Maria!} \JN{Julian!}
 \end{abstract}
 
 \compacttableofcontents
@@ -932,16 +932,83 @@ Notes.
 In this section we formally define rewriting in the \hax calculus. We follow [\TBD{Cynthia?}] in
 defining rewriting in the context of a sort assignment.
 
-\JN{started thinking about how to define rewriting and wondered about inconsistent bindings in
-  association maps in general. My mental model so far was that of a partial mapping, but of course I
-  can easily write down a term (or even rule) that has inconsistent associations. Put differently:
-  are these things really mappings that are represented as sets of pairs, i.e., by their graph, or
-  are they actually sets of pairs that are usually used as mappings? Thinking a bit further: if
-  inconsistent assocs are possible then what happens when I have a term $t = f(\{x: T, x: F\})$ and
-  a rule $f(\{x : \#1, \#2\}) \to \#1$. My intuition would be that $t$ indeed has the two reducts,
-  $T$ and $F$. Also, what's the expected semantics of two catchers in the same assoc map in the lhs
-  of a rule, e.g.\ $f(\{\#1,\#2\}) \to \#1$. When I apply that rule, do I just get sub-map,
-  non-deterministically?}
+\bigskip
+\JN{MS and JN thought about behavior of association maps -- thoughts and proposals below}:
+\paragraph{Commutativity}
+Although the two association maps $"{x : T, y : F}"$ and $"{y : F, x : T}"$ are not syntactically
+equal, one would expect them to behave identically, as they contain the same associations. That is
+one could argue that we consider association maps modulo commutativity (one possibility to model
+this formally could be to treat ``,'' as a commutative binary symbol). But then we seem to run into
+problems with ``inconsistent'' associations, because $"{x : T, x : F}"$ and $"{x : F, x : T}"$ would
+then also be indistinguishable. This problem becomes particularly apparent when considering
+matching: Suppose we have a rule $"Fun({ x : #1, #2}) → #1"$. The following two rewrite steps are
+expected: $"Fun({ x : T, y : F}) → T"$ with $\#1 \mapsto T, \#2 \mapsto y : F$ and
+$"Fun({y : F, x : T}) → T"$ again with $\#1 \mapsto T, \#2 \mapsto y : F$ (but using
+commutativity). But then one might argue that, simply exchanging the $y$ for another $x$, also the
+two steps $"Fun({ x : T, x : F}) → T"$ with $\#1 \mapsto T, \#2 \mapsto x : F$ and
+$"Fun({ x : F, x : T}) → T"$ again with $\#1 \mapsto T, \#2 \mapsto x : F$ should be possible. But
+then so should $"Fun({ x : F, x : T}) → F"$ and $"Fun({ x : T, x : F}) → F"$.
+
+There are multiple ways to resolve this. A first is to not resolve, but embrace it and simply allow
+this behavior.\footnote{But this doesn't fit the behavior in \CRSX, right? So that's maybe not the
+  way to go.} Then it should be possible to define association maps via rewriting modulo ACU, i.e.,
+with a binary symbol for building association sets (say ``,'') that is considered modulo
+associativity, commutativity and with the empty association map as a unit element. This makes
+matching and unification quite a bit harder, but also allows to build on well-studied theory.
+
+Another way would be to disallow ``inconsistent'' association maps (where we will have to specify,
+what exactly inconsistent means). So assume we forbid association maps that are already inconsistent
+both in rules and the terms we rewrite. The question then obviously is how to make sure we do not
+introduce inconsistencies. One way is via instantiations -- that is we need to apply substitutions
+to association maps such that no key can be present twice, either by favoring the already present
+one or by overwriting it. A possible (partial) definition for the former is given below:
+\begin{align*}
+  \{\}\sigma &= \{\}\\
+  \{A_1,\ldots,A_n\}\sigma &= \{A_1,\ldots,A_{n-1}\}\sigma \uplus A_n\sigma\\
+  \{\} \uplus A &= \{A\}\\
+  \{k_1:v_1,\ldots,k_n:v_n\} \uplus \{k : v\} &=
+  \begin{cases}
+    \{k_1:v_1,\ldots,k_n:v_n\} &\text{if $k\approx k_i$ for some $1 \leq i \leq n$}\\
+    \{k_1:v_1,\ldots,k_n:v_n, k : v\} &\text{otherwise}
+  \end{cases}
+\end{align*}
+Now we would also have to define what it means for two keys to be ``equal'', written $\approx$
+above, i.e., when a map would become inconsistent. The obvious checking for syntactic equality seems
+to weak, since (at least by the syntax) arbitrary meta-terms are allowed as keys. When considering
+that we probably want to avoid situations where through instantiation the map could become
+inconsistent, instantiating $\approx$ by unifiability seems like a good choice.
+
+In any case we should get the following behavior for the example from above: starting from the
+inconsistent term $"Fun({ x : T, y : F})"$ there is no rewrite step using the rule
+$"Fun({ x : #1, #2}) → #1"$, since no instantiation of $"{x : #1, #2}"$ can produce the required map:
+trying e.g.\ $[\#1 \mapsto T, \#2 \mapsto x : F]$ we get
+$"{x : #1, #2}"[\#1 \mapsto T, \#2 \mapsto x : F] = ("{}" \uplus "{x : T}") \uplus "{x : F}" =
+"{x :T}"$.
+
+The second case to introduce inconsistencies is by rewriting the keys themselves. Suppose we have a
+term $"Fun({x : T, G(x) : F})"$ and a rule $"G(#) → #"$. One way to avoid this would be by demanding
+that keys must not be joinable (have a common reduct), but that is in general not decidable. So
+maybe a better option would be to enforce that keys do not contain function constructions (we
+probably do not want rewriting in keys anyway, do we?).
+
+\paragraph{Nested Association Maps}
+The syntax for catchers could become a bit weird. Consider a left-hand side $"Fun({x : 0, #})"$.
+Does it match a term $"Fun({x : 0})"$? If so, $\#$ somehow needs to be mapped to ``nothing'',
+but directly mapping it to the empty map $\{\}$ seems awkward because then one would get
+$"Fun({x : 0, {}})"$. Similarly when matching with $"Fun({x : 0, y : 1, z : 2})"$
+one would expect to map $\#$ to $"{y : 1, z : 2}"$ which again nests maps.
+
+So somehow maps need to be ``flattened'' when instantiating catchers. The above definition tries to
+take care of that. A similar effect is present in the sort system where by using the rule S-P-ASSOC
+it seems to be possible to arbitrarily nest $"{}"$.
+
+\paragraph{Non-deterministic Catching}
+Is using two catchers in pattern allowed? We probably want to forbid this to get an easy, efficient
+matching procedure. Otherwise already for the term $"Fun({x : 0, y : 1})"$ we have four different
+matchers with the pattern $"Fun({#1, #2})"$.
+
+\JN{end of thoughts and proposals on association maps}
+\bigskip
 
 \begin{definition}[substitution]
   
