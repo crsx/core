@@ -551,6 +551,11 @@ cannot capture a bound one, regardless of its name.}
   the mutually exclusive forms $A([x]\#(!x))$ and $A([x]\#())$ but that would be a different kind of
   system.}
 
+\JN{Sorry I was confusing. Indeed a \emph{pattern} $[x]\#(x)$ should match both $[x]x$ and
+  $[x]y$. What I meant was that a \emph{pattern} $[x]y$ should not match a term that contains the
+  $x$, in particular $[x]x$. Put differently, I don't see how $Ex([x]x,\#x)$ and $Ex([x]y,\#x)$
+  overlap.}
+
 Formally, when a sort has a \kw{variable} declaration then it is said to have \emph{syntactic
   variables}, which has some consequences:
 %%
