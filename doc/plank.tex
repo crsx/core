@@ -940,6 +940,11 @@ defining rewriting in the context of a sort assignment.
 \bigskip
 \JN{MS and JN thought about behavior of association maps -- thoughts and proposals below}:
 \paragraph{Commutativity}
+\JN{%
+\[
+\text{Question 1: }
+\{x : 1, y : 0\} =^? \{y : 0, x : 1\}
+\]}
 Although the two association maps $"{x : T, y : F}"$ and $"{y : F, x : T}"$ are not syntactically
 equal, one would expect them to behave identically, as they contain the same associations. That is
 one could argue that we consider association maps modulo commutativity (one possibility to model
@@ -949,18 +954,28 @@ then also be indistinguishable. This problem becomes particularly apparent when 
 matching: Suppose we have a rule $"Fun({ x : #1, #2}) → #1"$. The following two rewrite steps are
 expected: $"Fun({ x : T, y : F}) → T"$ with $\#1 \mapsto T, \#2 \mapsto y : F$ and
 $"Fun({y : F, x : T}) → T"$ again with $\#1 \mapsto T, \#2 \mapsto y : F$ (but using
-commutativity). But then one might argue that, simply exchanging the $y$ for another $x$, also the
+commutativity). 
+\JN{%
+\[
+\text{Question 2: }
+\{x : 1, x : 0\} =^? \{x : 0, x : 1\}
+\]}
+But then one might argue that, simply exchanging the $y$ for another $x$, also the
 two steps $"Fun({ x : T, x : F}) → T"$ with $\#1 \mapsto T, \#2 \mapsto x : F$ and
 $"Fun({ x : F, x : T}) → T"$ again with $\#1 \mapsto T, \#2 \mapsto x : F$ should be possible. But
 then so should $"Fun({ x : F, x : T}) → F"$ and $"Fun({ x : T, x : F}) → F"$.
-
+\begin{center}
+\JN{Answer 1 to Question 2: ``Don't-Care'' -- Nondeterminism}
+\end{center}
 There are multiple ways to resolve this. A first is to not resolve, but embrace it and simply allow
 this behavior.\footnote{But this doesn't fit the behavior in \CRSX, right? So that's maybe not the
   way to go.} Then it should be possible to define association maps via rewriting modulo ACU, i.e.,
 with a binary symbol for building association sets (say ``,'') that is considered modulo
 associativity, commutativity and with the empty association map as a unit element. This makes
 matching and unification quite a bit harder, but also allows to build on well-studied theory.
-
+\begin{center}
+\JN{Answer 2 to Question 2: No equal keys allowed by construction}
+\end{center}
 Another way would be to disallow ``inconsistent'' association maps (where we will have to specify,
 what exactly inconsistent means). So assume we forbid association maps that are already inconsistent
 both in rules and the terms we rewrite. The question then obviously is how to make sure we do not
@@ -996,21 +1011,38 @@ that keys must not be joinable (have a common reduct), but that is in general no
 maybe a better option would be to enforce that keys do not contain function constructions (we
 probably do not want rewriting in keys anyway, do we?).
 
+\paragraph{Non-deterministic Catching}
+\begin{center}
+  \JN{Question 3: Possible to forbid in lhs: $\{\#X, \#Y\}$?\\To avoid blowup in matchers.}
+\end{center}
+Is using two catchers in pattern allowed? We probably want to forbid this to get an easy, efficient
+matching procedure. Otherwise already for the term $"Fun({x : 0, y : 1})"$ we have four different
+matchers with the pattern $"Fun({#1, #2})"$.
+
 \paragraph{Nested Association Maps}
+\begin{center}
+  \JN{Question 4: Pattern $\{x: 0, \#X\}$ matches $\{x:0\}$?}
+\end{center}
 The syntax for catchers could become a bit weird. Consider a left-hand side $"Fun({x : 0, #})"$.
 Does it match a term $"Fun({x : 0})"$? If so, $\#$ somehow needs to be mapped to ``nothing'',
 but directly mapping it to the empty map $\{\}$ seems awkward because then one would get
 $"Fun({x : 0, {}})"$. Similarly when matching with $"Fun({x : 0, y : 1, z : 2})"$
 one would expect to map $\#$ to $"{y : 1, z : 2}"$ which again nests maps.
-
 So somehow maps need to be ``flattened'' when instantiating catchers. The above definition tries to
-take care of that. A similar effect is present in the sort system where by using the rule S-P-ASSOC
-it seems to be possible to arbitrarily nest $"{}"$.
+take care of that.
 
-\paragraph{Non-deterministic Catching}
-Is using two catchers in pattern allowed? We probably want to forbid this to get an easy, efficient
-matching procedure. Otherwise already for the term $"Fun({x : 0, y : 1})"$ we have four different
-matchers with the pattern $"Fun({#1, #2})"$.
+\begin{center}
+  \JN{Question 5: Sort system: allows}
+  \begin{xalignat*}{2}
+    &\{x : 0\} & &\{Var : Nat\}\\
+    &\{\{x : 0\}\} & &\{Var : Nat\}\\
+    &\{\{\{x : 0\}\}\} & &\{Var : Nat\}\\
+    &\vdots & & \vdots
+  \end{xalignat*}
+  \JN{so should $\{x : 0\}$ and $\{\{ x : 0\}\}$ behave the same?}
+\end{center}
+A similar effect is present in the sort system where by using the rule S-P-ASSOC it seems to be
+possible to arbitrarily nest $"{}"$.
 
 \JN{end of thoughts and proposals on association maps}
 \bigskip
