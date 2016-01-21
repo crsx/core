@@ -230,6 +230,12 @@ We shall use the following terminology:
 \item A meta-term of the form $v$ is a \emph{variable occurrence}; if the variable $v$ occurs contained
   in a scope $[…v…]M$ then the variable occurrence is \emph{bound}.
 
+\item \TBD{Bullet on \kw{rule}.}
+
+\item \TBD{Bullet on \kw{variable}.}
+
+\item \TBD{Bullet on the use of sorts.}
+
 \end{itemize}
 
 %%\MS{About $F ::= \kw[\,S_1^{*\kw,}\,\kw]\,S_2$. Can $S_1$ actually be something different than a sort variable?}
@@ -244,94 +250,6 @@ In summary, we distinguish four different ways to brace elements. For data and s
 \emph{subterms}, and for \emph{meta-application arguments} we use $\kw{(…)}$.  For \emph{binders} we
 use $\kw{[…]}$.  For \emph{associations} we use $\kwm{\{…\}}$.  For \emph{sort parameters} we use
 $\kwm{⟨…⟩}$.
-
-In Figure~\ref{fig:syntax}, the $S$ in $S~\kw{rule}~M~\kw{$→$}~M\,\kw;$ is not superflous. Consider
-the following two rules:
-\begin{hacs}[numbers=right]
-    List⟨α⟩ rule Map([x]#(x), Nil) →  Nil;
-    List⟨Int⟩ rule Map([x]#(x), Cons(#1, #2)) →  Cons(#(#1), Map([x]#(x), #2));
-\end{hacs}
-\MS{I am not sure, I completely understand yet.}
-\CK{This states why it is important to give the sort of a rule: because
-sometimes, sorts may be ambiguous.  The first rule is defined for arbitrary
-lists, the second only for lists of integers, and will be met with a
-compiler error if you try to use it on a list of strings.  I'm not convinced
-it's a very good example, though: it doesn't make it clear why you would
-\emph{want} the rule to be limited to integer lists!}
-%%
-\KR{Yes, we need a better example. Essentially it seems \hax can have \emph{sort dispatch} by
-  allowing two rules that overlap \emph{except} for the parameter sort.}
-
-It is even possible to have function constructors that live in \emph{all} sorts:
-\begin{hacs}[numbers=right]
-    α scheme If(Bool, α, α);
-    α rule If(True, #1, #2) → #1;
-    α rule If(False, #1, #2) → #2;
-\end{hacs}
-
-\begin{example}
-  Example terms without Associations are: 
-  %% 
-  \begin{hacs}[numbers=right, texcl]
-      Zero, Plus(#X, #Y), S(Zero), x, #X, S([x,y]#X[y,x,z]), #X[x], #F[Zero], #F[#X]
-      [x,y]#F[y,x]
-    \end{hacs}
-    \MS{So currently, a meta-application is (strictly speaking) not called a term (except for
-      $\#X$). Do we want this?}
-
-    \CK{A meta-application $\#X[\kw{0}]$ or $\#X[z]$ is a term.  However,
-    \emph{scopes} are not considered terms (I would propose not calling it
-    a ``pattern meta-application'' as that is misleading, though).}
-    
-    Example terms with Associations of the form $M \kw{:} M$, where the key is a variable or a
-    constant, are
-    %% 
-    \begin{hacs}[numbers=right,texcl]
-      Plus(x, { x : Zero }), Plus(#X, { x : Zero }), Plus(Zero, {Zero : S(Zero)}) 
-    \end{hacs}
-    
-    Example terms, where the keys are meta-variables. \MS{I am sorry, I forgot, is this allowed?}
-    \CK{Woah, the second one definitely isn't, because the key is not a term;
-    even if it was, this would not be sortable with our second-order system.
-    I don't think there's any problem with the first.}
-    \begin{hacs}[numbers=right,texcl]
-     S({ #X : #Y }), #Z[S({ #X : #Y })]                    
-     S({[x]#X[x] : Zero }), 
-   \end{hacs}
-
-   \MS{The semantic of the following two is unclear, or?}
-   \CK{For the former, yes -- an association should be a mapping.  But for the
-   latter, couldn't it be a term carrying \emph{two} association mappings?  I
-   don't know whether we ever want this, but it doesn't necessarily give
-   ambiguity, I think.}
-%   \begin{hacs}[numbers=right,texcl]  
-%     S( {x : y, x : Zero} )
-%     Plus( {x : y}, {x : Zero} )
-%   \end{hacs}
-   Example terms with Associations of the form $¬M$ are:
-   \begin{hacs}[numbers=right,texcl]
-     Plus(x, { ¬x }), Plus(x, { ¬Zero }), Plus(#X,{¬Zero}), S({ ¬#X }), 
-     #Z[S({ ¬#Z[x] })], S({ ¬S([x]#X[x]) }), Plus(Zero,{¬S(Zero)}), Plus({ ¬x}, { ¬z})
-   \end{hacs}
-   
-   Finally, Example terms with Associations of the form $: m$ are:
-   \begin{hacs}[numbers=right,texcl]
-     Plus(x, { : #X }), Plus( { : #X}, { : #X}), Plus( { : #X}, { : #Y})
-     Plus( #X, { : #X })  // note, here \#X are distinct, the former is acutally []\#X
-   \end{hacs}
-   
-  \MS{The semantic of the following is unclear, or?}
-  \begin{hacs}[numbers=right,texcl]
-    Plus( { : #X, : #Y})
-  \end{hacs}
-  \CK{Seems to be used despite the unclearness, though!}
-\end{example}  
-\MS{I reduced the space they take up and added a couple of questions in between. Is it okay like
-  this or do you want me to kick them out at all?}  \KR{A: I think we should give terms in
-  connection with the examples below, and make sure to explain that some are incorrectly sorted.}
-\MS{Okay, I am on it!} \KR{Looking forward to it: if it works we should perhaps not collect all the
-  figures on one page but use individual [h!t] figures? I added one more example, as you can see, for
-even more interesting combinations…}
 
 The \hax formalism includes traditional ``constructor'' term rewriting systems, where there is a
 distinction between \emph{defined} symbols (\hax function constructors) and undefined symbols (\hax
@@ -430,7 +348,7 @@ notational convention that an abstraction is not considered a term).}
     occurrences of the variable we matched (and kept track of) in the pattern "#body(x)" are
     substituted with what "#arg" matched.
 
-    \KR{Note: the \kw{variable} declaration has been removed as it was incorrect here.}
+    \TBD{Also explain why things are sort correct.}
 
   \end{itemize}
   %%
@@ -730,7 +648,7 @@ by only allowing sortable scripts. Informally, sorting ensures that
 \item association keys and values have the proper sorts.
 \end{itemize}
 
-\begin{figure*}[p]
+\begin{figure*}[p]\small
   \vspace*{-3em}
   \begin{align}
     %
@@ -746,7 +664,7 @@ by only allowing sortable scripts. Informally, sorting ensures that
     \intertext{\shoveright{Sorting of Declaration\hfil\fbox{$ Γ ⊢ D $}}}
     %
     &\dfrac
-    {}
+    { Γ ⊢ s⟨\ov{α}⟩ }
     { Γ ⊢ s⟨\ov{α}⟩~\kw{data}~d\kw( \ov{F} \kw)\,\kw; }
     && Γ_{\op{cons}}(d) = \left⟨ s⟨\ov{α}⟩, \ov{F} \right⟩
     \tag{S-D-Data}
@@ -754,7 +672,7 @@ by only allowing sortable scripts. Informally, sorting ensures that
     \\[\jot]
     %
     &\dfrac
-    {}
+    { Γ ⊢ S }
     { Γ ⊢ S~\kw{scheme}~f\kw( \ov{F} \kw)\,\kw; }
     && Γ_{\op{cons}}(f) = \left⟨ S, \ov{F} \right⟩,~f∈Γ_{\op{fun}}
     \tag{S-D-Fun}
@@ -762,7 +680,7 @@ by only allowing sortable scripts. Informally, sorting ensures that
     \\[\jot]
     %
     &\dfrac
-    {}
+    { Γ ⊢ s⟨\ov{α}⟩ }
     { Γ ⊢ s⟨\ov{α}⟩~\kw{variable}\,\kw; }
     && s ∈ Γ_{\op{hasvar}}
     \tag{S-D-Var}
@@ -770,12 +688,28 @@ by only allowing sortable scripts. Informally, sorting ensures that
     \\[\jot]
     %
     &\dfrac
-    { Γ,Δ,\op{Pat},ε ⊢ f(\ov{F}) : S  \qquad Γ,Δ,\op{Con},ε ⊢ M : S }
+    { Γ ⊢ s⟨\ov{α}⟩ \quad Γ,Δ,\op{Pat},ε ⊢ f(\ov{F}) : S  \quad Γ,Δ,\op{Con},ε ⊢ M : S }
     { Γ ⊢ S~\kw{rule}~f(\ov{F})~\kw{→}~M\,\kw; }
     && (∃Δ),~f∈Γ_{\op{fun}}
     \tag{S-D-Rule}
     %
     \\
+    \intertext{\shoveright{Sorting of Sorts\hfil\smash{\fbox{$ Γ ⊢ S $}}}}
+    %
+    &\dfrac
+    { Γ ⊢ S_1 \quad\cdots\quad Γ ⊢ S_n }
+    { Γ ⊢ s⟨S_1,…,S_n⟩ }
+    && Γ_{\op{rank}}(s) = n %\underbrace{{*}→…→{*}}_n
+    \tag{S-S-Cons}
+    %
+    \\[\jot]
+    %
+    &\dfrac
+    {}
+    { Γ ⊢ α }
+    \tag{S-S-Var}
+    \\
+    %
     \intertext{\shoveright{Sorting of Term\hfil\smash{\fbox{$ Γ,Δ,RS,\ov{\mathcal{V}} ⊢ M : S $}}}}
     %
     &\dfrac
@@ -1335,6 +1269,96 @@ sort A // Association.
   Int scheme Pick(List[Int], ⟨Int,Int|Bool);
   Int rule Pick(#, ⟨x,y|#p|x,y⟩) → If(#p|#,#⟩, Pick(#, ⟨x,y|#p|x,y⟩), #);
 \end{hacs}
+
+\section{Term stuff}
+
+In Figure~\ref{fig:syntax}, the $S$ in $S~\kw{rule}~M~\kw{$→$}~M\,\kw;$ is not superflous. Consider
+the following two rules:
+\begin{hacs}[numbers=right]
+    List⟨α⟩ rule Map([x]#(x), Nil) →  Nil;
+    List⟨Int⟩ rule Map([x]#(x), Cons(#1, #2)) →  Cons(#(#1), Map([x]#(x), #2));
+\end{hacs}
+\MS{I am not sure, I completely understand yet.}
+\CK{This states why it is important to give the sort of a rule: because
+sometimes, sorts may be ambiguous.  The first rule is defined for arbitrary
+lists, the second only for lists of integers, and will be met with a
+compiler error if you try to use it on a list of strings.  I'm not convinced
+it's a very good example, though: it doesn't make it clear why you would
+\emph{want} the rule to be limited to integer lists!}
+%%
+\KR{Yes, we need a better example. Essentially it seems \hax can have \emph{sort dispatch} by
+  allowing two rules that overlap \emph{except} for the parameter sort.}
+
+It is even possible to have function constructors that live in \emph{all} sorts:
+\begin{hacs}[numbers=right]
+    α scheme If(Bool, α, α);
+    α rule If(True, #1, #2) → #1;
+    α rule If(False, #1, #2) → #2;
+\end{hacs}
+
+\begin{example}
+  Example terms without Associations are: 
+  %% 
+  \begin{hacs}[numbers=right, texcl]
+      Zero, Plus(#X, #Y), S(Zero), x, #X, S([x,y]#X[y,x,z]), #X[x], #F[Zero], #F[#X]
+      [x,y]#F[y,x]
+    \end{hacs}
+    \MS{So currently, a meta-application is (strictly speaking) not called a term (except for
+      $\#X$). Do we want this?}
+
+    \CK{A meta-application $\#X[\kw{0}]$ or $\#X[z]$ is a term.  However,
+    \emph{scopes} are not considered terms (I would propose not calling it
+    a ``pattern meta-application'' as that is misleading, though).}
+    
+    Example terms with Associations of the form $M \kw{:} M$, where the key is a variable or a
+    constant, are
+    %% 
+    \begin{hacs}[numbers=right,texcl]
+      Plus(x, { x : Zero }), Plus(#X, { x : Zero }), Plus(Zero, {Zero : S(Zero)}) 
+    \end{hacs}
+    
+    Example terms, where the keys are meta-variables. \MS{I am sorry, I forgot, is this allowed?}
+    \CK{Woah, the second one definitely isn't, because the key is not a term;
+    even if it was, this would not be sortable with our second-order system.
+    I don't think there's any problem with the first.}
+    \begin{hacs}[numbers=right,texcl]
+     S({ #X : #Y }), #Z[S({ #X : #Y })]                    
+     S({[x]#X[x] : Zero }), 
+   \end{hacs}
+
+   \MS{The semantic of the following two is unclear, or?}
+   \CK{For the former, yes -- an association should be a mapping.  But for the
+   latter, couldn't it be a term carrying \emph{two} association mappings?  I
+   don't know whether we ever want this, but it doesn't necessarily give
+   ambiguity, I think.}
+%   \begin{hacs}[numbers=right,texcl]  
+%     S( {x : y, x : Zero} )
+%     Plus( {x : y}, {x : Zero} )
+%   \end{hacs}
+   Example terms with Associations of the form $¬M$ are:
+   \begin{hacs}[numbers=right,texcl]
+     Plus(x, { ¬x }), Plus(x, { ¬Zero }), Plus(#X,{¬Zero}), S({ ¬#X }), 
+     #Z[S({ ¬#Z[x] })], S({ ¬S([x]#X[x]) }), Plus(Zero,{¬S(Zero)}), Plus({ ¬x}, { ¬z})
+   \end{hacs}
+   
+   Finally, Example terms with Associations of the form $: m$ are:
+   \begin{hacs}[numbers=right,texcl]
+     Plus(x, { : #X }), Plus( { : #X}, { : #X}), Plus( { : #X}, { : #Y})
+     Plus( #X, { : #X })  // note, here \#X are distinct, the former is acutally []\#X
+   \end{hacs}
+   
+  \MS{The semantic of the following is unclear, or?}
+  \begin{hacs}[numbers=right,texcl]
+    Plus( { : #X, : #Y})
+  \end{hacs}
+  \CK{Seems to be used despite the unclearness, though!}
+\end{example}  
+\MS{I reduced the space they take up and added a couple of questions in between. Is it okay like
+  this or do you want me to kick them out at all?}  \KR{A: I think we should give terms in
+  connection with the examples below, and make sure to explain that some are incorrectly sorted.}
+\MS{Okay, I am on it!} \KR{Looking forward to it: if it works we should perhaps not collect all the
+  figures on one page but use individual [h!t] figures? I added one more example, as you can see, for
+even more interesting combinations…}
 
 
 \end{document}
