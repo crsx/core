@@ -773,17 +773,17 @@ below why there is a ``principal'' such witness.
 
 \begin{itemize}
 
-\item Rule \thetag{S-D-Data} expresses that a new data constructor can be introduced as belonging to
+\item Rule \thetag{SD-Data} expresses that a new data constructor can be introduced as belonging to
   a specific named sort, possibly with sort parameters. The sort itself must be well-formed. The
   sort environment must record this, and the constructor must not be a function constructor.
 
-\item Conversely, \thetag{S-D-Fun} permits the introduction of ``defined'' function constructors:
+\item Conversely, \thetag{SD-Fun} permits the introduction of ``defined'' function constructors:
   these can build a term of a generic sort (see Example~\ref{ex:pick}).
 
-\item \thetag{S-D-Var} declares that a sort has syntactic variables, recorded in the sort
+\item \thetag{SD-Var} declares that a sort has syntactic variables, recorded in the sort
   environment. (This has consequences for the use of substitution in the sort below.)
 
-\item \thetag{S-D-Rule} is the main sort checking of rules. Once the arbitrary sort has been
+\item \thetag{SD-Rule} is the main sort checking of rules. Once the arbitrary sort has been
   checked, we check that the pattern and contraction terms are sortable with it. The pattern is
   checked with the ``Pat'' variant of the term sorting judgment, and the contraction with the
   ``Con'' variant, and we have to invent a witness rule environment $Δ$ that works for both.
@@ -998,8 +998,8 @@ below why there is a ``principal'' such witness.
 
 \begin{itemize}
 
-\item The rules in Figure~\ref{fig:termsortrules} gives the primary term rules per term context
-  $TC$, which indicates the context of our meta-term fragment:
+\item The rules in Figure~\ref{fig:termsortrules} give the primary term rules per term context $TC$,
+  which indicates the context of our meta-term fragment:
   %% 
   \begin{itemize}
   \item ``Pat'' indicates the pattern (left side) of a rule, at the outermost level.
