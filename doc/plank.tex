@@ -638,8 +638,9 @@ associations can be used to store environments. The next example explores this.
 \section{Sorting}
 \label{sec:sorting}
 
-The \hax calculus in practice restricts the terms of the grammar in Figure~\ref{fig:syntax} further
-by only allowing sortable scripts. Informally, sorting ensures that
+In this Section we define \hax script formation formally by restricting the terms of the grammar in
+Definition~\ref{def:syntax} further to only allow well-formed ``sortable'' scripts. Informally,
+sorting ensures that
 %%
 \begin{itemize}
 \item the pattern and contraction restrictions are obeyed;
@@ -647,221 +648,391 @@ by only allowing sortable scripts. Informally, sorting ensures that
 \item subterms (including variable and meta-variable occurrences) have the right sort;
 \item association keys and values have the proper sorts.
 \end{itemize}
+%%
+We first formalize the sorting rules and last discuss an algorithm for sort checking.
 
-\begin{figure*}[p]\small
-  \vspace*{-3em}
+\begin{definition}
+  %%
+  A \emph{global sort environment} $Γ$ is a structure that combines
+  %% 
+  \begin{itemize}
+
+  \item $Γ_{\op{rank}}\colon \mathcal{C} → \mathcal{N}$ gives the rank of each sort
+    constructor. \KR{This means we have no higher kinds, \ie, all sorts parameters are fully applied
+      sorts.}
+
+  \item $Γ_{\op{hasvar}}$ is a set of sort names (the sorts that allow variables).
+
+  \item $Γ_{\op{con}}\colon \mathcal{C} → S×F^*$ from constructor name to pairs of a sort and a
+    list of forms.
+    
+  \item $Γ_{\op{fun}}$ is a set of constructor names (those declared as schemes).
+
+  \end{itemize}
+  %% 
+\end{definition}
+
+\begin{definition}
+  %%
+  A \emph{rule environment} $Δ$ is a structure that combines
+  %% 
+  \begin{itemize}
+
+  \item $Δ_{\op{var}}\colon \mathcal{V} → S$ mapping from variable names to sorts.
+
+  \item $Δ_{\op{meta}}\colon \mathcal{M} → MF$ mapping from meta-variable names to ``meta-forms''
+    defined by
+    %% 
+    \begin{equation}
+      MF ::= \ov{S}⇒S \mid \ov{S}⇒\{S{:}S\} \tag{MetaForm}
+    \end{equation}
+
+  \end{itemize}
+  %%
+\end{definition}
+
+\TBD{Explain.}
+
+$MF$ captures the difference between regular meta-variables and ``catch-all'' ones:
+%%
+\begin{itemize}
+
+\item The shape $\ov{S}⇒S$ is used for meta-variables that need to be meta-applied to
+  arguments with the sorts $\ov{S}$ to then form a term of the sort~$S$.
+  
+\item The shape $\ov{S}⇒\{S_1{:}S_2\}$ used for meta-variables that catch all the associations in an
+  association list from $S_1$ to~$S_2$.
+  
+\end{itemize}
+
+\begin{definition}
+  %%
+  A \hax script $H$ is \emph{well-sorted} if we can prove $⊢H$ with the rule
+  %%
   \begin{align}
-    %
-    \intertext{\shoveright{Sorting of \hax script \hfil \fbox{$ ⊢ H $}}}
-    %
-    &\dfrac
-    { Γ ⊢ D_1 \quad\cdots\quad Γ ⊢ D_n }
+    &
+    \dfrac
+    { Γ ⊢ D_1 ~~\cdots~~ Γ ⊢ D_n }
     { ⊢ D_1…D_n }
-    && (∃Γ)
-    \tag{S-H}
-    %
-    \\
-    \intertext{\shoveright{Sorting of Declaration\hfil\fbox{$ Γ ⊢ D $}}}
+    \qquad\qquad
+    && (∃Γ) \qquad\qquad\qquad\qquad
+    \tag{SH}
+    % 
+  \end{align}
+  %%
+  using the rules below for sorting each declaration.
+  %%
+\end{definition}
+
+Thus sorting relies on a sort environment ``witness'' to establish that a script is well sorted. In
+practice, $Γ$ will be assembled from the constraints of the component declarations. We'll argue
+below why there is a ``principal'' such witness.
+
+\begin{definition}
+  %%
+  A \hax declaration $D$ is well-sorted for a sort environment $Γ$ if we can prove $Γ⊢D$ with the
+  following rules.
+  %%
+  \begin{align}
     %
     &\dfrac
     { Γ ⊢ s⟨\ov{α}⟩ }
     { Γ ⊢ s⟨\ov{α}⟩~\kw{data}~d\kw( \ov{F} \kw)\,\kw; }
-    && Γ_{\op{cons}}(d) = \left⟨ s⟨\ov{α}⟩, \ov{F} \right⟩
-    \tag{S-D-Data}
+    && Γ_{\op{con}}(d) = \left⟨ s⟨\ov{α}⟩, \ov{F} \right⟩,~d∉Γ_{\op{fun}}
+    \tag{SD-Data}
     %
-    \\[\jot]
+    \\[1ex]
     %
     &\dfrac
     { Γ ⊢ S }
     { Γ ⊢ S~\kw{scheme}~f\kw( \ov{F} \kw)\,\kw; }
-    && Γ_{\op{cons}}(f) = \left⟨ S, \ov{F} \right⟩,~f∈Γ_{\op{fun}}
-    \tag{S-D-Fun}
+    && Γ_{\op{con}}(f) = \left⟨ S, \ov{F} \right⟩,~f∈Γ_{\op{fun}}
+    \tag{SD-Fun}
     %
-    \\[\jot]
+    \\[1ex]
     %
     &\dfrac
     { Γ ⊢ s⟨\ov{α}⟩ }
     { Γ ⊢ s⟨\ov{α}⟩~\kw{variable}\,\kw; }
     && s ∈ Γ_{\op{hasvar}}
-    \tag{S-D-Var}
+    \tag{SD-Var}
     %
-    \\[\jot]
-    %
-    &\dfrac
-    { Γ ⊢ s⟨\ov{α}⟩ \quad Γ,Δ,\op{Pat},ε ⊢ f(\ov{F}) : S  \quad Γ,Δ,\op{Con},ε ⊢ M : S }
-    { Γ ⊢ S~\kw{rule}~f(\ov{F})~\kw{→}~M\,\kw; }
-    && (∃Δ),~f∈Γ_{\op{fun}}
-    \tag{S-D-Rule}
-    %
-    \\
-    \intertext{\shoveright{Sorting of Sorts\hfil\smash{\fbox{$ Γ ⊢ S $}}}}
+    \\[1ex]
     %
     &\dfrac
-    { Γ ⊢ S_1 \quad\cdots\quad Γ ⊢ S_n }
+    { Γ ⊢ S \quad Γ,Δ,\op{Pat},ε ⊢ M_1 : S  \quad Γ,Δ,\op{Con},ε ⊢ M_2 : S }
+    { Γ ⊢ S~\kw{rule}~M_1~\kw{→}~M_2\,\kw; }
+    && (∃Δ)
+    \tag{SD-Rule}
+    %
+  \end{align}
+  %%
+  (using the further rules below for sorting sorts and terms).
+  %%
+\end{definition}
+
+\begin{itemize}
+
+\item Rule \thetag{S-D-Data} expresses that a new data constructor can be introduced as belonging to
+  a specific named sort, possibly with sort parameters. The sort itself must be well-formed. The
+  sort environment must record this, and the constructor must not be a function constructor.
+
+\item Conversely, \thetag{S-D-Fun} permits the introduction of ``defined'' function constructors:
+  these can build a term of a generic sort (see Example~\ref{ex:pick}).
+
+\item \thetag{S-D-Var} declares that a sort has syntactic variables, recorded in the sort
+  environment. (This has consequences for the use of substitution in the sort below.)
+
+\item \thetag{S-D-Rule} is the main sort checking of rules. Once the arbitrary sort has been
+  checked, we check that the pattern and contraction terms are sortable with it. The pattern is
+  checked with the ``Pat'' variant of the term sorting judgment, and the contraction with the
+  ``Con'' variant, and we have to invent a witness rule environment $Δ$ that works for both.
+
+\end{itemize}
+
+\begin{definition}
+  %%
+  A sort denotation $S$ is well-sorted for a sort environment $Γ$ if we can prove $Γ⊢S$ with the
+  following rules.
+  %%
+  \begin{align}
+    %\intertext{\shoveright{Sorting of Sorts\hfil\smash{\fbox{$ Γ ⊢ S $}}}}
+    %
+    &\dfrac
+    { Γ ⊢ S_1 ~~\cdots~~ Γ ⊢ S_n }
     { Γ ⊢ s⟨S_1,…,S_n⟩ }
     && Γ_{\op{rank}}(s) = n %\underbrace{{*}→…→{*}}_n
-    \tag{S-S-Cons}
+    \tag{SS-Cons}
     %
-    \\[\jot]
+    \\[1ex]
     %
     &\dfrac
     {}
     { Γ ⊢ α }
-    \tag{S-S-Var}
-    \\
-    %
-    \intertext{\shoveright{Sorting of Term\hfil\smash{\fbox{$ Γ,Δ,RS,\ov{\mathcal{V}} ⊢ M : S $}}}}
-    %
-    &\dfrac
-    { Γ,Δ,RS,\ov{w} ⊢ P_1 : F_1 \quad\cdots\quad Γ,Δ,RS,\ov{w} ⊢ P_n : F_n }
-    { Γ,Δ,RS,\ov{w} ⊢ c\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : S }
-    &&\Cases{
-      Γ_{\op{cons}}(c) = \left⟨ S, (F_1\kw,…\kw,F_n) \right⟩\\
-      c∉Γ_{\op{fun}} ∨ RS=\op{Con}
-    }
-    \tag{S-M-Cons}
-    % 
-    \\[\jot]
-    %
-    &\dfrac
-    { }
-    { Γ,Δ,RS,\ov{w} ⊢ v : s⟨\ov{S}⟩ }
-    && Δ_{\op{var}}(v) = s⟨\ov{S}⟩, ~s∈Γ_{\op{hasvar}}
-    \tag{S-M-Var}
-    % 
-    \\[\jot]
-    %
-    &\dfrac
-    { Γ,Δ,\op{Pat},\ov{w} ⊢ v_1 : S_1 \quad\cdots\quad  Γ,Δ,\op{Pat},\ov{w} ⊢ v_n : S_n }
-    { Γ,Δ,\op{Pat},\ov{w} ⊢ m\,\kw(\,v_1\kw,…\kw,v_n\,\kw) : S }
-    &&\Cases{
-      ∀i\colon v_i∈\ov{w} \\
-      Δ_{\op{meta}}(m) = \left( (S_1,…,S_n)⇒S \right)
-    }
-    \tag{S-M-MetaP}
-    % 
-    \\[\jot]
-    %
-    &\dfrac
-    { Γ,Δ,\op{Con},\ov{w} ⊢ M_1 : S_1 \quad\cdots\quad  Γ,Δ,\op{Con},\ov{w} ⊢ M_n : S_n }
-    { Γ,Δ,\op{Con},\ov{w} ⊢ m\,\kw(\,M_1\kw,…\kw,M_n\,\kw) : S }
-    && Δ_{\op{meta}}(m) = \left( (S_1,…,S_n)⇒S \right)
-    \tag{S-M-MetaC}
-    %
-    \\
-    \intertext{\shoveright{Sorting of Piece\hfil\smash{\fbox{$ Γ,Δ,RS,\ov{\mathcal{V}} ⊢ P : F $}}}}
-    %
-    &\dfrac
-    { Γ,Δ',RS,(\ov{w}\,\ov{v}) ⊢ M : S }
-    { Γ,Δ,RS,\ov{w} ⊢ \kw[\,\ov{v}\,\kw]\,M : \kw[\,\ov{S}\,\kw]\,S }
-    && (∃Δ'⊇Δ),~ Δ'_{\op{var}}(\ov{v}) = \ov{S}
-    \tag{S-P-Bind}
-    %
-    \\[\jot]
-    %
-    &\dfrac
-    { Γ,Δ,RS,\ov{w} ⊢ A_1 : \{S_1{:}S_2\} \quad\cdots\quad Γ,Δ,RS,\ov{w} ⊢ A_n : \{S_1{:}S_2\} }
-    { Γ,Δ,RS,\ov{w} ⊢ \kwm\{\,A_1\kw,…\kw,A_n\,\kwm\} : \kwm\{S_1\kw:S_2\kwm\} }
-    \tag{S-P-Assoc}
-    %
-    \\
-    \intertext{\shoveright{Sorting of Association\hfil\smash{\fbox{$ Γ,Δ,RS,\ov{\mathcal{V}} ⊢ A : \{S{:}S\} $}}}}
-    %
-    &\dfrac
-    { Γ,Δ,RS,\ov{w} ⊢ M : S \qquad Γ,Δ,RS,\ov{w} ⊢ M' : S' }
-    { Γ,Δ,RS,\ov{w} ⊢ M\kw:M' : \{S{:}S'\} } 
-    \tag{S-A-Map}
-    % 
-    \\[\jot]
-    %
-    &\dfrac
-    { Γ,Δ,\op{Pat},\ov{w} ⊢ M : S }
-    { Γ,Δ,\op{Pat},\ov{w} ⊢ \kwm{¬}M : \{S{:}S'\} }
-    \tag{S-A-Not}
-    % 
-    \\[\jot]
-    %
-    &\dfrac
-    { Γ,Δ,\op{Pat},\ov{w} ⊢ v_1 : S_1 \quad\cdots\quad  Γ,Δ,\op{Pat},\ov{w} ⊢ v_n : S_n }
-    { Γ,Δ,RS,\ov{w} ⊢ m\,\kw(\,v_1\kw,…\kw,v_n\,\kw) : \{S{:}S'\} }
-    &&\Cases{
-      ∀i\colon v_i∈\ov{w} \\
-      Δ_{\op{meta}}(m) = \left( (S_1,…,S_n)⇒\{S{:}S'\} \right)
-    }
-    \tag{S-A-All}
+    \tag{SS-Var}
     %
   \end{align}
-  \vspace*{-2em}
-  \caption{\hax sorting rules.}
-  \label{fig:sortrules}
-\end{figure*}
-
-\begin{definition}[well-sorted]\label{def:sort}
-  Given a \hax script $H$, a sort $\op{Void}∈S$ which does not occur in $H$, and a sort environment
-  $Γ$, and define the additional pseudo-syntax rules
-  %%
-  \begin{align}
-    RS &::= \op{Pat} \mid \op{Con} \tag{RuleSide} \\
-    MF &::= \ov{S}⇒S \mid \ov{S}⇒\{S{:}S\} \tag{MetaForm}
-  \end{align}
-  %% 
-  The \hax script is \emph{well-sorted for $Γ$} if $Γ$ is the smallest sort environment for which we
-  can prove
-  %%
-  \begin{displaymath}
-    ⊢ H
-  \end{displaymath}
-  %%
-  using the rules of Figure~\ref{fig:sortrules}.
   %%
 \end{definition}
 
-Each proof will need to invent a \emph{global sort environment} witness $Γ$, a structure that
-combines
-%% 
 \begin{itemize}
 
-\item $Γ_{\op{hasvar}}\colon 2^{\mathcal{C}}$ is a set of sort names (the sorts that allow variables).
-
-\item $Γ_{\op{cons}}\colon \mathcal{C} → S×F^*$ from constructor name to pairs of a sort and a
-  list of forms.
-
-  
-\item $Γ_{\op{fun}}\colon 2^{\mathcal{C}}$ is a set of constructor names (those declared as schemes).
-
-\end{itemize}
-%% 
-and one \emph{rule sort environment} witness $Δ$ per rule, a structure that combines
-%% 
-\begin{itemize}
-
-\item $Δ_{\op{var}}\colon \mathcal{V} → S$ from variable names to sorts.
-
-\item $Δ_{\op{meta}}\colon \mathcal{M} → MF$ from meta-variable names to to 
-  names to ``meta-forms'' 
+\item Sorts are well-formed when they have consistent rank in the sort environment.
 
 \end{itemize}
 
-Notes.
-%%
+\begin{figure*}[p]\small
+  \vspace*{-3em}
+  \begin{align}
+    \intertext{\shoveright{Sorting of Meta-term\hfil\smash{\fbox{$ Γ,Δ,TC,\ov{\mathcal{V}} ⊢ M : S $}}}}
+    %
+    &\dfrac
+    { Γ,Δ,\op{InPat},\ov{v} ⊢ P_1 : F_1 ~~\cdots~~ Γ,Δ,\op{InPat},\ov{v} ⊢ P_n : F_n }
+    { Γ,Δ,\op{Pat},\ov{v} ⊢ f\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : S }
+    &&\Cases{
+      f∈Γ_{\op{fun}}\\
+      Γ_{\op{con}}(f) = \left⟨ S, (F_1\kw,…\kw,F_n) \right⟩
+    }
+    \tag{SMP-Fun}
+    % 
+    \\[1ex]
+    %
+    &\dfrac
+    { Γ,Δ,\op{InPat},\ov{v} ⊢ P_1 : F_1 ~~\cdots~~ Γ,Δ,\op{InPat},\ov{v} ⊢ P_n : F_n }
+    { Γ,Δ,\op{InPat},\ov{v} ⊢ d\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : S }
+    &&\Cases{
+      d∉Γ_{\op{fun}}\\
+      Γ_{\op{con}}(d) = \left⟨ S, (F_1\kw,…\kw,F_n) \right⟩
+    }
+    \tag{SMP-Data}
+    % 
+    \\[1ex]
+    %
+    &\dfrac
+    { }
+    { Γ,Δ,\op{InPat},\ov{v} ⊢ m\,\kw(\,w_1\kw,…\kw,w_n\,\kw) : S }
+    &&\Cases{
+      Δ_{\op{meta}}(m) = \left( (S_1,…,S_n)⇒S \right) \\
+      ∀i\colon w_i∈\ov{v} \\
+      ∀i\colon Δ_{\op{var}}(w_i) = S_i \\
+      \text{All the $w_i$ are different}
+    }
+    \tag{SMP-Meta}
+    % 
+    \\[1ex]
+    %
+    &\dfrac
+    { }
+    { Γ,Δ,\op{InPat},\ov{v} ⊢ w : s⟨\ov{S}⟩ }
+    &&\Cases{
+      Δ_{\op{var}}(w) = s⟨\ov{S}⟩ \\
+      s ∈ Γ_{\op{hasvar}}
+    }
+    \tag{SMP-Var}
+    %
+    \\[1em]
+    %
+    &\dfrac
+    { Γ,Δ,\op{Con},\ov{v} ⊢ P_1 : F_1 ~~\cdots~~ Γ,Δ,\op{Con},\ov{v} ⊢ P_n : F_n }
+    { Γ,Δ,\op{Con},\ov{v} ⊢ c\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : S }
+    && Γ_{\op{con}}(c) = \left⟨ S, (F_1\kw,…\kw,F_n) \right⟩
+    \tag{SMC-Cons}
+    % 
+    \\[1ex]
+    %
+    &\dfrac
+    { Γ,Δ,\op{Sub},\ov{v} ⊢ M_1 : S_1 ~~\cdots~~  Γ,Δ,\op{Sub},\ov{v} ⊢ M_n : S_n }
+    { Γ,Δ,\op{Con},\ov{v} ⊢ m\,\kw(\,M_1\kw,…\kw,M_n\,\kw) : S }
+    && Δ_{\op{meta}}(m) = \left( (S_1,…,S_n)⇒S \right)
+    \tag{SMC-Meta}
+    %
+    \\[1ex]
+    %
+    &\dfrac
+    { }
+    { Γ,Δ,\op{Con},\ov{v} ⊢ w : s⟨\ov{S}⟩ }
+    &&\Cases{
+      Δ_{\op{var}}(w) = s⟨\ov{S}⟩ \\
+      s ∈ Γ_{\op{hasvar}}
+    }
+    \tag{SMC-Var}
+    %
+    \\[1em]
+    %
+    &\dfrac
+    { Γ,Δ,\op{Con},\ov{v} ⊢ c\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : s⟨\ov{S}⟩ }
+    { Γ,Δ,\op{Sub},\ov{v} ⊢ c\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : s⟨\ov{S}⟩ }
+    && s ∉ Γ_{\op{hasvar}}
+    \tag{SMS-Cons}
+    % 
+    \\[1ex]
+    %
+    &\dfrac
+    { Γ,Δ,\op{Con},\ov{v} ⊢ m\,\kw(\,M_1\kw,…\kw,M_n\,\kw) : s⟨\ov{S}⟩ }
+    { Γ,Δ,\op{Sub},\ov{v} ⊢ m\,\kw(\,M_1\kw,…\kw,M_n\,\kw) : s⟨\ov{S}⟩ }
+    && s ∉ Γ_{\op{hasvar}}
+    \tag{SMS-Meta}
+    %
+    \\[1ex]
+    %
+    &\dfrac
+    { }
+    { Γ,Δ,\op{Sub},\ov{v} ⊢ w : S }
+    && Δ_{\op{var}}(w) = S
+    \tag{SMS-Var}
+    %
+    \\[1ex]
+    \intertext{\shoveright{Sorting of Piece\hfil\smash{\fbox{$ Γ,Δ,TC,\ov{\mathcal{V}} ⊢ P : F $}}}}
+    %
+    &\dfrac
+    { Γ,Δ',TC,(\ov{v}\,\ov{w}) ⊢ M : S }
+    { Γ,Δ,TC,\ov{v} ⊢ \kw[\,\ov{w}\,\kw]\,M : [\ov{S}]S }
+    && (∃Δ'⊇Δ),~ Δ'_{\op{var}}(\ov{v}) = \ov{S}
+    \tag{SP-Bind}
+    %
+    \\[1ex]
+    %
+    &\dfrac
+    { Γ,Δ,TC,\ov{v} ⊢ A_1 : \{S{:}S'\} ~~\cdots~~ Γ,Δ,TC,\ov{v} ⊢ A_n : \{S{:}S'\} }
+    { Γ,Δ,TC,\ov{v} ⊢ \kwm\{\,A_1\kw,…\kw,A_n\,\kwm\} : \{S{:}S'\} }
+    \tag{SP-Assoc}
+    %
+    \\[1ex]
+    \intertext{\shoveright{Sorting of Association\hfil\smash{\fbox{$ Γ,Δ,TC,\ov{\mathcal{V}} ⊢ A : \{S{:}S\} $}}}}
+    %
+    &\dfrac
+    { Γ,Δ,TC,\ov{v} ⊢ M : S \quad Γ,Δ,TC,\ov{v} ⊢ M' : S' }
+    { Γ,Δ,TC,\ov{v} ⊢ M\kw:M' : \{S{:}S'\} } 
+    \tag{SA-Map}
+    % 
+    \\[1ex]
+    %
+    &\dfrac
+    { Γ,Δ,\op{InPat},\ov{v} ⊢ M : S }
+    { Γ,Δ,\op{InPat},\ov{v} ⊢ \kwm{¬}M : \{S{:}S'\} }
+    \tag{SAP-Not}
+    % 
+    \\[1ex]
+    %
+    &\dfrac
+    { }
+    { Γ,Δ,\op{InPat},\ov{v} ⊢ m\,\kw(\,w_1\kw,…\kw,w_n\,\kw) : \{S{:}S'\} }
+    &&\Cases{
+      Δ_{\op{meta}}(m) = \left( (S_1,…,S_n)⇒\{S{:}S'\} \right) \\
+      ∀i\colon w_i∈\ov{v} \\
+      ∀i\colon Δ_{\op{var}}(w_i) = S_i
+    }
+    \tag{SAP-All}
+    % 
+    \\[1ex]
+    %
+    &\dfrac
+    { Γ,Δ,\op{Sub},\ov{v} ⊢ M_1 : S_1 ~~\cdots~~  Γ,Δ,\op{Sub},\ov{v} ⊢ M_n : S_n }
+    { Γ,Δ,\op{Con},\ov{v} ⊢ m\,\kw(\,M_1\kw,…\kw,M_n\,\kw) : \{S{:}S'\} }
+    && Δ_{\op{meta}}(m) = \left( (S_1,…,S_n)⇒\{S{:}S'\} \right)
+    \tag{SAC-All}
+    %
+  \end{align}
+  \vspace*{-1em}
+  \caption{\hax meta-term sorting rules.}
+  \label{fig:termsortrules}
+\end{figure*}
+
+\begin{definition}
+  %%
+  Given a ``term context'' helper sort of
+  %%
+  \begin{equation}
+    TC ::= \op{Pat} \mid \op{InPat} \mid \op{Con} \mid \op{Sub} \tag{TermContext}
+  \end{equation}
+  %%
+  Given a sort environment $Γ$ and a rule environment $Δ$. A meta-term $M$ has sort $S$ in context
+  $TC$ with bound variables $\ov{v}$ if we can prove
+  \begin{equation}
+    Γ,Δ,TC,\ov{v} ⊢ M : S
+  \end{equation}
+  %%
+  using the rules in Figure~\ref{fig:termsortrules}.
+  %%
+\end{definition}
+
 \begin{itemize}
 
-\item $MF$ captures the difference between regular meta-variables and ``$\kw:m$'' ones:
+\item The rules in Figure~\ref{fig:termsortrules} gives the primary term rules per term context
+  $TC$, which indicates the context of our meta-term fragment:
+  %% 
   \begin{itemize}
-
-  \item The shape $\ov{S}⇒S$ is used for meta-variables that need to be meta-applied to
-    arguments with the sorts $\ov{S}$ to then form a term of the sort~$S$.
-      
-  \item The shape $\ov{S}⇒\{S_1{:}S_2\}$ used for meta-variables that ``catch'' all the associations
-    in an association list from $S_1$ to~$S_2$.
-    
+  \item ``Pat'' indicates the pattern (left side) of a rule, at the outermost level.
+  \item ``InPat'' is used inside a piece of the pattern of a rule, not the outermost level.
+  \item ``Con'' denotes any location in the contraction (right side) of a rule except a substitution.
+  \item ``Sub'' denotes a substitution location (an immediate child of a meta-application) in the
+    contraction (right side) of a rule.
   \end{itemize}
 
-  \item\TBD{More explanation.}
-    
+\item The \thetag{SMP-*} rules handle patterns. The first rule \thetag{SMP-Fun} is the entry rule
+  for patterns, which must be function constructions, and have pieces that are
+  well-sorted. Fragments of patterns are then handled by the three following rules,
+  \thetag{SMP-Data,SMP-Meta,SMP-Var}, which capture the sort propagation as well as the special
+  constraints for patterns:
+  \begin{enumerate}
+  \item only data constructors allowed;
+  \item meta-application arguments are restricted to distinct bound variables;
+  \item free variables only allowed in positions with a sort that includes a \kw{variable}
+    declarations.
+  \end{enumerate}
+
+\item \thetag{SMC-*} rules handle contraction meta-terms. \TBD{More.}
+
+\item \thetag{SMS-*} rules handle contraction substitution arguments. \TBD{More.}
+
+\item \thetag{SP-*} rules handle ``pieces,'' \ie, scoped parameters to constructions. \TBD{More.}
+
+\item \thetag{SA*}…\TBD{More.}
+
 \end{itemize}
 
 \TBD{Example sort derivation.}
+
 
 %------------------------------------------------------------------------
 
