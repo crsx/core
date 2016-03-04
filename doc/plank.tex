@@ -175,6 +175,8 @@ We shall use the following terminology:
   \emph{data construction}. If $n=0$, i.e., the function or data symbol does not take any arguments,
   we usually drop the $()$. That is, we write $0$ instead of $0()$.
 
+  \CK{Either that should be `scheme f\{…\}' or `data c \{…\}'.  Which would be preferable?}
+
 \item Argument ``pieces'' $P$ of constructions take one of two forms: \emph{scopes} $[v_1,…,v_n]M$,
   $n≥0$, which introduce new local variables $v_1,…,v_n$ along with a meta-term $M$ wherein they can
   occur, and \emph{associations} $\{A_1,…,A_n\}$, $n≥0$, where each $A$ is either an \emph{entry}
@@ -185,6 +187,16 @@ We shall use the following terminology:
 
 \item A meta-term of the form $m(M_1,…,M_n)$, $n≥0$, is a \emph{meta-application}.  A meta-term that
   does not contain any meta-applications is called (simply) a \emph{term}.
+
+  \CK{I would say that a term is a meta-term that does not contain any meta-applications, catchers
+  or exclusions (note that the latter terms aren't meta-terms but associations).}
+
+  \CK{Also, I think it is worth observing something like the following (please reformulate at
+  wish!):}
+
+  Terms are the primary objects in the system, which the rules define a relation on.
+  We will consider in particular rules where all variables are bound or \emph{syntactic}
+  (more about this later).
 
 \item A meta-term of the form $v$ is a \emph{variable occurrence}; if the variable $v$ occurs contained
   in a scope $[…v…]M$ then the variable occurrence is \emph{bound}.
@@ -253,7 +265,7 @@ data constructors).
 Indeed, \hax is specifically based on Aczel's \emph{Contraction Schemes}~\cite{Aczel:1978} (where
 the restriction of only permitting abstractions as constrution arguments is first found) with the
 substitution notion from Klop's \emph{Combinatory Reduction Systems}~\cite{Klop+:tcs1993} and
-imposing a typing discipline similar to the the second-order limitation of Blanqui's \emph{Inductive
+imposing a typing discipline similar to the second-order limitation of Blanqui's \emph{Inductive
   Data Type Systems}~\cite{BlanquiJouannaudOkada:tcs2002}. \hax then adds first class
 \emph{environments}, and integrates those with the type discipline.
 
@@ -289,6 +301,12 @@ imposing a typing discipline similar to the the second-order limitation of Blanq
     "Ap" construction, only for those where the first subterm is an "Lm" ``abstraction.'' This
     creates the possibility for ``stuck'' application, just like in the actual λ calculus.
 
+    \CK{This partiality is debatable: in fact, the scheme is defined for all constructor-terms
+    with output sort Λ.  It is only undefined for variables, but the same could be said for the
+    Plus rules! I suppose the difference is that the Plus system does not admit closed terms
+    containing a variable, while this system does.  But if that is the crucial point, it should
+    be explained more fully, or not be brought up at all.}
+
   \item Once an application of an abstraction is matched, the "rule" gives the result of
     simplification as "#body(#arg)", which means that we construct a copy of "#body" except all
     occurrences of the variable we matched (and kept track of) in the pattern "#body(x)" are
@@ -311,6 +329,8 @@ imposing a typing discipline similar to the the second-order limitation of Blanq
   evaluation order like ``call-by-value.'' Furthermore, because variables can only be introduced
   through the scope mechanism, the $Λ$ sort can only express and simplify \emph{closed} λ-terms.
   %%
+  \CK{Oh? What about representing a variable as a variable?  Can you not make your start term
+  Ap(x,y)?}
 \end{example}
 
 As a many-sorted rewriting formalism, \hax also supports traditional recursive data structures.
@@ -386,6 +406,9 @@ rules, with some restrictions. This is what the \kw{variable} declaration is for
      Λx rule Ex([x]Lm([y]#(x,y)), #x) →  Lm([y]Ex([x]#(x,y), #x));                 // (xab)
   \end{hacs}
   %%
+  \CK{Do we want to allow this (non-constructor rules) in the long run?  I doubt it's
+  going to be a problem for the core calculus, of course, as it's simply a restriction...}
+
   Two of the rules are only possible because of the \kw{variable} classification for "Λx": the
   \thetag{xv} and \thetag{xvgc} rules (in lines 8 and 9, respectively). This is because these rules
   match \emph{explicit} variable names in the pattern. For \thetag{xv}, the pattern explicitly
@@ -418,12 +441,16 @@ Formally, when a sort has a \kw{variable} declaration then it is said to have \e
 \item variables of that sort may occur unbound in the meta-terms whose reduction you consider
   (others will only occur bound);
 
+  \CK{Mind if I change meta-terms to terms here?}
+
 \item you can \emph{match} on an explicit variable (either bound or free) of one of these sorts;
 
 \item variables of these sorts may occur free in the right-hand side of a rule, which corresponds to
   \emph{creating} new ``fresh'' variables in the contracted term.
 
 \item substitution is restricted to variables for the sort.
+
+  \CK{You mean, substition is not permitted for variables of the sort?}
 
 \end{itemize}
 %%
@@ -485,6 +512,17 @@ be \#2 is added to \#1. Entries in \#2 override entries in \#1.}
   semantics that I think any complications arising from the ``non-setness'' of them are a necessary
   price to pay.}
 
+\CK{I don't agree that it is a \emph{necessary} price to pay, as there are
+  syntactical solutions; for example the $\{\#1 \mid \dots\}$ and $\{\#1 +
+  \dots\}$ syntaxes we used before, which could be extended to combine
+  catcher meta-variables in the form $\{\#1 + \#2 + \dots\}$.  In fact, to
+  define substitution it is going to be somewhat inconvenient if we
+  \emph{don't} have something like this, because the way we must
+  instantiate $\{\#catcher, x : y\}$ is different depending on whether we're
+  instantiating the left-hand side of a rule (where $\#catcher$ should be
+  catching the whole mapping, including $x:y$) or the right-hand side (where
+  $x:y$ is an addition).}
+
 \end{example}
 
 \begin{figure}[h!t]
@@ -502,7 +540,7 @@ N rule Pick(#, [x,y]#greater(x,y)) → Pick2(#, [x,y]#pick(x,y), Zero);
 
 N scheme Pick2(List⟨N⟩, [N,N]Bool, N);
 N rule Pick2(Nil, [x,y]#greater(x,y), #n) → #n;
-N rule Pick2(Cons(#1, #rest), [x,y]#pick(x,y), #n)
+N rule Pick2(Cons(#1, #rest), [x,y]#greater(x,y), #n)
   → Pick2(#rest, [x,y]#greater(x,y), If(#greater(#1,#n),#1,#n));
   \end{hacs}
   \caption{Find largest element of a list of natural numbers.}
@@ -551,6 +589,7 @@ associations can be used to store environments. The next example explores this.
     Λρ  rule E(Ap(Ap(#f, #1), #2), {#}) →   E(Ap(E(Ap(#f, #1), {#}), E(#2, {#})), {#});
     Λρ  rule E(Ap(Lm([x]#(x)), #a), {#}) →  E(#(x), {#, x : E(#a,{#})});
   \end{hacs}
+  \CK{This is very non-terminating even for most terminating lambda-terms!}
   %%
   Notice how application is now data
   %%
@@ -725,6 +764,29 @@ below why there is a ``principal'' such witness.
   ``Con'' variant, and we have to invent a witness rule environment $Δ$ that works for both.
 
 \end{itemize}
+
+\CK{Pondering\dots\ these definitions say that the declarations must correspond
+to the global sort environment.  They do \emph{not} say that everything in the
+global sort environment must be declared.  You could add a requirement for this
+to be the case, but then you still would not have the property that schemes have
+to be declared before they're used. \\
+Do you want to have this?  Because if so, I think you'd have to adapt the
+schemes so they can \emph{change} the global sort environment; for example:
+  \begin{align}
+    &
+    \dfrac
+    { \emptyset ⊢ (Γ_1,D_1) ~~\cdots~~ Γ_{n-1} ⊢ (Γ_n,D_n) }
+    { ⊢ D_1…D_n }
+    \qquad\qquad
+    && \qquad\qquad\qquad\qquad
+    \tag{SH}
+    % 
+  \end{align}
+I think I prefer your way of doing it, though.  Just pondering the consequences. \\
+Another question is whether we should already demand at this point that
+$\Delta_{\op{var}}$ contains only syntactic variables.  I believe doing so would
+allow us to remove the requirements $s \in \Gamma_{\op{hasvar}}$ when variables
+are sorted.}
 
 \begin{definition}
   %%
@@ -954,14 +1016,34 @@ below why there is a ``principal'' such witness.
   \item only data constructors allowed;
   \item meta-application arguments are restricted to distinct bound variables;
   \item free variables only allowed in positions with a sort that includes a \kw{variable}
-    declarations.
+    declaration.
   \end{enumerate}
+
+  \CK{So data rules are permanently off the table, then?}
+
+  \CK{Also, for SMP-Var I think you should allow $w \in \{\ov{v}\}$ as an alternative to
+    $s \in \Gamma_{\op{hasvar}}$.  Or do you want to allow bound variables to \emph{only}
+    occur as meta-variable arguments?  I must confess that this is an interesting idea,
+    but it is not usual (indeed, normally bound variables are the only variables you can
+    match on).  The same question applies to SMC-Var.}
 
 \item \thetag{SMC-*} rules handle contraction meta-terms. \TBD{More.}
 
 \item \thetag{SMS-*} rules handle contraction substitution arguments. \TBD{More.}
 
 \item \thetag{SP-*} rules handle ``pieces,'' \ie, scoped parameters to constructions. \TBD{More.}
+
+  \CK{With regards to SP-Bind:
+  \begin{itemize}
+  \item I think you meant to require that $Δ'_{\op{var}}(\ov{w}) = \ov{S}$
+    rather than for $Δ'_{\op{var}}(\ov{w})$?
+  \item Why not simply \emph{define} $Δ'$ as $Δ ∪ \{ \ov{w}:=\ov{S} \}$?  As is,
+    the definition allows $Δ'$ to contain additional variables which $Δ$ does not contain.
+    This for instance gives $\emptyset \vdash [x]f(y)$, which I would consider undesirable.
+  \item Do you want to require that $\{\ov{v}\} \cap \{\ov{w}\} = \emptyset$ or not?
+    This is unclear from the notation (and indeed, could go either way in the
+    lambda-calculus).
+  \end{itemize}}
 
 \item \thetag{SA*}…\TBD{More.}
 
