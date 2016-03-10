@@ -1060,6 +1060,8 @@ are sorted.}
 In this section we formally define rewriting in the \hax calculus. We follow [\TBD{Cynthia?}] in
 defining rewriting in the context of a sort assignment.
 
+\CK{Oof, no idea who came up with that.  It's a fairly standard thing.}
+
 \bigskip
 \JN{MS and JN thought about behavior of association maps -- thoughts and proposals below}:
 \paragraph{Commutativity}
@@ -1096,6 +1098,12 @@ this behavior.\footnote{But this doesn't fit the behavior in \CRSX, right? So th
 with a binary symbol for building association sets (say ``,'') that is considered modulo
 associativity, commutativity and with the empty association map as a unit element. This makes
 matching and unification quite a bit harder, but also allows to build on well-studied theory.
+
+\CK{Does it really make matching and unification harder? It seems
+quite reasonable to think of associations simply as sets of pairs.
+Mind, I do not believe that this is truly what we want, as I think we
+want to \emph{override} existing mappings.}
+
 \begin{center}
 \JN{Answer 2 to Question 2: No equal keys allowed by construction}
 \end{center}
@@ -1115,14 +1123,22 @@ one or by overwriting it. A possible (partial) definition for the former is give
     \{k_1:v_1,\ldots,k_n:v_n, k : v\} &\text{otherwise}
   \end{cases}
 \end{align*}
+
+\CK{Problem is, I do \emph{not} like imposing an order on these sets.
+It gets kind of icky, and also does not match the implementation, I
+think.}
+
 Now we would also have to define what it means for two keys to be ``equal'', written $\approx$
 above, i.e., when a map would become inconsistent. The obvious checking for syntactic equality seems
-to weak, since (at least by the syntax) arbitrary meta-terms are allowed as keys. When considering
+too weak, since (at least by the syntax) arbitrary meta-terms are allowed as keys. When considering
 that we probably want to avoid situations where through instantiation the map could become
 inconsistent, instantiating $\approx$ by unifiability seems like a good choice.
 
+\CK{Except we absolutely do want to allow a mapping with different
+variables as keys, which this idea would disallow.}
+
 In any case we should get the following behavior for the example from above: starting from the
-inconsistent term $"Fun({ x : T, y : F})"$ there is no rewrite step using the rule
+inconsistent term $"Fun({ x : T, x : F})"$ there is no rewrite step using the rule
 $"Fun({ x : #1, #2}) → #1"$, since no instantiation of $"{x : #1, #2}"$ can produce the required map:
 trying e.g.\ $[\#1 \mapsto T, \#2 \mapsto x : F]$ we get
 $"{x : #1, #2}"[\#1 \mapsto T, \#2 \mapsto x : F] = ("{}" \uplus "{x : T}") \uplus "{x : F}" =
@@ -1134,6 +1150,16 @@ that keys must not be joinable (have a common reduct), but that is in general no
 maybe a better option would be to enforce that keys do not contain function constructions (we
 probably do not want rewriting in keys anyway, do we?).
 
+\CK{I think we do not want rewriting in keys.}
+
+\CK{Question: is it safe to assume that the only variables occurring
+as (part of) keys in associations are syntactic?  Since syntactic
+variables may not be substituted other than by other syntactic
+variables, it already avoids many problems.  It does not avoid the
+possibility of substituting two key-variables by the same variable,
+though\dots\ what do we \emph{want} to do if that happens?  Is it
+possible in practice?}
+
 \paragraph{Non-deterministic Catching}
 \begin{center}
   \JN{Question 3: Possible to forbid in lhs: $\{\#X, \#Y\}$?\\To avoid blowup in matchers.}
@@ -1141,6 +1167,9 @@ probably do not want rewriting in keys anyway, do we?).
 Is using two catchers in pattern allowed? We probably want to forbid this to get an easy, efficient
 matching procedure. Otherwise already for the term $"Fun({x : 0, y : 1})"$ we have four different
 matchers with the pattern $"Fun({#1, #2})"$.
+
+\CK{I would strongly prefer not!  Or if it is allowed, that they both
+match the full set.}
 
 \paragraph{Nested Association Maps}
 \begin{center}
@@ -1168,6 +1197,11 @@ A similar effect is present in the sort system where by using the rule S-P-ASSOC
 possible to arbitrarily nest $"{}"$.
 
 \JN{end of thoughts and proposals on association maps}
+
+\CK{I think this shows the benefits of using the syntax $\{\# \mid
+x : 0 \}$ instead: it makes it more clear that the catcher should
+always capture the whole map!}
+
 \bigskip
 
 \begin{definition}[substitution]
@@ -1175,6 +1209,18 @@ possible to arbitrarily nest $"{}"$.
 \end{definition}
 
 \TBD{mv, fv, substitution, rewriting.}
+
+\CK{I'm happy to write something up, but I think discussion points
+need to be answered first:
+\begin{itemize}
+\item Can I define it using $\{\# \mid \dots\}$ on the left and
+  $\{\# + \dots\}$ on the right, or would it be preferable if we
+  simply give different definitions of substitution for the left- and
+  right-hand side?
+\item What happens if a substitution collapses two keys in an
+  association?
+\end{itemize}
+}
 
 \begin{theorem}[subject reduction]
   Given a well-sorted \hax script $H$ with the rewrite 
@@ -1190,7 +1236,7 @@ A well-sorted term can only rewrite to a well-sorted term.
 
 In this section we provide proofs for several standard rewrite properties of~\hax.
 
-\TBD{What do we know of properties of such a system…Cynthi or Maria or Julian?
+\TBD{What do we know of properties of such a system… Cynthia or Maria or Julian?
   \\
   Also: decidability of type checking, possibly type inference?}
 
