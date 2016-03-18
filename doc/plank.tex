@@ -78,6 +78,16 @@ complex, and over time we have developed notions of what the ``core'' elements o
 are. At the same time, \HAX has highlighted what additional programming paradigms one should add to
 get a more useful programming language for writing compilers.
 
+\hax is our attempt at providing such a foundation.  \hax is specifically based on Aczel's
+\emph{Contraction Schemes}~\cite{Aczel:1978} (where the restriction we shall see of only permitting
+abstractions as constrution arguments is first found) with the substitution notion from Klop's
+\emph{Combinatory Reduction Systems}~\cite{Klop+:tcs1993} and imposing a typing discipline similar
+to the the second-order limitation of Blanqui's \emph{Inductive Data Type
+  Systems}~\cite{BlanquiJouannaudOkada:tcs2002}. The novelty of \hax is the mechanism used to add
+first class \emph{environments} and \emph{free variables}, and integrates those with the type
+discipline; these features are derived from the CRSX system~\cite{Rose:rta2011}, where they were
+never provided a formal foundation.
+
 \TBD{Example of complex feature that can be simplified.}
 
 The \hax calculus, presented here, represents the synthesis or what we have found to be the
@@ -249,13 +259,7 @@ data constructors).
   %%
 \end{example}
 
-\hax includes traditional higher-order rewriting systems (again with distinct defined symbols).
-Indeed, \hax is specifically based on Aczel's \emph{Contraction Schemes}~\cite{Aczel:1978} (where
-the restriction of only permitting abstractions as constrution arguments is first found) with the
-substitution notion from Klop's \emph{Combinatory Reduction Systems}~\cite{Klop+:tcs1993} and
-imposing a typing discipline similar to the the second-order limitation of Blanqui's \emph{Inductive
-  Data Type Systems}~\cite{BlanquiJouannaudOkada:tcs2002}. \hax then adds first class
-\emph{environments}, and integrates those with the type discipline.
+To illustrate the use of the higher-order rewriting features of \hax, we return to a classic.
 
 \begin{example}\label{ex:lambda}
   %%
@@ -366,20 +370,20 @@ rules, with some restrictions. This is what the \kw{variable} declaration is for
     be matched in rules but in turn \emph{only} substituted by other free variables.
 
   \item The β-reduction rule is replaced with a new scheme "Ex", which performs the substitution
-    explicitly, without referring to the primitive substitution of \hax except for renaming.
+    explicitly, without appealing to the primitive substitution of \hax except for renaming.
 
   \end{enumerate}
   %%
   The rules in \hax for the system follow the original presentation closely.
   %%
-  \begin{hacs}[numbers=right]
+  \begin{hacs}[numbers=right,texcl]
      Λx variable; // the sort uses explicit variables
      Λx data Lm([Λx]Λx); // abstraction
  
      Λx scheme Ap(Λx,Λx); // application
-     Λx rule Ap(Lm([x]#(x)),#x) → Ex([x]#(x),#x);  //(b)
+     Λx rule Ap(Lm([x]#(x)),#x) → Ex([x]#(x),#x);  // (b) ``β-introduction''
  
-     Λx scheme Ex([Λx]Λx,Λx); // explicit substitution
+     Λx scheme Ex([Λx]Λx,Λx); // (x\_) rules for ``explicit substitution''
      Λx rule Ex([x]x,#x) → #x;  // (xv)
      Λx rule Ex([x]y,#x) → y;   // (xvgc)
      Λx rule Ex([x]Ap(#f(x), #a(x)), #x) →  Ap(Ex([x]#f(x),#x), Ex([x]#a(x),#x));  // (xap)
@@ -428,7 +432,7 @@ Formally, when a sort has a \kw{variable} declaration then it is said to have \e
 \end{itemize}
 %%
 So it is not possible to combine the "Λ" sort from Example~\ref{ex:lambda} with "Λx" from
-Example~\ref{ex:lambda-x}: sorts are either ``classic'' higher-order, like "Λ", or ``syntactic''
+Example~\ref{ex:lambda-x}: each sort is either ``classic'' higher-order, like "Λ", or ``syntactic''
 higher-order, like "Λx", but never both.
 
 
@@ -580,6 +584,7 @@ sorting ensures that
 %%
 \begin{itemize}
 \item the pattern and contraction restrictions are obeyed;
+\item syntactic variables are used correctly;
 \item binders are used in the shape declared for constructors;
 \item subterms (including variable and meta-variable occurrences) have the right sort;
 \item association keys and values have the proper sorts.
@@ -594,13 +599,12 @@ We first formalize the sorting rules and last discuss an algorithm for sort chec
   \begin{itemize}
 
   \item $Γ_{\op{rank}}\colon \mathcal{C} → \mathcal{N}$ gives the rank of each sort
-    constructor. \KR{This means we have no higher kinds, \ie, all sorts parameters are fully applied
-      sorts.}
+    constructor (all sorts must be fully applied, there are no higher kinds).
 
   \item $Γ_{\op{hasvar}}$ is a set of sort names (the sorts that allow variables).
 
   \item $Γ_{\op{con}}\colon \mathcal{C} → S×F^*$ from constructor name to pairs of a sort and a
-    list of forms.
+    list of forms (the pair consists of the construction's sort and the shape of the arguments).
     
   \item $Γ_{\op{fun}}$ is a set of constructor names (those declared as schemes).
 
@@ -614,7 +618,8 @@ We first formalize the sorting rules and last discuss an algorithm for sort chec
   %% 
   \begin{itemize}
 
-  \item $Δ_{\op{var}}\colon \mathcal{V} → S$ mapping from variable names to sorts.
+  \item $Δ_{\op{var}}\colon \mathcal{V} → S$ mapping from variable names to sorts (the sort assigned
+    to each variable for the rule).
 
   \item $Δ_{\op{meta}}\colon \mathcal{M} → MF$ mapping from meta-variable names to ``meta-forms''
     defined by
@@ -622,12 +627,15 @@ We first formalize the sorting rules and last discuss an algorithm for sort chec
     \begin{equation}
       MF ::= \ov{S}⇒S \mid \ov{S}⇒\{S{:}S\} \tag{MetaForm}
     \end{equation}
+    %%
+    (defines the shape of allowed meta-applications for the meta-variable).
 
   \end{itemize}
   %%
 \end{definition}
 
-\TBD{Explain.}
+With these definitions, sorting will amount to ``inventing'' a global sort environment and a rule
+environment for each rule such that the 
 
 $MF$ captures the difference between regular meta-variables and ``catch-all'' ones:
 %%
@@ -885,7 +893,7 @@ below why there is a ``principal'' such witness.
     %
     &\dfrac
     { Γ,Δ,\op{InPat},\ov{v} ⊢ M : S }
-    { Γ,Δ,\op{InPat},\ov{v} ⊢ \kwm{¬}M : \{S{:}S'\} }
+    { Γ,Δ,\op{InPat},\ov{v} ⊢ {\kwm{¬}M\kw{:}} : \{S{:}S'\} }
     \tag{SAP-Not}
     % 
     \\[1ex]
@@ -922,8 +930,8 @@ below why there is a ``principal'' such witness.
     TC ::= \op{Pat} \mid \op{InPat} \mid \op{Con} \mid \op{Sub} \tag{TermContext}
   \end{equation}
   %%
-  Given a sort environment $Γ$ and a rule environment $Δ$. A meta-term $M$ has sort $S$ in context
-  $TC$ with bound variables $\ov{v}$ if we can prove
+  Given a sort environment $Γ$ and a rule environment $Δ$. A meta-term $M$ has sort $S$ in term
+  context $TC$ and bound variables $\ov{v}$ if we can prove
   \begin{equation}
     Γ,Δ,TC,\ov{v} ⊢ M : S
   \end{equation}
@@ -946,24 +954,75 @@ below why there is a ``principal'' such witness.
   \end{itemize}
 
 \item The \thetag{SMP-*} rules handle patterns. The first rule \thetag{SMP-Fun} is the entry rule
-  for patterns, which must be function constructions, and have pieces that are
+  for patterns, with $TC=\op{Pat}$, which must be function constructions, and have pieces that are
   well-sorted. Fragments of patterns are then handled by the three following rules,
-  \thetag{SMP-Data,SMP-Meta,SMP-Var}, which capture the sort propagation as well as the special
-  constraints for patterns:
+  \thetag{SMP-Data,SMP-Meta,SMP-Var}, with $TC=\op{InPat}$, which capture the sort propagation as
+  well as the special constraints for patterns:
+  %%
   \begin{enumerate}
-  \item only data constructors allowed;
-  \item meta-application arguments are restricted to distinct bound variables;
-  \item free variables only allowed in positions with a sort that includes a \kw{variable}
-    declarations.
+
+  \item \thetag{SMP-Data} sort checks that only data constructors are allowed;
+
+  \item \thetag{SMP-Meta} verifies that pattern meta-application arguments are restricted to
+    distinct bound variables;
+
+  \item \thetag{SMP-Var} verifies that other instances of variables only occur where a \kw{variable}
+    declaration explicitly permits it.
+
   \end{enumerate}
 
-\item \thetag{SMC-*} rules handle contraction meta-terms. \TBD{More.}
+\item The \thetag{SMC-*} rules handle contraction meta-terms.
+  %%
+  \begin{enumerate}
 
-\item \thetag{SMS-*} rules handle contraction substitution arguments. \TBD{More.}
+  \item \thetag{SMC-Cons} verifies that each construction (function or data) is well sorted.
 
-\item \thetag{SP-*} rules handle ``pieces,'' \ie, scoped parameters to constructions. \TBD{More.}
+  \item \thetag{SMC-Meta} verifies that every meta-application is sorted consistently with the rule
+    environment, and checks that the implied substitutions are well formed.
 
-\item \thetag{SA*}…\TBD{More.}
+  \item \thetag{SMC-Var} checks that variables are used at the right sort, and are permitted (by a
+    \kw{variable} declaration for the sort).
+
+  \end{enumerate}
+
+\item The \thetag{SMS-*} rules handle contraction substitution arguments. They really just wrap the
+  corresponding \thetag{SMC-*} rules except that \thetag{SMS-Cons,SMS-Meta} checks that the
+  non-trivial substitution is permitted by the sort \emph{not} having a \kw{variable} declaration,
+  and \thetag{SMS-Var} just checks the sort of the replacement variable \emph{without} any
+  constraints on whether the sort has a \kw{variable} declaration.
+
+\item The \thetag{SP-*} rules handle ``pieces,'' \ie, parameters of constructions (which at the
+  outermost level have a different structure than other subterms). Note that these do \emph{not}
+  depend on the term context, which is merely passed to the premises. (From the other rules we can
+  see that the term context will always be \op{InPat} or \op{Con}.)
+  %%
+  \begin{enumerate}
+
+  \item \thetag{SP-Bind} handles scopes. It creates a \emph{locally extended} version of the rule
+    environment, $Δ'$, which extends the variable bindings part of $Δ$ with the binders in the
+    scope; the sorts of these are fixed by the parent construction.
+
+  \item \thetag{SP-Assoc} handles collections of associations. These are checked by separate
+    individual rules for association, below.
+
+  \end{enumerate}
+
+\item The \thetag{SA*} rules handle associations. These are categorized in a slightly different ways
+  than the others above, as associations have different rules in patterns and contractions.
+  %%
+  \begin{enumerate}
+
+  \item \thetag{SA-Map} gives the rule for a simple mapping. Such mappings are permitted in both 
+    \TBD{key patterns should be restricted}
+
+  \item \thetag{SAP-Not} expresses that negation patterns
+
+  \end{enumerate}
+
+
+
+
+  …\TBD{More.}
 
 \end{itemize}
 
