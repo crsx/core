@@ -65,13 +65,12 @@ over the years, ranging from generic specification languages, where the goal is 
 but only declare the semantics of the program manipulation, all the way to tools that support
 specific aspects of program execution or compiler generation.
 
-One direction has been to use a combination of \emph{higher order
-  rewriting}~\cite{Jouannaud:klop2005} combined with \emph{higher order abstract syntax} (HOAS)
-\cite{PfenningElliot:pldi1988}. This approach is used by \CRSX (Combinatory Reduction Systems with
-eXtensions)~\cite{Rose:1996}, developed for writing industrial compilers at IBM
-Research~\cite{Rose:hor2010,Rose:rta2011,dp60:ibm2013}, and the derived system \HAX (Higher-order
-Attribute Contration Schemes)~\cite{Rose:ts2015}, developed to teach compiler construction at
-NYU~\cite{RoseRose:cims2015}.
+One direction has been to combine \emph{higher order rewriting}~\cite{Jouannaud:klop2005} with
+\emph{higher order abstract syntax} (HOAS) \cite{PfenningElliot:pldi1988}. This approach is used by
+\CRSX (Combinatory Reduction Systems with eXtensions)~\cite{Rose:1996}, developed for writing
+industrial compilers at IBM Research~\cite{Rose:hor2010,Rose:rta2011,dp60:ibm2013}, and the derived
+system \HAX (Higher-order Attribute Contration Schemes)~\cite{Rose:ts2015}, developed to teach
+compiler construction at NYU~\cite{RoseRose:cims2015}.
 
 However, the direct implementation of the full \CRSX language~\cite{crsx} turned out to be quite
 complex, and over time we have developed notions of what the ``core'' elements of the language
@@ -181,11 +180,9 @@ We shall use the following terminology:
 
 \item A meta-term of the form $c(P_1,…,P_n)$, for $n≥0$, is called a \emph{construction}; if furthermore
   the top symbol $c$ is declared with a "scheme c {…}" declaration then it is called a
-  \emph{function construction}, and if it is declared with "data d {…}" then it is called a
+  \emph{function construction}, and if it is declared with "data c {…}" then it is called a
   \emph{data construction}. If $n=0$, i.e., the function or data symbol does not take any arguments,
   we usually drop the $()$. That is, we write $0$ instead of $0()$.
-
-  \CK{Either that should be `scheme f\{…\}' or `data c \{…\}'.  Which would be preferable?}
 
 \item Argument ``pieces'' $P$ of constructions take one of two forms: \emph{scopes} $[v_1,…,v_n]M$,
   $n≥0$, which introduce new local variables $v_1,…,v_n$ along with a meta-term $M$ wherein they can
@@ -196,13 +193,7 @@ We shall use the following terminology:
   omitted: we write $S(0)$ instead of $S([]0)$.
 
 \item A meta-term of the form $m(M_1,…,M_n)$, $n≥0$, is a \emph{meta-application}.  A meta-term that
-  does not contain any meta-applications is called (simply) a \emph{term}.
-
-  \CK{I would say that a term is a meta-term that does not contain any meta-applications, catchers
-  or exclusions (note that the latter terms aren't meta-terms but associations).}
-
-  \CK{Also, I think it is worth observing something like the following (please reformulate at
-  wish!):}
+  does not contain any meta-applications, exclusions, or catchers, is called (simply) a \emph{term}.
 
   Terms are the primary objects in the system, which the rules define a relation on.
   We will consider in particular rules where all variables are bound or \emph{syntactic}

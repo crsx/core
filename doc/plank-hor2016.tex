@@ -1,0 +1,623 @@
+\documentclass[letterpaper,10pt]{proc}
+
+%% Style.
+%\usepackage{charter}
+\renewcommand{\rmdefault}{pplx}
+\usepackage{eulervm}
+\bibliographystyle{plain}
+\usepackage[margin=.5in]{geometry}
+
+%% Format.
+\input{setup}
+\usepackage{cite}
+\usepackage{stmaryrd}
+
+%% Topmatter.
+\title{ ħ: A Plank for Higher-order Attribute Contraction Schemes \\ Extended Abstract }
+\author{%
+  Cynthia Kop \\
+  University of Copenhagen
+  \and
+  Kristoffer H. Rose \\
+  Two Sigma Investments, LLC
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}\noindent
+  %%
+  We present and formalize ħ, a core (or ``plank'') calculus that can serve as the foundation
+  for several compiler specification languages, notably \CRSX (Combinatory Reductions Systems with
+  eXtensions) \HAX (Higher-order Attribute Contraction Schemes), and \textsf{TransScript}.
+  %%
+  We discuss how the ħ typing and formation rules introduce the necessary restrictions to
+  ensure that rewriting is well-defined, even in the presence of ħ's powerful extensions for
+  manipulating free variables and environments as first class elements (including in pattern
+  matching).
+  %%
+\end{abstract}
+
+%------------------------------------------------------------------------
+
+\section{Introduction}\label{sec:intro}
+
+Several systems that manipulate programs, so-called \emph{meta-programming} systems, have emerged
+over the years, ranging from generic specification languages, where the goal is to derive
+implementations from formal specifications of the program language semantics, all the way to tools
+that support specific aspects of program execution or compiler generation.
+
+One direction has been to combine \emph{higher order rewriting}~\cite{Jouannaud:klop2005} with
+\emph{higher order abstract syntax} (HOAS) \cite{PfenningElliot:pldi1988}. This approach is used by
+\CRSX (Combinatory Reduction Systems with eXtensions)~\cite{Rose:1996}, developed for writing
+industrial compilers at IBM Research~\cite{Rose:hor2010,Rose:rta2011,dp60:ibm2013}, and the derived
+systems \HAX (Higher-order Attribute Contration Schemes)~\cite{Rose:ts2015}, developed to teach
+compiler construction at NYU~\cite{RoseRose:cims2015}, and \textsf{TransScript} \cite{}, developed
+to support industrial strength fully automatic compiler generation.  The implementation of the full
+\CRSX language~\cite{crsx} turned out to be quite complex, and over time we have developed notions
+of what the ``core'' elements of such languages should be.
+
+ħ is our attempt at providing such an extended foundation.  ħ is specifically based on Aczel's
+\emph{Contraction Schemes}~\cite{Aczel:1978} (where the restriction we shall see of only permitting
+abstractions as constrution arguments is first found) with the substitution notion from Klop's CRS,
+\emph{Combinatory Reduction Systems}~\cite{Klop+:tcs1993} and imposing a typing discipline similar
+to the the second-order limitation of Blanqui's \emph{Inductive Data Type
+  Systems}~\cite{BlanquiJouannaudOkada:tcs2002}. The extension of ħ is the mechanism used to add
+first class \emph{environments} and \emph{free variables} in a formal way, and integrate those with
+the type discipline and pattern matching; these features are derived from the \CRSX
+system~\cite{Rose:rta2011}, where they were never provided a formal foundation.
+
+\begin{example}[$βη$]
+  The canonical higher order rewriting example, λ-calculus with β and η rewrite rules over closed
+  terms, is expressed as follows in~ħ:
+  \begin{hacs}
+  L scheme Lam([L]L);
+  L scheme Ap(L,L);
+  L rule Ap(Lam([x]#M(x)), #N) →  #M(#N);
+  L rule Lam([x]Ap(#M(), x)) →  #M();
+  \end{hacs}
+  The example shows CRS-style higher order matching, where patterns match all occurrences of bound
+  variables---"#M(x)" in the first rule---allowing rules to do \emph{substitution} of bound
+  variables---"#M(#N)" in the first rule achieves the substitution ``"#M[#N/x]"'' of the usual β
+  rule. CRS notably also makes \emph{absence} of binder arguments to meta-variables---"#M()" is not
+  "#M(x)" in the last rule---express that "x" can \emph{not} occur in subterms mathcing "#M".
+\end{example}
+
+\begin{example}
+  Abstract machines with proper variables can also be expressed.
+  \begin{hacs}
+  M  data  State();
+  \end{hacs}
+  \TBD{Finish.}
+\end{example}
+
+%------------------------------------------------------------------------
+
+\section{The Calculus}
+\label{sec:overview}
+
+\begin{definition}[ħ syntax]\label{def:syntax}
+  %%
+  The ħ syntax is summarized as follows (with overbars denoting vectors):
+  %%
+  \begin{align*}
+    \tag{ħ{}Script}
+    H &::= \ov{D} 
+    \\
+    \tag{Declaration}
+    D &::= S~\kw{data}~d\,\kw(\,\ov{F}\,\kw)\,\kw;\\*[-1pt]
+    &~\bigm| S~\kw{scheme}~f\,\kw(\,\ov{F}\,\kw)\,\kw;\\*[-1pt]
+    &~\bigm| S~\kw{variable}\,\kw;\\*[-1pt]
+    &~\bigm| S~\kw{rule}~M~\kw{$→$}~M\,\kw;
+    \\
+    \tag{Form}
+    F &::= \kw[\,\ov{S}\,\kw]\,S
+    \bigm| \kwm\{\, S:S \,\kwm\}
+    \\
+    \tag{Sort}
+    S &::= s\,\kwm{⟨}\,\ov{S}\,\kwm{⟩}
+    \bigm| α
+    \\[\jot]
+    \tag{Meta-Term}
+    M &::= c\,\kw(\,\ov{P}\,\kw)
+    \bigm| v
+    \bigm| m\,\kw(\,\ov{M}\,\kw)
+    \\
+    \tag{Piece}
+    P &::= \kw[\,\ov{v}\,\kw]\,M
+    \bigm| \kwm\{\, \ov{A} \,\kwm\}
+    \\
+    \tag{Association}
+    A &::= v\,\kw:\,M
+    \bigm| \kw{$¬$}\,v
+    \bigm| \kw\,m\,\kw(\,\ov{v}\,\kw)
+  \end{align*}
+  %%
+  The top level of a ħ script is $H$ and the grammar assumes that we have three categories of
+  identifier terminals defined (with representative exemplars from the examples):
+  %%
+  \begin{itemize}
+  \item $c,s,d,f ∈ \mathcal{C}$ stand for \emph{constructor} terminals ("Lam", "Ap").
+  \item $v,α ∈ \mathcal{V}$ stand for \emph{variable} terminals ("x", "foo").
+  \item $m ∈ \mathcal{M}$ stands for \emph{meta-variable} terminals ("#", "#M").
+  \end{itemize}
+  %%
+\end{definition}
+
+The ħ formalism includes traditional ``constructor'' term rewriting systems, where there is a
+distinction between \emph{defined} "scheme" symbols and "data" symbols, however, unlike functional
+programming, ħ allows for normal forms that include (incompletely) defined symbols.
+
+%------------------------------------------------------------------------
+
+\section{Sorting}
+\label{sec:sorting}
+
+In this Section we define ħ script formation formally by restricting the terms of the grammar in
+Definition~\ref{def:syntax} further to only allow well-formed ``sortable'' scripts. Informally,
+sorting ensures that
+%%
+\begin{itemize}
+\item pattern and contraction restrictions are obeyed;
+\item syntactic variables are used correctly;
+\item binders are used in the shape declared for constructors;
+\item subterms (including variable and meta-variable occurrences) have the right sort;
+\item association keys and values have the proper sorts.
+\end{itemize}
+
+\begin{definition}
+  %%
+  A \emph{global sort environment} $Γ$ is a structure that combines
+  %% 
+  $Γ_{\op{rank}}\colon \mathcal{C} → \mathcal{N}$: the rank of each sort
+  constructor (all sorts must be fully applied, there are no higher kinds);
+  %% 
+  $Γ_{\op{hasvar}}$: set of sort names (the sorts that allow variables);
+  %%
+  $Γ_{\op{con}}\colon \mathcal{C} → S×F^*$: map from constructor name to pairs of a sort and a list
+  of forms (the pair consists of the construction's sort and the shape of the arguments); and
+  %%
+  $Γ_{\op{fun}}$: set of constructor names (those declared with "scheme").
+  %% 
+\end{definition}
+
+\begin{definition}
+  %%
+  A \emph{rule environment} $Δ$ is a structure that combines
+  %% 
+  $Δ_{\op{var}}\colon \mathcal{V} → S$: mapping from variable names to sorts (the sort assigned
+  to each variable for the rule) and
+  %%
+  $Δ_{\op{meta}}\colon \mathcal{M} → MF$: mapping from meta-variable names to ``meta-forms''
+  defined by
+  %% 
+  \begin{equation}
+    MF ::= \ov{S}⇒S \mid \ov{S}⇒\{S{:}S\} \tag{MetaForm}
+  \end{equation}
+  %% 
+  $MF$ captures the difference between regular meta-variables and ``catch-all'' ones:
+  %% 
+  The shape $\ov{S}⇒S$ is used for meta-variables that need to be meta-applied to arguments with the
+  sorts $\ov{S}$ to then form a term of the sort~$S$.
+  %%
+  The shape $\ov{S}⇒\{S_1{:}S_2\}$ used for meta-variables that catch all the associations in an
+  association list from $S_1$ to~$S_2$.
+  %%
+\end{definition}
+
+\begin{definition}
+  %%
+  A ħ script $H$ is \emph{well formed} if we can prove $⊢H$ with the rule
+  %%
+  \begin{align}
+    &
+    \dfrac
+    { Γ ⊢ D_1 ~~\cdots~~ Γ ⊢ D_n }
+    { ⊢ D_1…D_n }
+    \qquad\qquad (∃Γ)
+    \tag{SH}
+    % 
+  \end{align}
+  %%
+  using the rules below for sorting each declaration.
+  %%
+\end{definition}
+
+Thus sorting relies on a sort environment ``witness'' to establish that a script is well sorted. In
+practice, $Γ$ will be assembled from the constraints of the component declarations. We'll argue
+below why there is a computable ``principal'' such witness.
+
+\begin{definition}
+  %%
+  A ħ declaration $D$ is well-sorted for a sort environment $Γ$ if we can prove $Γ⊢D$ with the
+  SD-* rules:
+  %%
+  \begin{align}
+    %
+    &\dfrac
+    { Γ ⊢ s⟨\ov{α}⟩ }
+    { Γ ⊢ s⟨\ov{α}⟩~\kw{data}~d\kw( \ov{F} \kw)\,\kw; }
+    \quad Γ_{\op{con}}(d) = \left⟨ s⟨\ov{α}⟩, \ov{F} \right⟩,~d∉Γ_{\op{fun}}
+    \tag{SD-Data}
+    %
+    \\[1ex]
+    %
+    &\dfrac
+    { Γ ⊢ S }
+    { Γ ⊢ S~\kw{scheme}~f\kw( \ov{F} \kw)\,\kw; }
+    \quad Γ_{\op{con}}(f) = \left⟨ S, \ov{F} \right⟩,~f∈Γ_{\op{fun}}
+    \tag{SD-Fun}
+    %
+    \\[1ex]
+    %
+    &\dfrac
+    { Γ ⊢ s⟨\ov{α}⟩ }
+    { Γ ⊢ s⟨\ov{α}⟩~\kw{variable}\,\kw; }
+    \quad s ∈ Γ_{\op{hasvar}}
+    \tag{SD-Var}
+    %
+    \\[1ex]
+    %
+    &\dfrac
+    { Γ ⊢ S \quad Γ,Δ,\op{Pat},ε ⊢ M_1 : S  \quad Γ,Δ,\op{Con},ε ⊢ M_2 : S }
+    { Γ ⊢ S~\kw{rule}~M_1~\kw{→}~M_2\,\kw; }
+    \quad (∃Δ)
+    \tag{SD-Rule}
+    %
+  \end{align}
+  %%
+  Rules \thetag{SD-Data,SD-Fun} express that constructors are recorded correct in the environment;
+  note that data constructors must belong to a unique named sort. \thetag{SD-Var} records sorts with
+  syntactic varables, and \thetag{SD-Rule} checks the sorts and well-formedness of the terms in
+  rules.
+  %%
+\end{definition}
+
+\begin{definition}
+  %%
+  A sort denotation $S$ is well-sorted for a sort environment $Γ$ if we can prove $Γ⊢S$ with the
+  SS-* rules:
+  %%
+  \begin{align}
+    %\intertext{\shoveright{Sorting of Sorts\hfil\smash{\fbox{$ Γ ⊢ S $}}}}
+    %
+    &\dfrac
+    { Γ ⊢ S_1 ~~\cdots~~ Γ ⊢ S_n }
+    { Γ ⊢ s⟨S_1,…,S_n⟩ }
+    && Γ_{\op{rank}}(s) = n %\underbrace{{*}→…→{*}}_n
+    \tag{SS-Cons}
+    %
+    \\[1ex]
+    %
+    &\dfrac
+    {}
+    { Γ ⊢ α }
+    \tag{SS-Var}
+    %
+  \end{align}
+  %%
+  Essentially, sorts are well-formed when they have consistent rank.
+\end{definition}
+
+\begin{figure*}[p]\small
+  \vspace*{-3em}
+  \begin{align}
+    \intertext{\shoveright{Sorting of Meta-term\hfil\smash{\fbox{$ Γ,Δ,TC,\ov{\mathcal{V}} ⊢ M : S $}}}}
+    %
+    &\dfrac
+    { Γ,Δ,\op{InPat},\ov{v} ⊢ P_1 : F_1 ~~\cdots~~ Γ,Δ,\op{InPat},\ov{v} ⊢ P_n : F_n }
+    { Γ,Δ,\op{Pat},\ov{v} ⊢ f\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : S }
+    &&\Cases{
+      f∈Γ_{\op{fun}}\\
+      Γ_{\op{con}}(f) = \left⟨ S, (F_1\kw,…\kw,F_n) \right⟩
+    }
+    \tag{SMP-Fun}
+    % 
+    \\[1ex]
+    %
+    &\dfrac
+    { Γ,Δ,\op{InPat},\ov{v} ⊢ P_1 : F_1 ~~\cdots~~ Γ,Δ,\op{InPat},\ov{v} ⊢ P_n : F_n }
+    { Γ,Δ,\op{InPat},\ov{v} ⊢ d\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : S }
+    &&\Cases{
+      d∉Γ_{\op{fun}}\\
+      Γ_{\op{con}}(d) = \left⟨ S, (F_1\kw,…\kw,F_n) \right⟩
+    }
+    \tag{SMP-Data}
+    % 
+    \\[1ex]
+    %
+    &\dfrac
+    { }
+    { Γ,Δ,\op{InPat},\ov{v} ⊢ m\,\kw(\,w_1\kw,…\kw,w_n\,\kw) : S }
+    &&\Cases{
+      Δ_{\op{meta}}(m) = \left( (S_1,…,S_n)⇒S \right) \\
+      ∀i\colon w_i∈\ov{v} \\
+      ∀i\colon Δ_{\op{var}}(w_i) = S_i \\
+      \text{All the $w_i$ are different}
+    }
+    \tag{SMP-Meta}
+    % 
+    \\[1ex]
+    %
+    &\dfrac
+    { }
+    { Γ,Δ,\op{InPat},\ov{v} ⊢ w : s⟨\ov{S}⟩ }
+    &&\Cases{
+      Δ_{\op{var}}(w) = s⟨\ov{S}⟩ \\
+      s ∈ Γ_{\op{hasvar}}
+    }
+    \tag{SMP-Var}
+    %
+    \\[1em]
+    %
+    &\dfrac
+    { Γ,Δ,\op{Con},\ov{v} ⊢ P_1 : F_1 ~~\cdots~~ Γ,Δ,\op{Con},\ov{v} ⊢ P_n : F_n }
+    { Γ,Δ,\op{Con},\ov{v} ⊢ c\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : S }
+    && Γ_{\op{con}}(c) = \left⟨ S, (F_1\kw,…\kw,F_n) \right⟩
+    \tag{SMC-Cons}
+    % 
+    \\[1ex]
+    %
+    &\dfrac
+    { Γ,Δ,\op{Sub},\ov{v} ⊢ M_1 : S_1 ~~\cdots~~  Γ,Δ,\op{Sub},\ov{v} ⊢ M_n : S_n }
+    { Γ,Δ,\op{Con},\ov{v} ⊢ m\,\kw(\,M_1\kw,…\kw,M_n\,\kw) : S }
+    && Δ_{\op{meta}}(m) = \left( (S_1,…,S_n)⇒S \right)
+    \tag{SMC-Meta}
+    %
+    \\[1ex]
+    %
+    &\dfrac
+    { }
+    { Γ,Δ,\op{Con},\ov{v} ⊢ w : s⟨\ov{S}⟩ }
+    &&\Cases{
+      Δ_{\op{var}}(w) = s⟨\ov{S}⟩ \\
+      s ∈ Γ_{\op{hasvar}}
+    }
+    \tag{SMC-Var}
+    %
+    \\[1em]
+    %
+    &\dfrac
+    { Γ,Δ,\op{Con},\ov{v} ⊢ c\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : s⟨\ov{S}⟩ }
+    { Γ,Δ,\op{Sub},\ov{v} ⊢ c\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : s⟨\ov{S}⟩ }
+    && s ∉ Γ_{\op{hasvar}}
+    \tag{SMS-Cons}
+    % 
+    \\[1ex]
+    %
+    &\dfrac
+    { Γ,Δ,\op{Con},\ov{v} ⊢ m\,\kw(\,M_1\kw,…\kw,M_n\,\kw) : s⟨\ov{S}⟩ }
+    { Γ,Δ,\op{Sub},\ov{v} ⊢ m\,\kw(\,M_1\kw,…\kw,M_n\,\kw) : s⟨\ov{S}⟩ }
+    && s ∉ Γ_{\op{hasvar}}
+    \tag{SMS-Meta}
+    %
+    \\[1ex]
+    %
+    &\dfrac
+    { }
+    { Γ,Δ,\op{Sub},\ov{v} ⊢ w : S }
+    && Δ_{\op{var}}(w) = S
+    \tag{SMS-Var}
+    %
+    \\[1ex]
+    \intertext{\shoveright{Sorting of Piece\hfil\smash{\fbox{$ Γ,Δ,TC,\ov{\mathcal{V}} ⊢ P : F $}}}}
+    %
+    &\dfrac
+    { Γ,Δ',TC,(\ov{v}\,\ov{w}) ⊢ M : S }
+    { Γ,Δ,TC,\ov{v} ⊢ \kw[\,\ov{w}\,\kw]\,M : [\ov{S}]S }
+    && (∃Δ'⊇Δ),~ Δ'_{\op{var}}(\ov{v}) = \ov{S}
+    \tag{SP-Bind}
+    %
+    \\[1ex]
+    %
+    &\dfrac
+    { Γ,Δ,TC,\ov{v} ⊢ A_1 : \{S{:}S'\} ~~\cdots~~ Γ,Δ,TC,\ov{v} ⊢ A_n : \{S{:}S'\} }
+    { Γ,Δ,TC,\ov{v} ⊢ \kwm\{\,A_1\kw,…\kw,A_n\,\kwm\} : \{S{:}S'\} }
+    \tag{SP-Assoc}
+    %
+    \\[1ex]
+    \intertext{\shoveright{Sorting of Association\hfil\smash{\fbox{$ Γ,Δ,TC,\ov{\mathcal{V}} ⊢ A : \{S{:}S\} $}}}}
+    %
+    &\dfrac
+    { Γ,Δ,TC,\ov{v} ⊢ M : S \quad Γ,Δ,TC,\ov{v} ⊢ M' : S' }
+    { Γ,Δ,TC,\ov{v} ⊢ M\kw:M' : \{S{:}S'\} } 
+    \tag{SA-Map}
+    % 
+    \\[1ex]
+    %
+    &\dfrac
+    { Γ,Δ,\op{InPat},\ov{v} ⊢ M : S }
+    { Γ,Δ,\op{InPat},\ov{v} ⊢ {\kwm{¬}M\kw{:}} : \{S{:}S'\} }
+    \tag{SAP-Not}
+    % 
+    \\[1ex]
+    %
+    &\dfrac
+    { }
+    { Γ,Δ,\op{InPat},\ov{v} ⊢ m\,\kw(\,w_1\kw,…\kw,w_n\,\kw) : \{S{:}S'\} }
+    &&\Cases{
+      Δ_{\op{meta}}(m) = \left( (S_1,…,S_n)⇒\{S{:}S'\} \right) \\
+      ∀i\colon w_i∈\ov{v} \\
+      ∀i\colon Δ_{\op{var}}(w_i) = S_i
+    }
+    \tag{SAP-All}
+    % 
+    \\[1ex]
+    %
+    &\dfrac
+    { Γ,Δ,\op{Sub},\ov{v} ⊢ M_1 : S_1 ~~\cdots~~  Γ,Δ,\op{Sub},\ov{v} ⊢ M_n : S_n }
+    { Γ,Δ,\op{Con},\ov{v} ⊢ m\,\kw(\,M_1\kw,…\kw,M_n\,\kw) : \{S{:}S'\} }
+    && Δ_{\op{meta}}(m) = \left( (S_1,…,S_n)⇒\{S{:}S'\} \right)
+    \tag{SAC-All}
+    %
+  \end{align}
+  \vspace*{-1em}
+  \caption{ħ meta-term sorting rules.}
+  \label{fig:termsortrules}
+\end{figure*}
+
+\begin{definition}
+  %%
+  Given a sort environment $Γ$ and a rule environment $Δ$. A meta-term $M$ is \emph{well-formed of
+    sort $S$} in term context $TC$ with
+  %%
+  \begin{equation}
+    TC ::= \op{Pat} \mid \op{InPat} \mid \op{Con} \mid \op{Sub} \tag{TermContext}
+  \end{equation}
+  %%
+  and bound variables $\ov{v}$ if we can prove
+  %% 
+  \begin{equation*}
+    Γ,Δ,TC,\ov{v} ⊢ M : S  
+  \end{equation*}
+  %%
+  using the rules in Figure~\ref{fig:termsortrules}.
+  %%
+\end{definition}
+
+The rules in Figure~\ref{fig:termsortrules} give the primary term rules per term context $TC$, which
+indicates the context of our meta-term fragment:
+%% 
+\begin{itemize}
+\item ``Pat'' indicates the pattern (left side) of a rule, at the outermost level.
+\item ``InPat'' is used inside a piece of the pattern of a rule, not the outermost level.
+\item ``Con'' denotes any location in the contraction (right side) of a rule except a substitution.
+\item ``Sub'' denotes a substitution location (an immediate child of a meta-application) in the
+  contraction (right side) of a rule.
+\end{itemize}
+%%
+
+
+
+The \thetag{SMP-*} rules handle patterns. The first rule \thetag{SMP-Fun} is the entry rule
+for patterns, with $TC=\op{Pat}$, which must be function constructions, and have pieces that are
+well-sorted. Fragments of patterns are then handled by the three following rules,
+\thetag{SMP-Data,SMP-Meta,SMP-Var}, with $TC=\op{InPat}$, which capture the sort propagation as
+well as the special constraints for patterns:
+%% 
+\begin{enumerate}
+
+\item \thetag{SMP-Data} sort checks that only data constructors are allowed;
+
+\item \thetag{SMP-Meta} verifies that pattern meta-application arguments are restricted to
+  distinct bound variables;
+
+\item \thetag{SMP-Var} verifies that other instances of variables only occur where a \kw{variable}
+  declaration explicitly permits it.
+
+\end{enumerate}
+
+The \thetag{SMC-*} rules handle contraction meta-terms.
+%% 
+\begin{enumerate}
+
+\item \thetag{SMC-Cons} verifies that each construction (function or data) is well sorted.
+
+\item \thetag{SMC-Meta} verifies that every meta-application is sorted consistently with the rule
+  environment, and checks that the implied substitutions are well formed.
+
+\item \thetag{SMC-Var} checks that variables are used at the right sort, and are permitted (by a
+  \kw{variable} declaration for the sort).
+
+\end{enumerate}
+
+The \thetag{SMS-*} rules handle contraction substitution arguments. They really just wrap the
+corresponding \thetag{SMC-*} rules except that \thetag{SMS-Cons,SMS-Meta} checks that the
+non-trivial substitution is permitted by the sort \emph{not} having a \kw{variable} declaration,
+and \thetag{SMS-Var} just checks the sort of the replacement variable \emph{without} any
+constraints on whether the sort has a \kw{variable} declaration.
+
+The \thetag{SP-*} rules handle ``pieces,'' \ie, parameters of constructions (which at the
+outermost level have a different structure than other subterms). Note that these do \emph{not}
+depend on the term context, which is merely passed to the premises. (From the other rules we can
+see that the term context will always be \op{InPat} or \op{Con}.)
+%% 
+\begin{enumerate}
+
+\item \thetag{SP-Bind} handles scopes. It creates a \emph{locally extended} version of the rule
+  environment, $Δ'$, which extends the variable bindings part of $Δ$ with the binders in the
+  scope; the sorts of these are fixed by the parent construction.
+
+\item \thetag{SP-Assoc} handles collections of associations. These are checked by separate
+  individual rules for association, below.
+
+\end{enumerate}
+
+The \thetag{SA*} rules handle associations. These are categorized in a slightly different ways
+than the others above, as associations have different rules in patterns and contractions.
+%% 
+\begin{enumerate}
+
+\item \thetag{SA-Map} gives the rule for a simple mapping. Such mappings are permitted in both 
+  \TBD{key patterns should be restricted}
+
+\item \thetag{SAP-Not} expresses that negation patterns
+
+\end{enumerate}
+
+
+\TBD{Example sort derivation.}
+
+
+%------------------------------------------------------------------------
+
+\section{Conclusion}
+\label{sec:conc}
+
+With ħ, we have presented a rather small calculus that can serve as the underlying formalism for
+reasoning about as well as implementing the \CRSX and \HAX languages.
+
+\TBD{What is covered.}
+
+~\cite{Knuth:mst1968} 
+~\cite{Aho+:2006}
+
+
+\paragraph*{Related work.}
+
+We would like to give credit to SIS~\cite{Mosses:daimi1979}, which shares with ħ the use of
+\emph{simplification} using a λ-calculus based formalism.
+
+The most prominent system that supports implementation of compilers in formal (rewriting and
+attribute grammar) form is ASF+SDF~\cite{Brand+:toplas2002}, which is based on first order
+rewriting. While modules have been added for symbol table management, these lack the full
+integration and easy way to handle scoped intermediate languages. The successor,
+Rascal~\cite{Bos+:eptcs2011} adds a module for HOAS, but Rascal specifications operate in a world of
+side effects, which we find hard to reconcile with higher-order term structures (with scopes).
+
+The notion of ``higher-order'' used by ħ is similar to but not quite the same as in higher-order
+attribute grammars (HAG)~\cite{VogtSwierstraKuiper:pldi1989}. Like HAGs, ħ specifications permit
+constructing and passing of abstract syntax fragments in attributes but the ``higher order'' aspect
+of ħ also covers the rewriting side, where we can build parameterized abstractions over any part
+of a specification, including with attributes. Indeed, one can use substitution inside attributes,
+and have absence of attributes and substitution block rewriting.
+
+\paragraph*{Future work.} \TBD{Speculate!}
+
+
+\paragraph*{Acknowledgements.} \TBD{Thank everyone.}
+
+EU-funded Marie Skłodowska-Curie ``HORIP'' action collaboration with Cynthia Kop.
+
+
+%------------------------------------------------------------------------
+
+\bibliography{crs}
+
+
+\TBD{End of sane part.}
+\hrule
+\vspace*{1pc}
+
+\end{document}
+
+
+%------------------------------------------------------------------------
+% Tell Emacs that this is a LaTeX document and how it is formatted:
+% Local Variables:
+% mode:latex
+% fill-column:100
+% TeX-master: t
+% TeX-auto-untabify: nil
+% End:
+
