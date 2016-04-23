@@ -108,7 +108,7 @@ system~\cite{Rose:rta2011}, where they were never provided a formal foundation.
     D &::= S~\kw{data}~d\,\kw(\,\ov{F}\,\kw)\,\kw;\\*[-1pt]
     &~\bigm| S~\kw{scheme}~f\,\kw(\,\ov{F}\,\kw)\,\kw;\\*[-1pt]
     &~\bigm| S~\kw{variable}\,\kw;\\*[-1pt]
-    &~\bigm| S~\kw{rule}~M~\kw{$→$}~M\,\kw;
+    &~\bigm| S~\kw{rule}~T~\kw{$→$}~T\,\kw;
     \\
     \tag{Form}
     F &::= \kw[\,\ov{S}\,\kw]\,S
@@ -118,17 +118,17 @@ system~\cite{Rose:rta2011}, where they were never provided a formal foundation.
     S &::= s\,\kwm{⟨}\,\ov{S}\,\kwm{⟩}
     \bigm| α
     \\[\jot]
-    \tag{Meta-Term}
-    M &::= c\,\kw(\,\ov{P}\,\kw)
+    \tag{Term}
+    T &::= c\,\kw(\,\ov{P}\,\kw)
     \bigm| v
-    \bigm| m\,\kw(\,\ov{M}\,\kw)
+    \bigm| m\,\kw(\,\ov{T}\,\kw)
     \\
     \tag{Piece}
-    P &::= \kw[\,\ov{v}\,\kw]\,M
+    P &::= \kw[\,\ov{v}\,\kw]\,T
     \bigm| \kwm\{\, \ov{A} \,\kwm\}
     \\
     \tag{Association}
-    A &::= v\,\kw:\,M
+    A &::= v\,\kw:\,T
     \bigm| \kw{$¬$}\,v
     \bigm| \kw\,m\,\kw(\,\ov{v}\,\kw)
   \end{align*}

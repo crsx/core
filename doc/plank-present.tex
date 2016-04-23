@@ -1,0 +1,144 @@
+\documentclass[pdftex,aspectratio=169,14pt]{beamer}
+\input{lecture-setup}
+\lstMakeShortInline[language=HACS,columns=fullflexible]"
+
+%% Style.
+\usepackage[T1]{fontenc}
+\usepackage{charter}
+\renewcommand{\ttdefault}{txtt}
+
+\useinnertheme{circles}
+\useoutertheme{default}
+\usefonttheme{serif}
+%\SelectTips{lu}{10 scaled 2074}
+
+%% Topmatter
+\title{ \hax }
+\author{ Kristoffer H. Rose \\
+ Two Sigma Investments, LLC \& New York University
+}
+\date{September 8, 2015 \\
+  CHUM 4 (IBM Watson, Yorktown Heights)
+}
+
+\begin{document}
+\maketitle
+%\begin{frame}{Outline}
+%  \tableofcontents
+%\end{frame}
+
+\section{Syntax}
+%\begin{frame}{Outline}
+%  \tableofcontents[current]
+%\end{frame}
+
+\begin{frame}{\hax syntax}\small
+  \vspace*{-1ex}
+  \begin{align}
+    \tag{\hax{}Script}
+    H &::= \ov{D} 
+    \\
+    \tag{Declaration}
+    D &::= S~\kw{data}~d\,\kw(\,\ov{F}\,\kw)\,\kw;
+    \bigm| S~\kw{scheme}~f\,\kw(\,\ov{F}\,\kw)\,\kw;
+    \bigm| S~\kw{variable}\,\kw;
+    \bigm| S~\kw{rule}~M~\kw{$→$}~M\,\kw;
+    \\
+    \tag{Form}
+    F &::= \kw[\,\ov{S}\,\kw]\,S
+    \bigm| \kwm\{\, S:S \,\kwm\}
+    \\
+    \tag{Sort}
+    S &::= s\,\kwm{⟨}\,\ov{S}\,\kwm{⟩}
+    \bigm| α
+    \\[\jot]
+    \tag{Meta-Term}
+    M &::= c\,\kw(\,\ov{P}\,\kw)
+    \bigm| v
+    \bigm| m\,\kw(\,\ov{M}\,\kw)
+    \\
+    \tag{Piece}
+    P &::= \kw[\,\ov{v}\,\kw]\,M
+    \bigm| \kwm\{\, \ov{A} \,\kwm\}
+    \\
+    \tag{Association}
+    A &::= M\,\kw:\,M
+    \bigm| \kw{$¬$}\,M
+    \bigm| \kw\,m\,\kw(\,\ov{v}\,\kw)
+  \end{align}
+\end{frame}
+
+\begin{frame}[fragile]{\hax type system}\small
+  \begin{enumerate}
+
+  \item All rules collected under top sort.
+
+  \item Each \structure{scheme} function can have unique attributes.
+
+  \item All \structure{data} constructors in sort must have \emph{same} attributes.
+
+  \item \emph{All} terms must have all attributes.
+
+  \item Map attributes are \emph{only} from variables of key sort, which must include \kw{variable}.
+
+  \item Meta-variables can \emph{only} have data attribute constraints for their sort.
+    \begin{itemize}
+    \item in patterns this implements ``Data'' option…
+    \end{itemize}
+
+  \item "{¬…}" only in patterns, "{}" only in contractions.
+
+  \item Substitution is \emph{only} of bound variables where binder has sort, which must include
+    \kw{variable}.
+
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{\HAX to \hax}
+  \begin{enumerate}
+
+  \item Resolve all syntax.
+
+  \item \structure{Regroup} all sorted declarations into top sort.
+
+  \item Complete each term instance with \structure{all possible attributes}.
+    \begin{itemize}
+    \item eliminates all ``catch-all'' attribute meta-variables.
+    \end{itemize}
+
+  \item Regular attributes converted to map attributes from dummy variable sort.
+
+  \item Erase synthesized and inherited ("↑" and "↓") markers.
+
+  \item \alert{Something about rule strategy.}
+
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{\CRSX to \hax}
+  \begin{enumerate}
+
+  \item Resolve all syntax.
+
+  \item All environments are resolved into---
+    \begin{itemize}
+    \item Top layer with \structure{constant→map}.
+    \item Second layer (map) is  \structure{variable→value} (dummy as needed).
+    \end{itemize}
+
+  \item Data declaration becomes dummy data attribute.
+
+  \end{enumerate}
+  \alert{Incomplete!}
+\end{frame}
+
+\end{document}
+
+
+%------------------------------------------------------------------------
+% Tell Emacs that this is a LaTeX document and how it is formatted:
+% Local Variables:
+% mode:latex
+% fill-column:100
+% TeX-master: t
+% End:

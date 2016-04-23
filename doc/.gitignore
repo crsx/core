@@ -5,3 +5,7 @@
 *.out
 *.pdf
 *.toc
+*.nav
+*.snm
+*.vrb
+auto
