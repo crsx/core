@@ -259,8 +259,8 @@ below why there is a computable ``principal'' such witness.
     \\[1ex]
     %
     &\dfrac
-    { Γ ⊢ S \quad Γ,Δ,\op{Pat},ε ⊢ M_1 : S  \quad Γ,Δ,\op{Con},ε ⊢ M_2 : S }
-    { Γ ⊢ S~\kw{rule}~M_1~\kw{→}~M_2\,\kw; }
+    { Γ ⊢ S \quad Γ,Δ,\op{Pat},ε ⊢ T_1 : S  \quad Γ,Δ,\op{Con},ε ⊢ T_2 : S }
+    { Γ ⊢ S~\kw{rule}~T_1~\kw{→}~T_2\,\kw; }
     \quad (∃Δ)
     \tag{SD-Rule}
     %
@@ -302,7 +302,7 @@ below why there is a computable ``principal'' such witness.
 \begin{figure*}[p]\small
   \vspace*{-3em}
   \begin{align}
-    \intertext{\shoveright{Sorting of Meta-term\hfil\smash{\fbox{$ Γ,Δ,TC,\ov{\mathcal{V}} ⊢ M : S $}}}}
+    \intertext{\shoveright{Sorting of Term\hfil\smash{\fbox{$ Γ,Δ,TC,\ov{\mathcal{V}} ⊢ T : S $}}}}
     %
     &\dfrac
     { Γ,Δ,\op{InPat},\ov{v} ⊢ P_1 : F_1 ~~\cdots~~ Γ,Δ,\op{InPat},\ov{v} ⊢ P_n : F_n }
@@ -359,8 +359,8 @@ below why there is a computable ``principal'' such witness.
     \\[1ex]
     %
     &\dfrac
-    { Γ,Δ,\op{Sub},\ov{v} ⊢ M_1 : S_1 ~~\cdots~~  Γ,Δ,\op{Sub},\ov{v} ⊢ M_n : S_n }
-    { Γ,Δ,\op{Con},\ov{v} ⊢ m\,\kw(\,M_1\kw,…\kw,M_n\,\kw) : S }
+    { Γ,Δ,\op{Sub},\ov{v} ⊢ T_1 : S_1 ~~\cdots~~  Γ,Δ,\op{Sub},\ov{v} ⊢ T_n : S_n }
+    { Γ,Δ,\op{Con},\ov{v} ⊢ m\,\kw(\,T_1\kw,…\kw,T_n\,\kw) : S }
     && Δ_{\op{meta}}(m) = \left( (S_1,…,S_n)⇒S \right)
     \tag{SMC-Meta}
     %
@@ -386,8 +386,8 @@ below why there is a computable ``principal'' such witness.
     \\[1ex]
     %
     &\dfrac
-    { Γ,Δ,\op{Con},\ov{v} ⊢ m\,\kw(\,M_1\kw,…\kw,M_n\,\kw) : s⟨\ov{S}⟩ }
-    { Γ,Δ,\op{Sub},\ov{v} ⊢ m\,\kw(\,M_1\kw,…\kw,M_n\,\kw) : s⟨\ov{S}⟩ }
+    { Γ,Δ,\op{Con},\ov{v} ⊢ m\,\kw(\,T_1\kw,…\kw,T_n\,\kw) : s⟨\ov{S}⟩ }
+    { Γ,Δ,\op{Sub},\ov{v} ⊢ m\,\kw(\,T_1\kw,…\kw,T_n\,\kw) : s⟨\ov{S}⟩ }
     && s ∉ Γ_{\op{hasvar}}
     \tag{SMS-Meta}
     %
@@ -403,8 +403,8 @@ below why there is a computable ``principal'' such witness.
     \intertext{\shoveright{Sorting of Piece\hfil\smash{\fbox{$ Γ,Δ,TC,\ov{\mathcal{V}} ⊢ P : F $}}}}
     %
     &\dfrac
-    { Γ,Δ',TC,(\ov{v}\,\ov{w}) ⊢ M : S }
-    { Γ,Δ,TC,\ov{v} ⊢ \kw[\,\ov{w}\,\kw]\,M : [\ov{S}]S }
+    { Γ,Δ',TC,(\ov{v}\,\ov{w}) ⊢ T : S }
+    { Γ,Δ,TC,\ov{v} ⊢ \kw[\,\ov{w}\,\kw]\,T : [\ov{S}]S }
     && (∃Δ'⊇Δ),~ Δ'_{\op{var}}(\ov{v}) = \ov{S}
     \tag{SP-Bind}
     %
@@ -419,15 +419,15 @@ below why there is a computable ``principal'' such witness.
     \intertext{\shoveright{Sorting of Association\hfil\smash{\fbox{$ Γ,Δ,TC,\ov{\mathcal{V}} ⊢ A : \{S{:}S\} $}}}}
     %
     &\dfrac
-    { Γ,Δ,TC,\ov{v} ⊢ M : S \quad Γ,Δ,TC,\ov{v} ⊢ M' : S' }
-    { Γ,Δ,TC,\ov{v} ⊢ M\kw:M' : \{S{:}S'\} } 
+    { Γ,Δ,TC,\ov{v} ⊢ T : S \quad Γ,Δ,TC,\ov{v} ⊢ M' : S' }
+    { Γ,Δ,TC,\ov{v} ⊢ T\kw:M' : \{S{:}S'\} } 
     \tag{SA-Map}
     % 
     \\[1ex]
     %
     &\dfrac
-    { Γ,Δ,\op{InPat},\ov{v} ⊢ M : S }
-    { Γ,Δ,\op{InPat},\ov{v} ⊢ {\kwm{¬}M\kw{:}} : \{S{:}S'\} }
+    { Γ,Δ,\op{InPat},\ov{v} ⊢ T : S }
+    { Γ,Δ,\op{InPat},\ov{v} ⊢ {\kwm{¬}T\kw{:}} : \{S{:}S'\} }
     \tag{SAP-Not}
     % 
     \\[1ex]
@@ -445,20 +445,20 @@ below why there is a computable ``principal'' such witness.
     \\[1ex]
     %
     &\dfrac
-    { Γ,Δ,\op{Sub},\ov{v} ⊢ M_1 : S_1 ~~\cdots~~  Γ,Δ,\op{Sub},\ov{v} ⊢ M_n : S_n }
-    { Γ,Δ,\op{Con},\ov{v} ⊢ m\,\kw(\,M_1\kw,…\kw,M_n\,\kw) : \{S{:}S'\} }
+    { Γ,Δ,\op{Sub},\ov{v} ⊢ T_1 : S_1 ~~\cdots~~  Γ,Δ,\op{Sub},\ov{v} ⊢ T_n : S_n }
+    { Γ,Δ,\op{Con},\ov{v} ⊢ m\,\kw(\,T_1\kw,…\kw,T_n\,\kw) : \{S{:}S'\} }
     && Δ_{\op{meta}}(m) = \left( (S_1,…,S_n)⇒\{S{:}S'\} \right)
     \tag{SAC-All}
     %
   \end{align}
   \vspace*{-1em}
-  \caption{ħ meta-term sorting rules.}
+  \caption{ħ term sorting rules.}
   \label{fig:termsortrules}
 \end{figure*}
 
 \begin{definition}
   %%
-  Given a sort environment $Γ$ and a rule environment $Δ$. A meta-term $M$ is \emph{well-formed of
+  Given a sort environment $Γ$ and a rule environment $Δ$. A term $T$ is \emph{well-formed of
     sort $S$} in term context $TC$ with
   %%
   \begin{equation}
@@ -468,7 +468,7 @@ below why there is a computable ``principal'' such witness.
   and bound variables $\ov{v}$ if we can prove
   %% 
   \begin{equation*}
-    Γ,Δ,TC,\ov{v} ⊢ M : S  
+    Γ,Δ,TC,\ov{v} ⊢ T : S  
   \end{equation*}
   %%
   using the rules in Figure~\ref{fig:termsortrules}.
@@ -476,7 +476,7 @@ below why there is a computable ``principal'' such witness.
 \end{definition}
 
 The rules in Figure~\ref{fig:termsortrules} give the primary term rules per term context $TC$, which
-indicates the context of our meta-term fragment:
+indicates the context of our term fragment:
 %% 
 \begin{itemize}
 \item ``Pat'' indicates the pattern (left side) of a rule, at the outermost level.
@@ -507,7 +507,7 @@ well as the special constraints for patterns:
 
 \end{enumerate}
 
-The \thetag{SMC-*} rules handle contraction meta-terms.
+The \thetag{SMC-*} rules handle contraction terms.
 %% 
 \begin{enumerate}
 
