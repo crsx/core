@@ -145,7 +145,7 @@ system~\cite{Rose:rta2011}, where they were never provided a formal foundation.
 \end{definition}
 
 The ħ formalism includes traditional ``constructor'' term rewriting systems, where there is a
-distinction between \emph{defined} "scheme" symbols and "data" symbols, however, unlike functional
+distinction between \emph{defined} "scheme" symbols and "data" symbols. However, unlike functional
 programming, ħ allows for normal forms that include (incompletely) defined symbols.
 
 %------------------------------------------------------------------------
@@ -160,6 +160,8 @@ sorting ensures that
 \begin{itemize}
 \item pattern and contraction restrictions are obeyed;
 \item syntactic variables are used correctly;
+  %CK: NOTE: this is the first time you refer to "syntatic variables";
+  % it will leave the reader wondering what you're talking about!
 \item binders are used in the shape declared for constructors;
 \item subterms (including variable and meta-variable occurrences) have the right sort;
 \item association keys and values have the proper sorts.
@@ -172,12 +174,12 @@ sorting ensures that
   $Γ_{\op{rank}}\colon \mathcal{C} → \mathcal{N}$: the rank of each sort
   constructor (all sorts must be fully applied, there are no higher kinds);
   %% 
-  $Γ_{\op{hasvar}}$: set of sort names (the sorts that allow variables);
+  $Γ_{\op{hasvar}}$: a set of sort names (the sorts that allow variables);
   %%
-  $Γ_{\op{con}}\colon \mathcal{C} → S×F^*$: map from constructor name to pairs of a sort and a list
+  $Γ_{\op{con}}\colon \mathcal{C} → S×F^*$: a map from constructor names to pairs of a sort and a list
   of forms (the pair consists of the construction's sort and the shape of the arguments); and
   %%
-  $Γ_{\op{fun}}$: set of constructor names (those declared with "scheme").
+  $Γ_{\op{fun}}$: a set of constructor names (those declared with "scheme").
   %% 
 \end{definition}
 
@@ -185,10 +187,10 @@ sorting ensures that
   %%
   A \emph{rule environment} $Δ$ is a structure that combines
   %% 
-  $Δ_{\op{var}}\colon \mathcal{V} → S$: mapping from variable names to sorts (the sort assigned
+  $Δ_{\op{var}}\colon \mathcal{V} → S$: a mapping from variable names to sorts (the sort assigned
   to each variable for the rule) and
   %%
-  $Δ_{\op{meta}}\colon \mathcal{M} → MF$: mapping from meta-variable names to ``meta-forms''
+  $Δ_{\op{meta}}\colon \mathcal{M} → MF$: a mapping from meta-variable names to ``meta-forms''
   defined by
   %% 
   \begin{equation}
@@ -200,7 +202,7 @@ sorting ensures that
   The shape $\ov{S}⇒S$ is used for meta-variables that need to be meta-applied to arguments with the
   sorts $\ov{S}$ to then form a term of the sort~$S$.
   %%
-  The shape $\ov{S}⇒\{S_1{:}S_2\}$ used for meta-variables that catch all the associations in an
+  The shape $\ov{S}⇒\{S_1{:}S_2\}$ is used for meta-variables that catch all the associations in an
   association list from $S_1$ to~$S_2$.
   %%
 \end{definition}
@@ -407,6 +409,8 @@ below why there is a computable ``principal'' such witness.
     { Γ,Δ,TC,\ov{v} ⊢ \kw[\,\ov{w}\,\kw]\,T : [\ov{S}]S }
     && (∃Δ'⊇Δ),~ Δ'_{\op{var}}(\ov{v}) = \ov{S}
     \tag{SP-Bind}
+    %CK: Should that requirement instead be:
+    % Δ'_{\op{var}}(\ov{w}) = \ov{S} ?
     %
     \\[1ex]
     %
@@ -565,7 +569,7 @@ than the others above, as associations have different rules in patterns and cont
 \label{sec:conc}
 
 With ħ, we have presented a rather small calculus that can serve as the underlying formalism for
-reasoning about as well as implementing the \CRSX and \HAX languages.
+reasoning about, as well as implementing the \CRSX and \HAX languages.
 
 \TBD{What is covered.}
 
@@ -597,7 +601,9 @@ and have absence of attributes and substitution block rewriting.
 
 \paragraph*{Acknowledgements.} \TBD{Thank everyone.}
 
-EU-funded Marie Skłodowska-Curie ``HORIP'' action collaboration with Cynthia Kop.
+%EU-funded Marie Skłodowska-Curie ``HORIP'' action collaboration with Cynthia Kop.
+Supported by the Marie Sk{\l}odowska-Curie action ``HORIP'', program
+H2020-MSCA-IF-2014, 658162.
 
 
 %------------------------------------------------------------------------
