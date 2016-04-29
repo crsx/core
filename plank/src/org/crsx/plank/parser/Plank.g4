@@ -10,7 +10,7 @@ declaration
 :  sort 'data' CONS forms ';'              #DataDeclaration
 |  sort 'scheme' CONS forms ';'            #SchemeDeclaration
 |  sort 'variable' ';'                     #VariableDeclaration
-|  sort PRIORITY? 'rule' term '→' term ';' #RuleDeclaration
+|  opts sort 'rule' term '→' term ';'      #RuleDeclaration
 ;
 
 forms : '(' form (',' form)* ')' | '(' ')' | ;
@@ -19,18 +19,26 @@ form
 |  	'{' sort ':' sort '}'                #AssocForm
 ;
 
-sorts : '<' sort (',' sort)* '>' | '<' '>' | ;
+sorts : sort (',' sort)* | ;
 sort
-:  CONS sorts                            #InstanceSort
+:  CONS sortparams                       #InstanceSort
 |  VAR                                   #VarSort
 ;
 
+sortparams : '<' sorts '>' | ;
+
 terms: '(' term (',' term)* ')' | '(' ')' | ;
 term
+:  sortanno rawterm                      #SortedTerm
+|  rawterm                               #UnsortedTerm
+;
+rawterm
 :  CONS pieces                           #ConsTerm
 |  VAR                                   #VarTerm
 |  META terms                            #MetaTerm
 ;
+
+sortanno : '<' sort '>' | ;
 
 pieces : piece (',' piece)* | ;
 piece
@@ -46,7 +54,17 @@ association
 |  META terms                            #AllAssoc
 ;
 
+opts : '[' opt (',' opt)* ']' | '[' ']' | ;
+opt
+: PRIORITY                               #Priority
+| CONS                                   #Name
+;
+
+// Tokens.
 CONS : [A-Z] [A-Za-z0-9_]* ;
 META : '#' [A-Za-z0-9_]* ;
 VAR  : [a-z] [A-Za-z0-9_]* ;
 PRIORITY : 'default' | 'priority' ;
+
+// Skip.
+WS : ([ \t\r\n] | '/*' .*? '*/') -> skip;

@@ -38,7 +38,6 @@
   %%
 \end{abstract}
 
-%------------------------------------------------------------------------
 
 \section{Introduction}\label{sec:intro}
 
@@ -80,7 +79,7 @@ system~\cite{Rose:rta2011}, where they were never provided a formal foundation.
   variables---"#M(x)" in the first rule---allowing rules to do \emph{substitution} of bound
   variables---"#M(#N)" in the first rule achieves the substitution ``"#M[#N/x]"'' of the usual β
   rule. CRS notably also makes \emph{absence} of binder arguments to meta-variables---"#M()" is not
-  "#M(x)" in the last rule---express that "x" can \emph{not} occur in subterms mathcing "#M".
+  "#M(x)" in the last rule---express that "x" can \emph{not} occur in subterms matching "#M".
 \end{example}
 
 \begin{example}
@@ -88,10 +87,9 @@ system~\cite{Rose:rta2011}, where they were never provided a formal foundation.
   \begin{hacs}
   M  data  State();
   \end{hacs}
-  \TBD{Finish.}
+  \TBD{Finish example using syntactic variables.}
 \end{example}
 
-%------------------------------------------------------------------------
 
 \section{The Calculus}
 \label{sec:overview}
@@ -129,7 +127,7 @@ system~\cite{Rose:rta2011}, where they were never provided a formal foundation.
     \\
     \tag{Association}
     A &::= v\,\kw:\,T
-    \bigm| \kw{$¬$}\,v
+    \bigm| \kw{$¬$}\,v\kw:
     \bigm| \kw\,m\,\kw(\,\ov{v}\,\kw)
   \end{align*}
   %%
@@ -148,7 +146,6 @@ The ħ formalism includes traditional ``constructor'' term rewriting systems, wh
 distinction between \emph{defined} "scheme" symbols and "data" symbols. However, unlike functional
 programming, ħ allows for normal forms that include (incompletely) defined symbols.
 
-%------------------------------------------------------------------------
 
 \section{Sorting}
 \label{sec:sorting}
@@ -159,9 +156,7 @@ sorting ensures that
 %%
 \begin{itemize}
 \item pattern and contraction restrictions are obeyed;
-\item syntactic variables are used correctly;
-  %CK: NOTE: this is the first time you refer to "syntatic variables";
-  % it will leave the reader wondering what you're talking about!
+\item our special ``syntactic variables'' are used correctly;
 \item binders are used in the shape declared for constructors;
 \item subterms (including variable and meta-variable occurrences) have the right sort;
 \item association keys and values have the proper sorts.
@@ -261,9 +256,14 @@ below why there is a computable ``principal'' such witness.
     \\[1ex]
     %
     &\dfrac
-    { Γ ⊢ S \quad Γ,Δ,\op{Pat},ε ⊢ T_1 : S  \quad Γ,Δ,\op{Con},ε ⊢ T_2 : S }
+    { Γ ⊢ S \quad Γ,Δ,V,\op{Pat},ε ⊢ T_1 : S  \quad Γ,Δ,V,\op{Con},ε ⊢ T_2 : S }
     { Γ ⊢ S~\kw{rule}~T_1~\kw{→}~T_2\,\kw; }
-    \quad (∃Δ)
+    \notag
+    \\*
+    &\qquad\qquad\qquad\qquad\Cases{
+      (∃Δ) \\
+      V_i = \op{NonAssocVars(T_i)}
+    }
     \tag{SD-Rule}
     %
   \end{align}
@@ -271,7 +271,8 @@ below why there is a computable ``principal'' such witness.
   Rules \thetag{SD-Data,SD-Fun} express that constructors are recorded correct in the environment;
   note that data constructors must belong to a unique named sort. \thetag{SD-Var} records sorts with
   syntactic varables, and \thetag{SD-Rule} checks the sorts and well-formedness of the terms in
-  rules.
+  rules; the ``NonAssocVars'' function returns all variables in a term that are \emph{not} inside an
+  association.
   %%
 \end{definition}
 
@@ -304,11 +305,11 @@ below why there is a computable ``principal'' such witness.
 \begin{figure*}[p]\small
   \vspace*{-3em}
   \begin{align}
-    \intertext{\shoveright{Sorting of Term\hfil\smash{\fbox{$ Γ,Δ,TC,\ov{\mathcal{V}} ⊢ T : S $}}}}
+    \intertext{\shoveright{Sorting of Term\hfil\smash{\fbox{$ Γ,Δ,V,TC,\ov{\mathcal{V}} ⊢ T : S $}}}}
     %
     &\dfrac
-    { Γ,Δ,\op{InPat},\ov{v} ⊢ P_1 : F_1 ~~\cdots~~ Γ,Δ,\op{InPat},\ov{v} ⊢ P_n : F_n }
-    { Γ,Δ,\op{Pat},\ov{v} ⊢ f\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : S }
+    { Γ,Δ,V,\op{InPat},\ov{v} ⊢ P_1 : F_1 ~~\cdots~~ Γ,Δ,V,\op{InPat},\ov{v} ⊢ P_n : F_n }
+    { Γ,Δ,V,\op{Pat},\ov{v} ⊢ f\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : S }
     &&\Cases{
       f∈Γ_{\op{fun}}\\
       Γ_{\op{con}}(f) = \left⟨ S, (F_1\kw,…\kw,F_n) \right⟩
@@ -318,8 +319,8 @@ below why there is a computable ``principal'' such witness.
     \\[1ex]
     %
     &\dfrac
-    { Γ,Δ,\op{InPat},\ov{v} ⊢ P_1 : F_1 ~~\cdots~~ Γ,Δ,\op{InPat},\ov{v} ⊢ P_n : F_n }
-    { Γ,Δ,\op{InPat},\ov{v} ⊢ d\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : S }
+    { Γ,Δ,V,\op{InPat},\ov{v} ⊢ P_1 : F_1 ~~\cdots~~ Γ,Δ,V,\op{InPat},\ov{v} ⊢ P_n : F_n }
+    { Γ,Δ,V,\op{InPat},\ov{v} ⊢ d\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : S }
     &&\Cases{
       d∉Γ_{\op{fun}}\\
       Γ_{\op{con}}(d) = \left⟨ S, (F_1\kw,…\kw,F_n) \right⟩
@@ -330,7 +331,7 @@ below why there is a computable ``principal'' such witness.
     %
     &\dfrac
     { }
-    { Γ,Δ,\op{InPat},\ov{v} ⊢ m\,\kw(\,w_1\kw,…\kw,w_n\,\kw) : S }
+    { Γ,Δ,V,\op{InPat},\ov{v} ⊢ m\,\kw(\,w_1\kw,…\kw,w_n\,\kw) : S }
     &&\Cases{
       Δ_{\op{meta}}(m) = \left( (S_1,…,S_n)⇒S \right) \\
       ∀i\colon w_i∈\ov{v} \\
@@ -343,7 +344,7 @@ below why there is a computable ``principal'' such witness.
     %
     &\dfrac
     { }
-    { Γ,Δ,\op{InPat},\ov{v} ⊢ w : s⟨\ov{S}⟩ }
+    { Γ,Δ,V,\op{InPat},\ov{v} ⊢ w : s⟨\ov{S}⟩ }
     &&\Cases{
       Δ_{\op{var}}(w) = s⟨\ov{S}⟩ \\
       s ∈ Γ_{\op{hasvar}}
@@ -353,16 +354,16 @@ below why there is a computable ``principal'' such witness.
     \\[1em]
     %
     &\dfrac
-    { Γ,Δ,\op{Con},\ov{v} ⊢ P_1 : F_1 ~~\cdots~~ Γ,Δ,\op{Con},\ov{v} ⊢ P_n : F_n }
-    { Γ,Δ,\op{Con},\ov{v} ⊢ c\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : S }
+    { Γ,Δ,V,\op{Con},\ov{v} ⊢ P_1 : F_1 ~~\cdots~~ Γ,Δ,V,\op{Con},\ov{v} ⊢ P_n : F_n }
+    { Γ,Δ,V,\op{Con},\ov{v} ⊢ c\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : S }
     && Γ_{\op{con}}(c) = \left⟨ S, (F_1\kw,…\kw,F_n) \right⟩
     \tag{SMC-Cons}
     % 
     \\[1ex]
     %
     &\dfrac
-    { Γ,Δ,\op{Sub},\ov{v} ⊢ T_1 : S_1 ~~\cdots~~  Γ,Δ,\op{Sub},\ov{v} ⊢ T_n : S_n }
-    { Γ,Δ,\op{Con},\ov{v} ⊢ m\,\kw(\,T_1\kw,…\kw,T_n\,\kw) : S }
+    { Γ,Δ,V,\op{Sub},\ov{v} ⊢ T_1 : S_1 ~~\cdots~~  Γ,Δ,V,\op{Sub},\ov{v} ⊢ T_n : S_n }
+    { Γ,Δ,V,\op{Con},\ov{v} ⊢ m\,\kw(\,T_1\kw,…\kw,T_n\,\kw) : S }
     && Δ_{\op{meta}}(m) = \left( (S_1,…,S_n)⇒S \right)
     \tag{SMC-Meta}
     %
@@ -370,7 +371,7 @@ below why there is a computable ``principal'' such witness.
     %
     &\dfrac
     { }
-    { Γ,Δ,\op{Con},\ov{v} ⊢ w : s⟨\ov{S}⟩ }
+    { Γ,Δ,V,\op{Con},\ov{v} ⊢ w : s⟨\ov{S}⟩ }
     &&\Cases{
       Δ_{\op{var}}(w) = s⟨\ov{S}⟩ \\
       s ∈ Γ_{\op{hasvar}}
@@ -380,16 +381,16 @@ below why there is a computable ``principal'' such witness.
     \\[1em]
     %
     &\dfrac
-    { Γ,Δ,\op{Con},\ov{v} ⊢ c\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : s⟨\ov{S}⟩ }
-    { Γ,Δ,\op{Sub},\ov{v} ⊢ c\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : s⟨\ov{S}⟩ }
+    { Γ,Δ,V,\op{Con},\ov{v} ⊢ c\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : s⟨\ov{S}⟩ }
+    { Γ,Δ,V,\op{Sub},\ov{v} ⊢ c\,\kw(\,P_1\kw,…\kw,P_n\,\kw) : s⟨\ov{S}⟩ }
     && s ∉ Γ_{\op{hasvar}}
     \tag{SMS-Cons}
     % 
     \\[1ex]
     %
     &\dfrac
-    { Γ,Δ,\op{Con},\ov{v} ⊢ m\,\kw(\,T_1\kw,…\kw,T_n\,\kw) : s⟨\ov{S}⟩ }
-    { Γ,Δ,\op{Sub},\ov{v} ⊢ m\,\kw(\,T_1\kw,…\kw,T_n\,\kw) : s⟨\ov{S}⟩ }
+    { Γ,Δ,V,\op{Con},\ov{v} ⊢ m\,\kw(\,T_1\kw,…\kw,T_n\,\kw) : s⟨\ov{S}⟩ }
+    { Γ,Δ,V,\op{Sub},\ov{v} ⊢ m\,\kw(\,T_1\kw,…\kw,T_n\,\kw) : s⟨\ov{S}⟩ }
     && s ∉ Γ_{\op{hasvar}}
     \tag{SMS-Meta}
     %
@@ -397,48 +398,49 @@ below why there is a computable ``principal'' such witness.
     %
     &\dfrac
     { }
-    { Γ,Δ,\op{Sub},\ov{v} ⊢ w : S }
+    { Γ,Δ,V,\op{Sub},\ov{v} ⊢ w : S }
     && Δ_{\op{var}}(w) = S
     \tag{SMS-Var}
     %
     \\[1ex]
-    \intertext{\shoveright{Sorting of Piece\hfil\smash{\fbox{$ Γ,Δ,TC,\ov{\mathcal{V}} ⊢ P : F $}}}}
+    \intertext{\shoveright{Sorting of Piece\hfil\smash{\fbox{$ Γ,Δ,V,TC,\ov{\mathcal{V}} ⊢ P : F $}}}}
     %
     &\dfrac
-    { Γ,Δ',TC,(\ov{v}\,\ov{w}) ⊢ T : S }
-    { Γ,Δ,TC,\ov{v} ⊢ \kw[\,\ov{w}\,\kw]\,T : [\ov{S}]S }
-    && (∃Δ'⊇Δ),~ Δ'_{\op{var}}(\ov{v}) = \ov{S}
+    { Γ,Δ∪Δ',V,TC,(\ov{v}\,\ov{w}) ⊢ T : S }
+    { Γ,Δ,V,TC,\ov{v} ⊢ \kw[\,\ov{w}\,\kw]\,T : [\ov{S}]S }
+    && (∃Δ'), Δ'_{\op{var}}(\ov{w}) = \ov{S}
     \tag{SP-Bind}
-    %CK: Should that requirement instead be:
-    % Δ'_{\op{var}}(\ov{w}) = \ov{S} ?
     %
     \\[1ex]
     %
     &\dfrac
-    { Γ,Δ,TC,\ov{v} ⊢ A_1 : \{S{:}S'\} ~~\cdots~~ Γ,Δ,TC,\ov{v} ⊢ A_n : \{S{:}S'\} }
-    { Γ,Δ,TC,\ov{v} ⊢ \kwm\{\,A_1\kw,…\kw,A_n\,\kwm\} : \{S{:}S'\} }
+    { Γ,Δ,V,TC,\ov{v} ⊢ A_1 : \{S{:}S'\} ~~\cdots~~ Γ,Δ,V,TC,\ov{v} ⊢ A_n : \{S{:}S'\} }
+    { Γ,Δ,V,TC,\ov{v} ⊢ \kwm\{\,A_1\kw,…\kw,A_n\,\kwm\} : \{S{:}S'\} }
     \tag{SP-Assoc}
     %
     \\[1ex]
-    \intertext{\shoveright{Sorting of Association\hfil\smash{\fbox{$ Γ,Δ,TC,\ov{\mathcal{V}} ⊢ A : \{S{:}S\} $}}}}
+    \intertext{\shoveright{Sorting of Association\hfil\smash{\fbox{$ Γ,Δ,V,TC,\ov{\mathcal{V}} ⊢ A : \{S{:}S\} $}}}}
     %
     &\dfrac
-    { Γ,Δ,TC,\ov{v} ⊢ T : S \quad Γ,Δ,TC,\ov{v} ⊢ M' : S' }
-    { Γ,Δ,TC,\ov{v} ⊢ T\kw:M' : \{S{:}S'\} } 
+    { Γ,Δ,V,TC,\ov{v} ⊢ w : S \quad Γ,Δ,V∪V',TC,\ov{v} ⊢ T' : S' }
+    { Γ,Δ,V,TC,\ov{v} ⊢ w\kw:T' : \{S{:}S'\} } 
     \tag{SA-Map}
-    % 
+    &&\Cases{
+      w ∈ V \\
+      V' = \op{NonAssocVars}(T')
+    }
     \\[1ex]
     %
     &\dfrac
-    { Γ,Δ,\op{InPat},\ov{v} ⊢ T : S }
-    { Γ,Δ,\op{InPat},\ov{v} ⊢ {\kwm{¬}T\kw{:}} : \{S{:}S'\} }
+    { Γ,Δ,V,\op{InPat},\ov{v} ⊢ w : S }
+    { Γ,Δ,V,\op{InPat},\ov{v} ⊢ {\kwm{¬}w\kw{:}} : \{S{:}S'\} }
     \tag{SAP-Not}
     % 
     \\[1ex]
     %
     &\dfrac
     { }
-    { Γ,Δ,\op{InPat},\ov{v} ⊢ m\,\kw(\,w_1\kw,…\kw,w_n\,\kw) : \{S{:}S'\} }
+    { Γ,Δ,V,\op{InPat},\ov{v} ⊢ m\,\kw(\,w_1\kw,…\kw,w_n\,\kw) : \{S{:}S'\} }
     &&\Cases{
       Δ_{\op{meta}}(m) = \left( (S_1,…,S_n)⇒\{S{:}S'\} \right) \\
       ∀i\colon w_i∈\ov{v} \\
@@ -449,8 +451,8 @@ below why there is a computable ``principal'' such witness.
     \\[1ex]
     %
     &\dfrac
-    { Γ,Δ,\op{Sub},\ov{v} ⊢ T_1 : S_1 ~~\cdots~~  Γ,Δ,\op{Sub},\ov{v} ⊢ T_n : S_n }
-    { Γ,Δ,\op{Con},\ov{v} ⊢ m\,\kw(\,T_1\kw,…\kw,T_n\,\kw) : \{S{:}S'\} }
+    { Γ,Δ,V,\op{Sub},\ov{v} ⊢ T_1 : S_1 ~~\cdots~~  Γ,Δ,V,\op{Sub},\ov{v} ⊢ T_n : S_n }
+    { Γ,Δ,V,\op{Con},\ov{v} ⊢ m\,\kw(\,T_1\kw,…\kw,T_n\,\kw) : \{S{:}S'\} }
     && Δ_{\op{meta}}(m) = \left( (S_1,…,S_n)⇒\{S{:}S'\} \right)
     \tag{SAC-All}
     %
@@ -462,8 +464,8 @@ below why there is a computable ``principal'' such witness.
 
 \begin{definition}
   %%
-  Given a sort environment $Γ$ and a rule environment $Δ$. A term $T$ is \emph{well-formed of
-    sort $S$} in term context $TC$ with
+  Given a sort environment $Γ$, a rule environment $Δ$, and a variable set~$V$. A term $T$ is
+  \emph{well-formed of sort $S$} in term context $TC$ with
   %%
   \begin{equation}
     TC ::= \op{Pat} \mid \op{InPat} \mid \op{Con} \mid \op{Sub} \tag{TermContext}
@@ -472,7 +474,7 @@ below why there is a computable ``principal'' such witness.
   and bound variables $\ov{v}$ if we can prove
   %% 
   \begin{equation*}
-    Γ,Δ,TC,\ov{v} ⊢ T : S  
+    Γ,Δ,V,TC,\ov{v} ⊢ T : S  
   \end{equation*}
   %%
   using the rules in Figure~\ref{fig:termsortrules}.
@@ -490,40 +492,29 @@ indicates the context of our term fragment:
   contraction (right side) of a rule.
 \end{itemize}
 %%
-
-
-
 The \thetag{SMP-*} rules handle patterns. The first rule \thetag{SMP-Fun} is the entry rule
 for patterns, with $TC=\op{Pat}$, which must be function constructions, and have pieces that are
 well-sorted. Fragments of patterns are then handled by the three following rules,
 \thetag{SMP-Data,SMP-Meta,SMP-Var}, with $TC=\op{InPat}$, which capture the sort propagation as
 well as the special constraints for patterns:
 %% 
-\begin{enumerate}
-
-\item \thetag{SMP-Data} sort checks that only data constructors are allowed;
-
-\item \thetag{SMP-Meta} verifies that pattern meta-application arguments are restricted to
-  distinct bound variables;
-
-\item \thetag{SMP-Var} verifies that other instances of variables only occur where a \kw{variable}
-  declaration explicitly permits it.
-
-\end{enumerate}
+\thetag{SMP-Data} sort checks that only data constructors are allowed;
+%%
+\thetag{SMP-Meta} verifies that pattern meta-application arguments are restricted to distinct bound
+variables;
+%%
+\thetag{SMP-Var} verifies that other instances of variables only occur where a \kw{variable}
+declaration explicitly permits it.
 
 The \thetag{SMC-*} rules handle contraction terms.
 %% 
-\begin{enumerate}
-
-\item \thetag{SMC-Cons} verifies that each construction (function or data) is well sorted.
-
-\item \thetag{SMC-Meta} verifies that every meta-application is sorted consistently with the rule
-  environment, and checks that the implied substitutions are well formed.
-
-\item \thetag{SMC-Var} checks that variables are used at the right sort, and are permitted (by a
-  \kw{variable} declaration for the sort).
-
-\end{enumerate}
+\thetag{SMC-Cons} verifies that each construction (function or data) is well sorted.
+%%
+\thetag{SMC-Meta} verifies that every meta-application is sorted consistently with the rule
+environment, and checks that the implied substitutions are well formed.
+%%
+\thetag{SMC-Var} checks that variables are used at the right sort, and are permitted (by a
+\kw{variable} declaration for the sort).
 
 The \thetag{SMS-*} rules handle contraction substitution arguments. They really just wrap the
 corresponding \thetag{SMC-*} rules except that \thetag{SMS-Cons,SMS-Meta} checks that the
@@ -536,34 +527,32 @@ outermost level have a different structure than other subterms). Note that these
 depend on the term context, which is merely passed to the premises. (From the other rules we can
 see that the term context will always be \op{InPat} or \op{Con}.)
 %% 
-\begin{enumerate}
-
-\item \thetag{SP-Bind} handles scopes. It creates a \emph{locally extended} version of the rule
-  environment, $Δ'$, which extends the variable bindings part of $Δ$ with the binders in the
-  scope; the sorts of these are fixed by the parent construction.
-
-\item \thetag{SP-Assoc} handles collections of associations. These are checked by separate
-  individual rules for association, below.
-
-\end{enumerate}
+\thetag{SP-Bind} handles scopes. It creates a \emph{locally extended} version of the rule
+environment, $Δ'$, which extends the variable bindings part of $Δ$ with the binders in the scope;
+the sorts of these are fixed by the parent construction.
+%%
+\thetag{SP-Assoc} handles collections of associations. These are checked by separate individual
+rules for association, below.
 
 The \thetag{SA*} rules handle associations. These are categorized in a slightly different ways
 than the others above, as associations have different rules in patterns and contractions.
 %% 
-\begin{enumerate}
-
-\item \thetag{SA-Map} gives the rule for a simple mapping. Such mappings are permitted in both 
-  \TBD{key patterns should be restricted}
-
-\item \thetag{SAP-Not} expresses that negation patterns
-
-\end{enumerate}
-
+\thetag{SA-Map} gives the rule for a simple mappings. The only unusual requirement is the side
+condition that the variable, $w$, must also occur in elsewhere in the term as a non-key, a
+requirement that ensures that matching is deterministic (in essence avoiding the ``axiom of choice''
+for the set of keys).
+%%
+The two \thetag{SAP-*} rules express the constraints on the other two forms that can occur in
+patterns, and \thetag{SAC-All} that environment copy is unconstrained in cntractions.
 
 \TBD{Example sort derivation.}
 
 
-%------------------------------------------------------------------------
+\section{Implementation}
+\label{sec:imp}
+
+The \plank language has been implemented \TBD{Describe implementation on github.}
+
 
 \section{Conclusion}
 \label{sec:conc}
@@ -572,10 +561,6 @@ With ħ, we have presented a rather small calculus that can serve as the underly
 reasoning about, as well as implementing the \CRSX and \HAX languages.
 
 \TBD{What is covered.}
-
-~\cite{Knuth:mst1968} 
-~\cite{Aho+:2006}
-
 
 \paragraph*{Related work.}
 

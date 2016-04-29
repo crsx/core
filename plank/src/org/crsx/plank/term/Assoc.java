@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Kristoffer H. Rose <krisrose@crsx.org>
+ * Copyright © 2016  Kristoffer H. Rose <krisrose@crsx.org>
  * Available under the Apache 2.0 license.
  */
 package org.crsx.plank.term;
@@ -14,9 +14,9 @@ import org.crsx.plank.sort.Sort;
 
 /**
  * Struct describing an association map piece of a term.
- * @author krisrose
+ * @author Kristoffer H. Rose <krisrose@crsx.org>
  */
-public class Assoc extends Origined {
+public final class Assoc extends Origined {
 
 	/**
 	 * Create association.
@@ -27,8 +27,8 @@ public class Assoc extends Origined {
 	 * @param omit variables that must be non-present for match
 	 * @param all catch-all meta-applications
 	 */
-	public static Assoc mk(String origin, Sort keySort, Sort valueSort, Map<Var, Term> map, Set<Var> omit, List<Term> all) {
-		return new Assoc(origin, keySort, valueSort, map, omit, all.toArray(new Term[all.size()]));
+	public static Assoc mk(String origin, Sort keySort, Sort valueSort, Map<Var, Term> map, Set<Var> omit, List<Meta> all) {
+		return new Assoc(origin, keySort, valueSort, map, omit, all.toArray(new Meta[all.size()]));
 	}
 	
 	// State.
@@ -46,10 +46,10 @@ public class Assoc extends Origined {
 	public final Set<Var> omit;
 	
 	/** Catch-all meta-applications. */
-	public final Term[] all;
+	public final Meta[] all;
 	
 	/** Real constructor. */
-	private Assoc(String origin, Sort keySort, Sort valueSort, Map<Var, Term> map, Set<Var> omit, Term[] all) {
+	private Assoc(String origin, Sort keySort, Sort valueSort, Map<Var, Term> map, Set<Var> omit, Meta[] all) {
 		super(origin);
 		this.keySort = keySort;
 		this.valueSort = valueSort;

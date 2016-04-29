@@ -1,12 +1,12 @@
 /*
- * Copyright © 2016 Kristoffer H. Rose <krisrose@crsx.org>
+ * Copyright © 2016  Kristoffer H. Rose <krisrose@crsx.org>
  * Available under the Apache 2.0 license.
  */
 package org.crsx.plank.base;
 
 /**
  * Any artifact with an origin string.
- * @author krisrose
+ * @author Kristoffer H. Rose <krisrose@crsx.org>
  */
 public class Origined {
 	
@@ -32,10 +32,10 @@ public class Origined {
 	 * @param origins the component origin messages
 	 * @return new origin string
 	 */
-	public static String combine(String format, Origined... origins) {
+	public static String combine(String format, String... origins) {
 		String[] enclosedOrigins = new String[origins.length];
 		for (int i = 0; i < origins.length; ++i)
-			enclosedOrigins[i] = "{" + origins[i].origin() + "}";
+			enclosedOrigins[i] = "{" + origins[i] + "}";
 		return String.format(format, (Object[]) enclosedOrigins);
 	}
 }

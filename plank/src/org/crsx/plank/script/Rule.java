@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Kristoffer H. Rose <krisrose@crsx.org>
+ * Copyright © 2016  Kristoffer H. Rose <krisrose@crsx.org>
  * Available under the Apache 2.0 license.
  */
 package org.crsx.plank.script;
@@ -8,13 +8,14 @@ import java.util.Map;
 
 import org.crsx.plank.base.Origined;
 import org.crsx.plank.sort.Sort;
+import org.crsx.plank.term.Cons;
 import org.crsx.plank.term.Term;
 
 /**
  * Struct describing a rule.
- * @author krisrose
+ * @author Kristoffer H. Rose <krisrose@crsx.org>
  */
-public class Rule extends Origined {
+public final class Rule extends Origined {
 
 	/**
 	 * Create a rule.
@@ -24,7 +25,7 @@ public class Rule extends Origined {
 	 * @param pattern of rule
 	 * @param contractum of rule
 	 */
-	public static Rule mk(String origin, Sort sort, Map<String, String> options, Term pattern, Term contractum) {
+	public static Rule mk(String origin, Sort sort, Map<String, String> options, Cons pattern, Term contractum) {
 		Priority priority = Priority.STANDARD;
 		if (options.containsKey("priority")) {
 			switch (options.get("priority")) {
@@ -37,7 +38,7 @@ public class Rule extends Origined {
 
 	/**
 	 * Rule priority.
-	 * @author krisrose
+	 * @author Kristoffer H. Rose <krisrose@crsx.org>
 	 */
 	public enum Priority {
 		LOW, STANDARD, HIGH;
@@ -52,13 +53,13 @@ public class Rule extends Origined {
 	public final Priority priority;
 	
 	/** The pattern of the rule.*/
-	public final Term pattern;
+	public final Cons pattern;
 	
 	/** The contraction of the rule. */
 	public final Term contractum; 
 	
 	/** Instantiate. */
-	private Rule(String origin, Sort sort, Priority priority, Term pattern, Term contractum) {
+	private Rule(String origin, Sort sort, Priority priority, Cons pattern, Term contractum) {
 		super(origin);
 		this.sort = sort;
 		this.priority = priority;

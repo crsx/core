@@ -1,17 +1,21 @@
 /*
- * Copyright © 2016 Kristoffer H. Rose <krisrose@crsx.org>
+ * Copyright © 2016  Kristoffer H. Rose <krisrose@crsx.org>
  * Available under the Apache 2.0 license.
  */
 package org.crsx.plank.sort;
 
+import java.io.IOException;
+import java.util.Map;
+
 import org.crsx.plank.base.Origined;
+import org.crsx.plank.base.PlankException;
 import org.crsx.plank.base.Var;
 
 /**
  * A sort, either a sort variable or a sort instance.
- * @author krisrose
+ * @author Kristoffer H. Rose <krisrose@crsx.org>
  */
-public class Sort extends Origined {
+public final class Sort extends Origined {
 	
 	/**
 	 * Create sort variable.
@@ -38,7 +42,7 @@ public class Sort extends Origined {
 	// State.
 	
 	/** The variable for a sort variable, null otherwise. */
-	private Var var;
+	public Var var;
 
 	/** The sort name for a sort instance, null otherwise. */
 	public final String name;
@@ -72,5 +76,29 @@ public class Sort extends Origined {
 				return false;
 		}
 		return true;
+	}
+	
+	/** Append a textual form of the sort to out. */
+	public void appendSort(Appendable out, Map<Var, String> namings) throws PlankException {
+		try {
+			if (isVar()) {
+				if (!namings.containsKey(var))
+					namings.put(var, var.name + namings.size());
+				out.append(namings.get(var));
+			} else {
+				out.append(name);
+				if (param.length > 0) {
+					String sep = "<";
+					for (Sort p : param) {
+						out.append(sep);
+						p.appendSort(out, namings);
+						sep = ", ";
+					}
+					out.append(">");
+				}
+			}
+		} catch (IOException ioe) {
+			throw new PlankException(ioe);
+		}
 	}
 }
