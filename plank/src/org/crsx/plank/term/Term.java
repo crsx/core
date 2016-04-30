@@ -203,7 +203,7 @@ public abstract class Term extends Origined {
 			throws PlankException;
 	
 	/**
-	 * Append textual form of term to an output.
+	 * Append plank textual form of term to an output.
 	 * @param out where to send the text
 	 * @param prefix text to insert before each turn; if it starts with newline, the procedure will extend it with indentation
 	 * @param namings of variables that are being used
@@ -216,5 +216,16 @@ public abstract class Term extends Origined {
 	@Override
 	public final boolean equals(Object obj) {
 		return obj instanceof Term && equalsTerm((Term) obj, new HashMap<>());
+	}
+	
+	@Override
+	public final String toString() {
+		StringBuilder sb = new StringBuilder();
+		try {
+			appendTerm(sb, "\n  ", new HashMap<Var, String>());
+		} catch (PlankException e) {
+			sb.append("**** BAD TERM (" + e.getMessage() + ") ****");
+		}
+		return sb.toString();
 	}
 }

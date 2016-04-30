@@ -4,11 +4,14 @@
  */
 package org.crsx.plank.term;
 
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.crsx.plank.base.Origined;
+import org.crsx.plank.base.PlankException;
 import org.crsx.plank.base.Var;
 import org.crsx.plank.sort.Sort;
 
@@ -56,5 +59,41 @@ public final class Assoc extends Origined {
 		this.map = map;
 		this.omit = omit;
 		this.all = all;
+	}
+
+	/**
+	 * Append the text of an association.
+	 * @param out target for the text
+	 * @param prefix to use in embedded terms
+	 * @param namings to use for variables
+	 * @throws PlankException when the association cannot be printed
+	 */
+	public void appendAssoc(Appendable out, String prefix, Map<Var, String> namings) throws PlankException {
+		try {
+			String sep = "{";
+			for (Var key : map.keySet()) {
+				out.append(sep);
+				Occur.appendFreeVar(out, keySort, key, prefix, namings);
+				out.append(":");
+				map.get(key).appendTerm(out, "", namings);
+				sep = ", ";
+			}
+			out.append("}");
+		} catch (IOException ioe) {
+			throw new PlankException(ioe);
+		}
+	}
+	
+	// Object...
+
+	@Override
+	public final String toString() {
+		StringBuilder sb = new StringBuilder();
+		try {
+			appendAssoc(sb, "\n  ", new HashMap<Var, String>());
+		} catch (PlankException e) {
+			sb.append("**BADASSOC(" + e.getMessage() + ")**");
+		}
+		return sb.toString();
 	}
 }

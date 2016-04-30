@@ -1,0 +1,7 @@
+Bool data True;
+
+a scheme If(Bool, a, a);
+
+Bool data False;
+
+Bool rule If(True, #1, #2) -> #1 ;

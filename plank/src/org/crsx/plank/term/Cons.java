@@ -146,7 +146,6 @@ public final class Cons extends Term {
 
 	@Override
 	void appendTerm(Appendable out, String prefix, Map<Var, String> namings) throws PlankException {
-		// NOTE: This method depends on the Plank.g4 format.
 		try {
 			out.append(prefix);
 			out.append("<");
@@ -178,15 +177,7 @@ public final class Cons extends Term {
 				for (Assoc a : assoc) {
 					out.append(prefix);
 					out.append(sep);
-					String sep2 = "{";
-					for (Var key : a.map.keySet()) {
-						out.append(sep2);
-						Occur.appendFreeVar(out, a.keySort, key, prefix, namings);
-						out.append(":");
-						a.map.get(key).appendTerm(out, "", namings);
-						sep2 = ", ";
-					}
-					out.append("}");
+					a.appendAssoc(out, prefix, namings);
 					sep = ", ";
 				}
 				out.append(")");
@@ -194,6 +185,5 @@ public final class Cons extends Term {
 		} catch (IOException e) {
 			throw new PlankException(e);
 		}
-		
 	}
 }

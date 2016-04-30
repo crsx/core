@@ -49,12 +49,12 @@ that support specific aspects of program execution or compiler generation.
 One direction has been to combine \emph{higher order rewriting}~\cite{Jouannaud:klop2005} with
 \emph{higher order abstract syntax} (HOAS) \cite{PfenningElliot:pldi1988}. This approach is used by
 \CRSX (Combinatory Reduction Systems with eXtensions)~\cite{Rose:1996}, developed for writing
-industrial compilers at IBM Research~\cite{Rose:hor2010,Rose:rta2011,dp60:ibm2013}, and the derived
-systems \HAX (Higher-order Attribute Contration Schemes)~\cite{Rose:ts2015}, developed to teach
-compiler construction at NYU~\cite{RoseRose:cims2015}, and \textsf{TransScript} \cite{}, developed
-to support industrial strength fully automatic compiler generation.  The implementation of the full
-\CRSX language~\cite{crsx} turned out to be quite complex, and over time we have developed notions
-of what the ``core'' elements of such languages should be.
+industrial compilers at IBM Research~\cite{Rose:rta2011}, and the derived systems \HAX (Higher-order
+Attribute Contration Schemes)~\cite{Rose:ts2015}, developed to teach compiler construction at
+NYU~\cite{RoseRose:cims2015}, and \textsf{TransScript} \cite{}, developed to support industrial
+strength fully automatic compiler generation.  The implementation of the full \CRSX
+language~\cite{crsx} turned out to be quite complex, and over time we have developed notions of what
+the ``core'' elements of such languages should be.
 
 ħ is our attempt at providing such an extended foundation.  ħ is specifically based on Aczel's
 \emph{Contraction Schemes}~\cite{Aczel:1978} (where the restriction we shall see of only permitting
@@ -221,8 +221,8 @@ sorting ensures that
 \end{definition}
 
 Thus sorting relies on a sort environment ``witness'' to establish that a script is well sorted. In
-practice, $Γ$ will be assembled from the constraints of the component declarations. We'll argue
-below why there is a computable ``principal'' such witness.
+practice, $Γ$ will be assembled from the constraints of the component declarations. Because all top
+level symbols are explicitly sorted, sort assignment is not problematic.
 
 \begin{definition}
   %%
@@ -545,20 +545,20 @@ for the set of keys).
 The two \thetag{SAP-*} rules express the constraints on the other two forms that can occur in
 patterns, and \thetag{SAC-All} that environment copy is unconstrained in cntractions.
 
-\TBD{Example sort derivation.}
-
 
 \section{Implementation}
 \label{sec:imp}
 
-The \plank language has been implemented \TBD{Describe implementation on github.}
+The \plank language has been implemented in the \CRSX project from scratch, and is available from
+\url{http://github.com/crsx/core/plank}.
 
 
 \section{Conclusion}
 \label{sec:conc}
 
 With ħ, we have presented a rather small calculus that can serve as the underlying formalism for
-reasoning about, as well as implementing the \CRSX and \HAX languages.
+reasoning about, as well as implementing, serious compiler generation languages that support native
+higher-order abstract syntax.
 
 \TBD{What is covered.}
 
@@ -581,24 +581,25 @@ of ħ also covers the rewriting side, where we can build parameterized abstracti
 of a specification, including with attributes. Indeed, one can use substitution inside attributes,
 and have absence of attributes and substitution block rewriting.
 
-\paragraph*{Future work.} \TBD{Speculate!}
+\paragraph*{Future work.}
 
+For the full version of this work, we plan to complete the implementation including porting the old
+\CRSX pattern matching compiler and possibly looking to integrate with the TransScript ANTLR-based
+parser frontend. On the teory side we still owe the world a proper formal development of the
+properties of matching in \plank.
 
-\paragraph*{Acknowledgements.} \TBD{Thank everyone.}
+\paragraph*{Acknowledgements.}
 
+The authors are grateful to Lionel Villard, Maria Schett, and Julian Nagele, for continuous valuable
+discussions in the \CRSX project during the development of this work.
+%%
 %EU-funded Marie Skłodowska-Curie ``HORIP'' action collaboration with Cynthia Kop.
-Supported by the Marie Sk{\l}odowska-Curie action ``HORIP'', program
+The project is supported by the Marie Sk{\l}odowska-Curie action ``HORIP'', program
 H2020-MSCA-IF-2014, 658162.
 
 
-%------------------------------------------------------------------------
-
 \bibliography{crs}
 
-
-\TBD{End of sane part.}
-\hrule
-\vspace*{1pc}
 
 \end{document}
 
@@ -611,4 +612,3 @@ H2020-MSCA-IF-2014, 658162.
 % TeX-master: t
 % TeX-auto-untabify: nil
 % End:
-

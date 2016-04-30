@@ -5,6 +5,7 @@
 package org.crsx.plank.sort;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.crsx.plank.base.Origined;
@@ -78,7 +79,12 @@ public final class Sort extends Origined {
 		return true;
 	}
 	
-	/** Append a textual form of the sort to out. */
+	/**
+	 * Output the plank textual syntax of the sort
+	 * @param out target for the text
+	 * @param namings to use for variables
+	 * @throws PlankException when the sort cannot be printed
+	 */
 	public void appendSort(Appendable out, Map<Var, String> namings) throws PlankException {
 		try {
 			if (isVar()) {
@@ -100,5 +106,18 @@ public final class Sort extends Origined {
 		} catch (IOException ioe) {
 			throw new PlankException(ioe);
 		}
+	}
+	
+	// Object...
+	
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		try {
+			appendSort(sb, new HashMap<Var, String>());
+		} catch (PlankException e) {
+			sb.append("**BADSORT(" + e.getMessage() + ")**");
+		}
+		return sb.toString();
 	}
 }

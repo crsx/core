@@ -7,17 +7,18 @@ grammar Plank;
 hscript : declaration* ;
 
 declaration
-:  sort 'data' CONS forms ';'              #DataDeclaration
-|  sort 'scheme' CONS forms ';'            #SchemeDeclaration
-|  sort 'variable' ';'                     #VariableDeclaration
-|  opts sort 'rule' term '→' term ';'      #RuleDeclaration
+:  sort 'data' CONS forms ';'            #DataDeclaration
+|  sort 'scheme' CONS forms ';'          #SchemeDeclaration
+|  sort 'variable' ';'                   #VariableDeclaration
+|  opts sort 'rule' term '->' term ';'   #RuleDeclaration
 ;
 
 forms : '(' form (',' form)* ')' | '(' ')' | ;
 form
-:  '[' sorts ']' sort                    #ScopeForm
+:  bindersorts sort                      #ScopeForm
 |  	'{' sort ':' sort '}'                #AssocForm
 ;
+bindersorts : '[' sorts ']' | ;
 
 sorts : sort (',' sort)* | ;
 sort
@@ -29,18 +30,17 @@ sortparams : '<' sorts '>' | ;
 
 terms: '(' term (',' term)* ')' | '(' ')' | ;
 term
-:  sortanno rawterm                      #SortedTerm
-|  rawterm                               #UnsortedTerm
+:  sortanno rawterm
 ;
+sortanno : '<' sort '>' | ;
+
 rawterm
 :  CONS pieces                           #ConsTerm
 |  VAR                                   #VarTerm
 |  META terms                            #MetaTerm
 ;
 
-sortanno : '<' sort '>' | ;
-
-pieces : piece (',' piece)* | ;
+pieces : '(' piece (',' piece)* ')' | '(' ')' | ;
 piece
 :  binders term                          #ScopePiece
 |  associations                          #AssocPiece
