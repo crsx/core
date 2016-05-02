@@ -13,7 +13,7 @@
 \usepackage{stmaryrd}
 
 %% Topmatter.
-\title{ ħ: A Plank for Higher-order Attribute Contraction Schemes \\ Extended Abstract }
+\title{ ħ: A Plank for Higher-order Attribute Contraction Schemes \\ \emph{Extended Abstract} }
 \author{%
   Cynthia Kop \\
   University of Copenhagen
@@ -83,11 +83,27 @@ system~\cite{Rose:rta2011}, where they were never provided a formal foundation.
 \end{example}
 
 \begin{example}
-  Abstract machines with proper variables can also be expressed.
-  \begin{hacs}
-  M  data  State();
+  Here is a traditional ``call-by-value'' λ calculus evaluator, using HOAS and an environment.
+  \begin{hacs}[numbers=right]
+  L data Lam([L]L);
+  L data Ap(L, L);
+  L variable;
+
+  L scheme Eval(L, {L:L});
+  L rule Eval(Lam([x]#B(x)), {#env})
+    → Lam([x]#B(x));
+  L rule Eval(Ap(#F, #A), {#env})
+    → Apply(Eval(#F, {#env}),
+              Eval(#A, {#env}), {#env});
+  L rule Eval(x, {#env; x : #V}) → #V;
+
+  L scheme Apply(L, L, {L:L});
+  L rule Apply(Lam([x]#B(x)), #V, {#env})
+    → Eval(#B(z), {#env, z : #V}); 
   \end{hacs}
-  \TBD{Finish example using syntactic variables.}
+  The "variable" declaration ensures that variables in the "L" sort are syntactic, so they can be
+  matched in line 11 (free) and line 13 (bound), where we in the latter substitute it with a fresh
+  variable, "z" in line 14, in the term and environment.
 \end{example}
 
 
@@ -550,7 +566,8 @@ patterns, and \thetag{SAC-All} that environment copy is unconstrained in cntract
 \label{sec:imp}
 
 The \plank language has been implemented in the \CRSX project from scratch, and is available from
-\url{http://github.com/crsx/core/plank}.
+\url{http://github.com/crsx/core/plank}. At the time of writing, it still has errors, but these are
+all minor and we expect to root them out by the time of the workshop.
 
 
 \section{Conclusion}
@@ -558,9 +575,7 @@ The \plank language has been implemented in the \CRSX project from scratch, and 
 
 With ħ, we have presented a rather small calculus that can serve as the underlying formalism for
 reasoning about, as well as implementing, serious compiler generation languages that support native
-higher-order abstract syntax.
-
-\TBD{What is covered.}
+higher-order abstract syntax. We have a full implementation.
 
 \paragraph*{Related work.}
 
@@ -583,17 +598,16 @@ and have absence of attributes and substitution block rewriting.
 
 \paragraph*{Future work.}
 
-For the full version of this work, we plan to complete the implementation including porting the old
-\CRSX pattern matching compiler and possibly looking to integrate with the TransScript ANTLR-based
-parser frontend. On the teory side we still owe the world a proper formal development of the
-properties of matching in \plank.
+For the full version of this work, we plan to complete the implementation by porting the old \CRSX
+pattern matching compiler and possibly looking to integrate with the TransScript ANTLR-based parser
+frontend. On the teory side we still owe the world a proper formal development of the properties of
+matching in \plank.
 
 \paragraph*{Acknowledgements.}
 
 The authors are grateful to Lionel Villard, Maria Schett, and Julian Nagele, for continuous valuable
 discussions in the \CRSX project during the development of this work.
 %%
-%EU-funded Marie Skłodowska-Curie ``HORIP'' action collaboration with Cynthia Kop.
 The project is supported by the Marie Sk{\l}odowska-Curie action ``HORIP'', program
 H2020-MSCA-IF-2014, 658162.
 
