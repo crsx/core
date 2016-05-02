@@ -90,15 +90,18 @@ final class Piece extends Origined {
 		List<Term> subs = new ArrayList<>();
 		List<Assoc> assocs = new ArrayList<>();
 		int assocIndex = 0;
+		int realIndex = 0;
 		for (Piece piece : pieces) {
 			if (piece.isScopePiece()) {
 				subs.add(piece.sub);
 				binders.add(piece.binder);
 			} else { // association piece
 				Sort keySort = form.keySort[assocIndex];
-				Sort valueSort = form.valueSort[assocCount];
-				assocs.add(Assoc.mk(origin, keySort, valueSort, piece.maps, piece.omit, piece.all));
+				Sort valueSort = form.valueSort[assocIndex];
+				assocs.add(Assoc.mk(origin, realIndex, keySort, valueSort, piece.maps, piece.omit, piece.all));
+				++assocIndex;
 			}
+			++realIndex;
 		}
 		Var[][] binder = binders.isEmpty() ? NO_BINDERS : binders.toArray(new Var[binders.size()][]);
 		Term[] sub = subs.isEmpty() ? NO_TERMS : subs.toArray(new Term[subs.size()]);

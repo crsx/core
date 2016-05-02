@@ -6,6 +6,7 @@ package org.crsx.plank.loader;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,12 +20,17 @@ import org.crsx.plank.base.Var;
 import org.crsx.plank.execute.Executable;
 import org.crsx.plank.sort.ConsForm;
 import org.crsx.plank.sort.Sort;
+import org.crsx.plank.term.Assoc;
 import org.crsx.plank.term.Cons;
+import org.crsx.plank.term.Meta;
+import org.crsx.plank.term.Occur;
 import org.crsx.plank.term.Term;
 
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.ListMultimap;
 
 /**
  * Loading and holding a plank script with rich information.
@@ -102,9 +108,14 @@ public final class Loader {
 			sort1 = Sort.mkSortVar(sort1.origin(), unifyRepresentative(sort1.var));
 		if (sort2.isVar() && _unifyEquiv.containsKey(sort2.var))
 			sort2 = Sort.mkSortVar(sort2.origin(), unifyRepresentative(sort2.var));
-
-		// CASE 1: If we have two (now representative) variables. Make them equivalent, return the representative.
+		
 		if (sort1.isVar() && sort2.isVar()) {
+
+			// CASE 0: We have the same variable twice, escape!
+			if (sort1.var == sort2.var)
+				return sort1;
+			
+			// CASE 1: If we have two (now representative) variables. Make them equivalent, return the representative.
 			Var var1 = sort1.var;
 			Var var2 = sort2.var;
 			if (var1.compareTo(var2) > 0) {
@@ -197,6 +208,90 @@ public final class Loader {
 			return Sort.mkSortInstance(sort.origin(), sort.name, param);
 		}
 	}
+	
+	/** Expand all sort constraints, leaving only unconstrained sort variables. */
+	private Sort expandSort(Sort sort) {
+		if (sort == null) {
+			return null; // so it can be used on partial records
+		} else if (sort.isVar()) {
+			Var rep = unifyRepresentative(sort.var);
+			if (_unifySortConstraint.containsKey(rep)) {
+				sort = _unifySortConstraint.get(rep);
+				return expandSort(sort); // tail recursive!
+			}
+			return Sort.mkSortVar(sort.origin(), rep);
+		} else {
+			final int rank = sort.param.length;
+			Sort[] param = new Sort[rank]; 
+			for (int i = 0; i < rank; ++i) {
+				param[i] = expandSort(sort.param[i]);
+			}
+			return Sort.mkSortInstance(sort.origin(), sort.name, param);
+		}
+	}
+
+	/** Expand all sorts in a constructor form. */
+	private ConsForm expandConsForm(ConsForm form) {
+		final int subCount = form.subSort.length;
+		Sort[] newSubSort = new Sort[subCount];
+		Sort[][] newBinderSort = new Sort[subCount][];
+		for (int i = 0; i < subCount; ++i) {
+			newSubSort[i] = expandSort(form.subSort[i]);
+			final int rank = form.binderSort[i].length;
+			Sort[] subBinderSort = new Sort[rank];
+			for (int j = 0; j < rank; ++j)
+				subBinderSort[j] = expandSort(form.binderSort[i][j]);
+			newBinderSort[i] = subBinderSort;
+		}
+		final int assocCount = form.keySort.length;
+		Sort[] newKeySort = new Sort[assocCount];
+		Sort[] newValueSort = new Sort[assocCount];
+		for (int i = 0; i < assocCount; ++i) {
+			newKeySort[i] = expandSort(form.keySort[i]);
+			newValueSort[i] = expandSort(form.valueSort[i]);
+		}
+		return ConsForm.mk(form.origin(), expandSort(form.sort), form.name, newSubSort, newBinderSort, newKeySort, newValueSort, form.assocRealIndex, form.scheme);
+	}
+	
+	/** Expand all sorts in a term to incorporate all constraints. */
+	public Term expandTerm(Term term) {
+		switch (term.kind()) {
+		case CONS : {
+			Cons cons = term.cons();
+			final int subCount = cons.sub.length;
+			Term[] newSub = new Term[subCount];
+			for (int i = 0; i < subCount; ++i)
+				newSub[i] = expandTerm(cons.sub[i]);
+			final int assocCount = cons.assoc.length;
+			Assoc[] newAssoc = new Assoc[assocCount];
+			for (int i = 0; i <assocCount; ++i)
+				newAssoc[i] = expandAssoc(cons.assoc[i]);
+			return Term.mkCons(cons.origin(), expandSort(cons.sort()), expandConsForm(cons.form), cons.binder, newSub, newAssoc);
+		}
+		case META : {
+			Meta meta = term.meta();
+			List<Term> subs = new ArrayList<Term>();
+			for (Term t : meta.sub)
+				subs.add(expandTerm(t));
+			return Term.mkMeta(meta.origin(), expandSort(meta.sort()), meta.name, subs);
+		}
+		case OCCUR : {
+			Occur occur = term.occur();
+			return Term.mkOccur(occur.origin(), expandSort(occur.sort()), occur.var);
+		}
+		}
+		return null; // unreachable
+	}
+
+	/** Create a new association where all sorts have been expanded. */
+	private Assoc expandAssoc(Assoc assoc) {
+		Sort newKeySort = expandSort(assoc.keySort);
+		Sort newValueSort = expandSort(assoc.valueSort);
+		Map<Var, Term> newMap = new HashMap<>();
+		for (Var key : assoc.map.keySet())
+			newMap.put(key, expandTerm(assoc.map.get(key)));
+		return Assoc.mk(assoc.origin(), assoc.realIndex, newKeySort, newValueSort, newMap, assoc.omit, Arrays.asList(assoc.all));
+	}
 
 	/** Add constructor declaration of given form. */
 	public void addConsDeclaration(ConsForm form) throws PlankException {
@@ -204,7 +299,7 @@ public final class Loader {
 			throw new PlankException("sort of data constructor %s must be named sort with optional parameters (%s)", form.name, form.sort.toString());
 		if (_consForms.containsKey(form.name))
 			throw new PlankException("duplicate declaration of constructor %s", form.name);
-		_consForms.put(form.name, form);
+		_consForms.put(form.name, expandConsForm(form));
 	}
 
 	/** Set the given sort to have syntactic variables. */
@@ -227,7 +322,7 @@ public final class Loader {
 	public void addRule(String origin, Sort sort, Map<String,String> options, Cons pattern, Term contractum) throws PlankException {
 		if (_rules.containsKey(origin))
 			throw new PlankException("duplicate rules registered from same place? (%s)", origin);
-		Rule rule = Rule.mk(origin, sort, options, pattern, contractum);
+		Rule rule = Rule.mk(origin, expandSort(sort), options, (Cons) expandTerm(pattern), expandTerm(contractum));
 		_rules.put(origin, rule);
 	}
 	
@@ -248,6 +343,17 @@ public final class Loader {
 		return _consForms.get(cons);
 	}
 	
+	/** Whether the loader has any errors registered with it. */
+	public boolean hasErrors() {
+		return !_errors.isEmpty();
+	}
+
+	/** Append the actual errors to an output. */
+	public void appendErrors(Appendable out) throws IOException {
+		for (String err : _errors)
+			out.append(err + "\n");
+	}
+	
 	/** Extract an execution context. */
 	public Executable executable() {
 		return new Executable(Collections.unmodifiableMap(_rules));
@@ -257,21 +363,21 @@ public final class Loader {
 	public void append(Appendable out) throws PlankException {
 		try {
 			// Group all constructor declarations and rules by sort.
-			ImmutableListMultimap.Builder<String, ConsForm> formsb= ImmutableListMultimap.builder();
-			ImmutableSetMultimap.Builder<String, String> sortsb = ImmutableSetMultimap.builder();
+			ListMultimap<String, ConsForm> formsBySort= LinkedListMultimap.create();
+			ListMultimap<String, String> sortsByName = LinkedListMultimap.create();
 			for (String cons : _consForms.keySet()) {
 				ConsForm form = _consForms.get(cons); 
 				Sort sort = _consForms.get(cons).sort; 
-				formsb.put(sort.toString(), form);
-				sortsb.put(sort.name != null ? sort.name : "a", sort.toString());
+				formsBySort.put(sort.toString(), form);
+				String sortName = sort.name != null ? sort.name : "a";
+				String sortText = sort.toString();
+				if (!sortsByName.containsEntry(sortName, sortText))
+					sortsByName.put(sortName, sortText);
 			}
-			ImmutableListMultimap<String, ConsForm> formsBySort = formsb.build();
-			ImmutableSetMultimap<String, String> sortsByName = sortsb.build();
-			
 			// Print all the groups!
 			
 			for (String name : sortsByName.keySet()) {
-				ImmutableSet<String> sorts = sortsByName.get(name);
+				List<String> sorts = sortsByName.get(name);
 				if (sorts.isEmpty())
 					appendNoCaseSort(out, name);
 				else {
@@ -295,7 +401,7 @@ public final class Loader {
 			// Print the rules!
 			for (String o : _rules.keySet()) {
 				Rule rule = _rules.get(o);
-				rule.appendRule(out);
+				rule.appendRule(out, false);
 			}
 			
 		} catch (IOException ioe) {

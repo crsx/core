@@ -33,7 +33,7 @@ public final class TermBuilder extends Sink {
 	// Constructor.
 	
 	/** Instantiate builder. */
-	public TermBuilder() {
+	TermBuilder() {
 		_sink = new RootSink(null);
 	}
 	
@@ -70,8 +70,8 @@ public final class TermBuilder extends Sink {
 	}
 
 	@Override
-	public Sink openAssoc(String origin, Sort keySort, Sort valueSort) throws PlankException {
-		_sink = _sink.openAssoc(origin, keySort, valueSort);
+	public Sink openAssoc(String origin, int realIndex, Sort keySort, Sort valueSort) throws PlankException {
+		_sink = _sink.openAssoc(origin, realIndex, keySort, valueSort);
 		return this;
 	}
 
@@ -139,7 +139,7 @@ public final class TermBuilder extends Sink {
 			throw new PlankException("scopes only allowed inside constructions");
 		}
 		@Override
-		public Sink openAssoc(String origin, Sort keySort, Sort valueSort) throws PlankException {
+		public Sink openAssoc(String origin, int realIndex, Sort keySort, Sort valueSort) throws PlankException {
 			throw new PlankException("associations only allowed inside constructions");
 		}
 		@Override
@@ -218,8 +218,8 @@ public final class TermBuilder extends Sink {
 			return this;
 		}
 		@Override
-		public Sink openAssoc(String origin, Sort keySort, Sort valueSort) throws PlankException {
-			return new AssocSink(this, origin, keySort, valueSort);
+		public Sink openAssoc(String origin, int realIndex, Sort keySort, Sort valueSort) throws PlankException {
+			return new AssocSink(this, origin, realIndex, keySort, valueSort);
 		}
 	}
 
@@ -229,17 +229,20 @@ public final class TermBuilder extends Sink {
 	 */
 	class AssocSink extends RootSink {
 
-		/** State information for the final {@link Assoc#mk(String, Sort, Sort, Map, java.util.Set, List)}. */ 
+		/** State information for the final {@link Assoc#mk(String, int, Sort, Sort, Map, java.util.Set, List)}. */ 
 		private final String _origin;
+		private final int _realIndex;
 		private final Sort _keySort;
 		private final Sort _valueSort;
 		private Var _key; // to save key from key event to after value subtree has been processed 
 		private final Map<Var, Term> _map = new HashMap<>();
 
-		/** Initial association information from {@link Sink#openAssoc(String, Sort, Sort)}. */
-		public AssocSink(RootSink parent, String origin, Sort keySort, Sort valueSort) {
+		/** Initial association information from {@link Sink#openAssoc(String, int, Sort, Sort)}. 
+		 * @param realIndex TODO*/
+		public AssocSink(RootSink parent, String origin, int realIndex, Sort keySort, Sort valueSort) {
 			super(parent);
 			_origin = origin;
+			_realIndex = realIndex;
 			_keySort = keySort;
 			_valueSort = valueSort;
 		}
@@ -262,7 +265,7 @@ public final class TermBuilder extends Sink {
 		// Sink...
 		@Override
 		public Sink closeAssoc() throws PlankException {
-			return _parent.addAssoc(Assoc.mk(_origin, _keySort, _valueSort, _map, new HashSet<>(), new ArrayList<>()));
+			return _parent.addAssoc(Assoc.mk(_origin, _realIndex, _keySort, _valueSort, _map, new HashSet<>(), new ArrayList<>()));
 		}
 		@Override
 		public Sink map(Var key) throws PlankException {

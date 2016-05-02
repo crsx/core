@@ -15,6 +15,7 @@ import org.crsx.plank.term.Match.Substitute;
 
 /**
  * A meta-application.
+ * @see Term#mkMeta(String, Sort, String, java.util.List)
  * @author Kristoffer H. Rose <krisrose@crsx.org>
  */
 public final class Meta extends Term {
@@ -78,20 +79,22 @@ public final class Meta extends Term {
 	}
 
 	@Override
-	void appendTerm(Appendable out, String prefix, Map<Var, String> namings) throws PlankException {
+	public void appendTerm(Appendable out, String prefix, Map<Var, String> namings, boolean includeSorts) throws PlankException {
 		// NOTE: This method depends on the Plank.g4 format.
 		try {
 			out.append(prefix);
-			out.append("<");
-			sort().appendSort(out, namings);
-			out.append(">");
+			if (includeSorts) {
+				out.append("<");
+				sort().appendSort(out, namings);
+				out.append(">");
+			}
 			out.append(name);
 			if (sub.length > 0) {
 				if (prefix.startsWith("\n")) prefix += "  ";
 				String sep = "(";
 				for (Term s : sub) {
 					out.append(sep);
-					s.appendTerm(out, prefix, namings);
+					s.appendTerm(out, prefix, namings, includeSorts);
 					sep = ", ";
 				}
 				out.append(")");

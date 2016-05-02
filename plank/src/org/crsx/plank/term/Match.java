@@ -49,31 +49,31 @@ public final class Match extends Origined {
 	// State.
 	
 	/** Valuate (map) each meta-variable to the substitute describing what substitutions it can perform and in what redex. */
-	final Map<String, Substitute<Term>> valuation = new HashMap<>();
+	public final Map<String, Substitute<Term>> valuation = new HashMap<>();
 
 	/** Free variable renamings. */
-	final Map<Var, Var> freeRenames = new HashMap<Var, Var>();
+	public final Map<Var, Var> freeRenames = new HashMap<Var, Var>();
 
 	/** Association catch-all mappings. */
-	final Map<String, Substitute<Assoc>> assocAllValuation = new HashMap<>();
+	public final Map<String, Substitute<Assoc>> assocAllValuation = new HashMap<>();
 	
 	/** Whether the match succeeded. */
-	boolean success = true;
+	public boolean success = true;
 	
 	/** Whether the match could be half of a unification (only accurate for {@link #full} match). */
-	boolean unifyPossible = true;
+	public boolean unifyPossible = true;
 
 	/** Whether the match failed because of a conflict with something irreducible. */
-	boolean alwaysFail = false;
+	public boolean alwaysFail = false;
 
 	/** Whether the match failed because a variable was not substituted. */
-	boolean variableFail = false;
-	
+	public boolean variableFail = false;
+
 	/** The path to the place where the match failed. */
-	final TermPath failurePath = Term.path();
+	public final Path failurePath = Term.path();
 	
 	/** Whether a full match was attempted (continues after failure, useful for unification). */
-	final boolean full;
+	public final boolean full;
 	
 	// Constructor.
 	
@@ -188,7 +188,7 @@ public final class Match extends Origined {
 		case META : {
 			// Pattern is meta-application, with just bound variables as substitution parameters. Redex kind does not matter. 
 			final Meta p = pattern.meta();
-			final Meta r = redex.meta();
+			final Term r = redex;
 			if (!valuation.containsKey(p.name)) {
 				// First encounter of this meta-variable! Valuate it.
 				updateValuation(valuation, p, r, binderMap);
@@ -248,7 +248,6 @@ public final class Match extends Origined {
 			}
 			// TODO: Check missing bound variables.
 		}
-		
 	}
 
 	/**

@@ -5,6 +5,7 @@
 package org.crsx.plank.loader;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.crsx.plank.sort.ConsForm;
@@ -45,15 +46,27 @@ final class Form {
 	 * @param origin of this declaration
 	 * @param sort sort of the constructor declaration
 	 * @param cons name of constructor
-	 * @param forms the list of forms of individual arguments, in order
+	 * @param forms the list of forms of individual arguments, in original argument order
 	 * @param scheme whether the declaration should be a scheme (otherwise it is data)
 	 */
 	static ConsForm mkConsForm(String origin, Sort sort, String cons, List<Form> forms, boolean scheme) {
-		final Sort[] subSort = forms.stream().filter(f -> !f.isAssoc()).map(f -> f.sort).toArray(n -> new Sort[n]);
-		final Sort[][] binderSort = forms.stream().filter(f -> !f.isAssoc()).map(f -> f.args).toArray(n -> new Sort[n][]);
-		final Sort[] keySort = forms.stream().filter(f -> f.isAssoc()).map(f -> f.key).toArray(n -> new Sort[n]);
-		final Sort[] valueSort = forms.stream().filter(f -> f.isAssoc()).map(f -> f.sort).toArray(n -> new Sort[n]);
-		return ConsForm.mk(origin, sort, cons, subSort, binderSort, keySort, valueSort, scheme);
+		final Form[] subForm = forms.stream().filter(f -> !f.isAssoc()).toArray(n -> new Form[n]);
+		final Sort[] subSort = Arrays.stream(subForm).map(f -> f.sort).toArray(n -> new Sort[n]);
+		final Sort[][] binderSort = Arrays.stream(subForm).map(f -> f.args).toArray(n -> new Sort[n][]);
+		final Form[] assocForms = forms.stream().filter(f -> f.isAssoc()).toArray(n -> new Form[n]);
+		final Sort[] keySort = Arrays.stream(assocForms).map(f -> f.key).toArray(n -> new Sort[n]);
+		final Sort[] valueSort = Arrays.stream(assocForms).map(f -> f.sort).toArray(n -> new Sort[n]);
+		int[] assocRealIndex = new int[assocForms.length];
+		int realIndex = 0;
+		int assocIndex = 0;
+		for (Form f : forms) { // access indices so no streams
+			if (f.isAssoc()) {
+				assocRealIndex[assocIndex] = realIndex;
+				++assocIndex;
+			}
+			++realIndex;
+		}
+		return ConsForm.mk(origin, sort, cons, subSort, binderSort, keySort, valueSort, assocRealIndex, scheme);
 	}
 
 	// State.

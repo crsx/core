@@ -4,10 +4,13 @@
  */
 package org.crsx.plank.loader;
 
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.crsx.plank.base.Origined;
 import org.crsx.plank.base.PlankException;
+import org.crsx.plank.base.Var;
 import org.crsx.plank.sort.Sort;
 import org.crsx.plank.term.Cons;
 import org.crsx.plank.term.Term;
@@ -59,6 +62,8 @@ public final class Rule extends Origined {
 	/** The contraction of the rule. */
 	public final Term contractum; 
 	
+	// Constructor.
+	
 	/** Instantiate. */
 	private Rule(String origin, Sort sort, Priority priority, Cons pattern, Term contractum) {
 		super(origin);
@@ -68,7 +73,27 @@ public final class Rule extends Origined {
 		this.contractum = contractum;
 	}
 	
-	public void appendRule(Appendable out) throws PlankException {
-		// TODO!
+	// Methods.
+	
+	/**
+	 * Show rule in textual form.
+	 * @param out target of text
+	 * @param includeSorts whether rule should include sorts
+	 * @throws PlankException if out fais or there is something wrong with the term
+	 */
+	public void appendRule(Appendable out, boolean includeSorts) throws PlankException {
+		try {
+			Map<Var, String> namings = new HashMap<>();
+			// TODO: opts.
+			sort.appendSort(out, namings);
+			out.append(" rule ");
+			pattern.appendTerm(out, "\n    ", namings, includeSorts);
+			out.append("\n  →");
+			contractum.appendTerm(out, "\n    ", namings, includeSorts);
+			out.append("\n;\n");
+		} catch (IOException ioe) {
+			throw new PlankException(ioe);
+		}
+		
 	}
 }

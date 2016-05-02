@@ -10,7 +10,7 @@ declaration
 :  sort 'data' CONS forms ';'            #DataDeclaration
 |  sort 'scheme' CONS forms ';'          #SchemeDeclaration
 |  sort 'variable' ';'                   #VariableDeclaration
-|  opts sort 'rule' term '->' term ';'   #RuleDeclaration
+|  opts sort 'rule' term '→' term ';'   #RuleDeclaration
 ;
 
 forms : '(' form (',' form)* ')' | '(' ')' | ;

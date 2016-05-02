@@ -17,6 +17,7 @@ import org.crsx.plank.sort.Sort;
 
 /**
  * Term model.
+ * Note that while terms may appear immutable (with all final fields), they are not: it is possible to replace subterms.
  * @author Kristoffer H. Rose <krisrose@crsx.org>
  */
 public abstract class Term extends Origined {
@@ -55,8 +56,13 @@ public abstract class Term extends Origined {
 		return new Occur(origin, sort, var);
 	}
 
+	/** Create an empty path. */
+	public static Path path() {
+		return new Path();
+	}
+
 	/**
-	 * Create event-based term builder.
+	 * Create {@link Sink}-based receiver, which accumulates a term and allows you to retrieve it when it has been received.
 	 * Note: cannot create meta-terms.
 	 * @return builder, which is also a sink ready for first event of term to build
 	 */
@@ -64,16 +70,11 @@ public abstract class Term extends Origined {
 		return new TermBuilder();
 	}
 
-	/** Create an empty path. */
-	static TermPath path() {
-		return new TermPath();
-	}
-
 	// State.
 	
 	/** The sort of the term. */
 	private final Sort _sort;
-	
+
 	// Constructor.
 	
 	/**
@@ -94,6 +95,11 @@ public abstract class Term extends Origined {
 	/** The three kinds of term. */
 	public static enum Kind {
 		CONS, OCCUR, META
+	}
+	
+	/** Is this term a function, i.e., a constructions with a "scheme" constructor? */
+	public final boolean isFun() {
+		return kind() == Kind.CONS && cons().form.scheme;
 	}
 
 	/** The sort of the term.*/
@@ -125,11 +131,11 @@ public abstract class Term extends Origined {
 	 * <li> if {@link Match#variableFail} is true then a variable blocks evaluation, and substituting it may progress things;
 	 * <li> otherwise, the problamtic term may be reducible. 
 	 * </ul>
-	 * In each case, {@link Match#failurePath} contains a {@link TermPath} to the point of failure.
+	 * In each case, {@link Match#failurePath} contains a {@link Path} to the point of failure.
 	 *  
 	 * @param redex to match against
 	 */
-	final Match match(Term redex) {
+	public final Match match(Term redex) {
 		return Match.match(origin(), this, redex, false); 
 	}
 	
@@ -141,18 +147,42 @@ public abstract class Term extends Origined {
 	 * @return the sink to use for subsequent events after rewrite result has been received
 	 * @throws PlankException if an inconsistency is discovered or the sink fails
 	 */
-	final Sink rewrite(Sink sink, Match match) throws PlankException {
+	public final Sink rewrite(Sink sink, Match match) throws PlankException {
 		return rewriteTerm(sink, match, new HashMap<Var, Var>());
+	}
+
+	/**
+	 * Update the current term.
+	 * Note: you must make sure the subterm has been created in the right context so bound variables etc. are in sync.
+	 * @param path where to update - cannot be empty!
+	 * @param subterm what to insert as replacement (old fragment at that location is lost)
+	 * @throws PlankException if path is incorrect for term
+	 */
+	public void update(Path path, Term subterm) throws PlankException {
+		if (path.isEmpty())
+			throw new PlankException("cannot update self");
+		Term t = this;
+		Path p = path.clone();
+		while (!p.isStep())
+			t = p.popApplyStep(t);
+		// t is now the parent to be updated, and path is the last step to the child to be updated
+		if (t.kind() != Kind.CONS)
+			throw new PlankException("attempt to update non-construction");
+		Cons c = t.cons();
+		if (p.startsWithScopeTerm())
+			c.sub[p.firstIndex()] = subterm;
+		else {
+			Assoc a = c.assoc[p.firstIndex()];
+			a.map.put(p.firstKey(), subterm);
+		}
 	}
 
 	/**
 	 * Send a copy of the term to the sink.
 	 * Free variables in the copy will be mapped to fresh variables.
-	 * Note the requirement on the freeRenames parameter to ensure that the copy is well-defined.
-	 * @param sink to send events to
 	 * @return the sink to use for subsequent events
 	 */
-	final Sink send(Sink sink) throws PlankException {
+	public final Sink send(Sink sink) throws PlankException {
 		return send(sink, new HashMap<Var, Var>());
 	}
 
@@ -164,7 +194,7 @@ public abstract class Term extends Origined {
 	 * @param freeRenames map variables in this to equal variables in that
 	 * @return the sink to use for subsequent events
 	 */
-	final Sink send(Sink sink, Map<Var, Var> freeRenames) throws PlankException {
+	public final Sink send(Sink sink, Map<Var, Var> freeRenames) throws PlankException {
 		Meta dummy = mkMeta("internal", sort(), "#", Arrays.asList(new Term[0]));
 		Match match = dummy.match(this);
 		return dummy.rewriteTerm(sink, match, freeRenames);
@@ -207,9 +237,10 @@ public abstract class Term extends Origined {
 	 * @param out where to send the text
 	 * @param prefix text to insert before each turn; if it starts with newline, the procedure will extend it with indentation
 	 * @param namings of variables that are being used
+	 * @param includeSorts whether to include sorts in the term
 	 * @throws PlankException if there is a problem, including an IOException from appendable
 	 */
-	abstract void appendTerm(Appendable out, String prefix, Map<Var, String> namings) throws PlankException;
+	public abstract void appendTerm(Appendable out, String prefix, Map<Var, String> namings, boolean includeSorts) throws PlankException;
 	
 	// Object...
 	
@@ -222,7 +253,7 @@ public abstract class Term extends Origined {
 	public final String toString() {
 		StringBuilder sb = new StringBuilder();
 		try {
-			appendTerm(sb, "\n  ", new HashMap<Var, String>());
+			appendTerm(sb, "\n  ", new HashMap<Var, String>(), true);
 		} catch (PlankException e) {
 			sb.append("**** BAD TERM (" + e.getMessage() + ") ****");
 		}

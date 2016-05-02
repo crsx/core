@@ -29,10 +29,11 @@ public final class ConsForm extends Origined {
 	 * @param binderSort sorts of the binders of each argument scope, in order
 	 * @param keySort sorts of the association key variables, in order
 	 * @param valueSort sorts of the association values, in order
+	 * @param assocRealIndex the indices of the associations in the original term
 	 * @param scheme whether the construction is a defined symbol
 	 */
-	public static ConsForm mk(String origin, Sort sort, String name, Sort[] subSort, Sort[][] binderSort, Sort[] keySort, Sort[] valueSort, boolean scheme) {
-		return new ConsForm(origin, sort, name, subSort, binderSort, keySort, valueSort, scheme);
+	public static ConsForm mk(String origin, Sort sort, String name, Sort[] subSort, Sort[][] binderSort, Sort[] keySort, Sort[] valueSort, int[] assocRealIndex, boolean scheme) {
+		return new ConsForm(origin, sort, name, subSort, binderSort, keySort, valueSort, assocRealIndex, scheme);
 	}
 
 	// State
@@ -54,22 +55,30 @@ public final class ConsForm extends Origined {
 	/** The value sorts of the association subpieces, in order. */
 	public final Sort[] valueSort;
 
+	/** Real index in the original form of each association. */
+	public final int[] assocRealIndex;
+	
 	/** Whether this is a defined symbol. */
 	public final boolean scheme;
 	
 	/** Actual instantiation. */
-	private ConsForm(String origin, Sort sort, String name, Sort[] subSort, Sort[][] binderSort, Sort[] keySort, Sort[] valueSort, boolean scheme) {
+	private ConsForm(String origin, Sort sort, String name, Sort[] subSort, Sort[][] binderSort, Sort[] keySort, Sort[] valueSort, int[] assocRealIndex, boolean scheme) {
 		super(origin);
 		this.sort = sort;
+		assert sort != null;
 		this.name = name;
-		this.subSort = subSort;
-		this.binderSort = binderSort;
-		this.keySort = keySort;
-		this.valueSort = valueSort;
+		assert sort != null;
+		this.subSort = subSort == null || subSort.length == 0 ? NO_SORT : subSort;
+		this.binderSort = binderSort == null || binderSort.length == 0 ? NO_BINDER_SORT : binderSort;
+		this.keySort = keySort == null || keySort.length == 0 ? NO_SORT : keySort;
+		this.valueSort = valueSort == null || valueSort.length == 0 ? NO_SORT : valueSort;
+		this.assocRealIndex = assocRealIndex;
 		this.scheme = scheme;
 		assert subSort.length == binderSort.length : "Panic: constructor form with inconsistent binders and subterms?";
 		assert keySort.length == valueSort.length : "Panic: constructor form with inconsistent key and value sorts?";
 	}
+	private static Sort[] NO_SORT = new Sort[0];
+	private static Sort[][] NO_BINDER_SORT = new Sort[0][];
 	
 	// Methods.
 	
@@ -83,16 +92,19 @@ public final class ConsForm extends Origined {
 			Map<Var, String> namings = new HashMap<>();
 			sort.appendSort(out, namings);
 			out.append(scheme ? " scheme " : " data ");
+			// Constructor.
 			out.append(name);
 			final int subCount = subSort.length;
 			final int assocCount = keySort.length;
 			if (subCount + assocCount > 0) {
 				String sep = "(";
+				// Scopes.
 				for (int i = 0; i < subCount; ++i) {
 					out.append(sep);
 					subSort[i].appendSort(out, namings);
 					sep = ", ";
 				}
+				// Associations.
 				for (int i = 0; i < assocCount; ++i) {
 					out.append(sep);
 					out.append("{");
@@ -103,7 +115,6 @@ public final class ConsForm extends Origined {
 					sep = ", ";
 				}
 				out.append(")");
-				// TODO
 			}
 			out.append(";\n");
 		} catch (IOException e) {

@@ -71,41 +71,19 @@ import org.crsx.plank.util.LayeredMap;
 import com.google.common.collect.ImmutableMap;
 
 /**
- * Load a parsed plank script into a {@link Loader}.
+ * 
  * This includes assigning sorts to all nodes.
  * @author krisrose
  */
 public class PlankBuilder extends PlankBaseVisitor<Object> {
 
-	/**
-	 * Parse a plank script and return a context loaded with the script.
-	 * @param input textual form of the script
-	 */
-	public static Loader parse(CharStream input) {
-		PlankBuilder builder = new PlankBuilder();
-		
-		// Parse.
-		PlankLexer lexer = new PlankLexer(input);
-		CommonTokenStream tokens = new CommonTokenStream(lexer);
-		PlankParser parser = new PlankParser(tokens);
-		//parser.setTrace(true);
-		try {
-			ParseTree tree = parser.hscript();
-			System.out.println(tree.toStringTree(parser));
-			builder.visit(tree); // this is where the real work is done...
-		} catch (RecognitionException e) {
-			String message = e.getMessage();
-			Token token = e.getOffendingToken();
-			builder.context().addError(originRange(token, token), "%s", message);
-		}
-		
-		return builder.context(); // return result
-	}
-
 	// State.
-	
+
 	/** Context to construct. */
-	private final Loader _loader = new Loader();
+	private Loader _loader;
+
+	/** False on first pass, true on second pass. */
+	boolean _rulesPass;
 	
 	/** Separate pattern and contraction processing. */ 
 	private boolean _inPattern;
@@ -121,26 +99,90 @@ public class PlankBuilder extends PlankBaseVisitor<Object> {
 	
 	/** The sorts of bound variables in a rule. */
 	private final Map<Var, Sort> _boundSort = new HashMap<>();
-
-//	/** Rules contexts collected during visitation for processing after. */
-//	private final List<RuleDeclarationContext> _ruleDeclarations = new ArrayList<>();
-
-	boolean _rulesPass;
 	
 	/** Current context sorts during term generation in rules. */
 	private final Deque<List<Form>> _contextFormsStack = new ArrayDeque<>();
 	
 	// Constructor.
 	
-	/** Instantiate the builder. */
-	private PlankBuilder() {	}
+	/** Creater builder for plank. */
+	public PlankBuilder() {}
 
 	// Methods.
-	
-	/** Return the generated context. */
-	private Loader context() {
+
+	/**
+	 * Parse a plank script and load it.
+	 * @param input textual form of the script
+	 * @param traceParse whether to trace parsing events
+	 */
+	public Loader parseScript(CharStream input, boolean traceParse) {
+		_loader = new Loader();
+		try {
+
+			// Parse.
+			PlankLexer lexer = new PlankLexer(input);
+			CommonTokenStream tokens = new CommonTokenStream(lexer);
+			PlankParser parser = new PlankParser(tokens);
+			parser.setTrace(traceParse);
+			ParseTree tree = parser.hscript();
+			if (traceParse)
+				System.out.println(tree.toStringTree(parser));
+			
+			// Build.
+			visit(tree); // this is where the real work is done...
+			
+		} catch (RecognitionException e) {
+			String message = e.getMessage();
+			Token token = e.getOffendingToken();
+			_loader.addError(input.getSourceName() + ":" + originRange(token, token), "%s", message);
+		}
 		return _loader;
 	}
+	
+	/**
+	 * Parse a term for use by script loaded with the builder.
+	 * @param input with term
+	 * @param traceParse if parsing itself should be traced
+	 * @return the succesfully parsed term
+	 * @throws PlankException if the term cannot be parsed or has some other problem
+	 */
+	public Term parseTerm(CharStream input, boolean traceParse) throws PlankException {
+		try {
+			if (_loader == null)
+				throw new PlankException("Cannot parse term without having script loaded.");
+			if (_loader.hasErrors())
+				throw new PlankException("Cannot parse term from script with errors.");
+
+			// Parse.
+			PlankLexer lexer = new PlankLexer(input);
+			CommonTokenStream tokens = new CommonTokenStream(lexer);
+			PlankParser parser = new PlankParser(tokens);
+			parser.setTrace(traceParse);
+			ParseTree tree = parser.term();
+			if (traceParse)
+				System.out.println(tree.toStringTree(parser));
+			
+			// Setup the build environment.
+			_varsScope.clear();
+			_freeSort.clear();
+			_metaSubstSorts.clear();
+			_boundSort.clear();
+			_contextFormsStack.clear();
+			_inPattern = false;
+
+			// Now read the Term; provide a dummy sort (so normal inference kicks in).
+			Sort sort = Sort.mkSortVar("", mkVar("dummy", true, false));
+			_contextFormsStack.push(Arrays.asList(Form.mkScopeForm(null, sort)));
+			Term term = (Term) visit(tree);
+			term = _loader.expandTerm(term);
+			return term;
+			
+		} catch (RecognitionException re) {
+			String message = re.getMessage();
+			Token token = re.getOffendingToken();
+			throw new PlankException(re, "%s:%s: %s", input.getSourceName(), originRange(token, token), message);
+		}
+	}	
 	
 	// PlankVisitor...
 	

@@ -13,6 +13,7 @@ import org.crsx.plank.sort.Sort;
 
 /**
  * A variable occurrence in a term.
+ * @see Term#mkOccur(String, Sort, Var)
  * @author Kristoffer H. Rose <krisrose@crsx.org>
  */
 public final class Occur extends Term {
@@ -74,19 +75,21 @@ public final class Occur extends Term {
 	}
 
 	@Override
-	void appendTerm(Appendable out, String prefix, Map<Var, String> namings) throws PlankException {
+	public void appendTerm(Appendable out, String prefix, Map<Var, String> namings, boolean includeSorts) throws PlankException {
 		// NOTE: This method depends on the Plank.g4 format.
-		appendFreeVar(out, sort(), var, prefix, namings);
+		appendFreeVar(out, sort(), var, prefix, namings, includeSorts);
 	}
 
 	/** Append just the sorted free variable, extending namings as needed in the process. */
-	static void appendFreeVar(Appendable out, Sort sort, Var var, String prefix, Map<Var, String> namings) throws PlankException {
+	static void appendFreeVar(Appendable out, Sort sort, Var var, String prefix, Map<Var, String> namings, boolean includeSorts) throws PlankException {
 		// NOTE: This method depends on the Plank.g4 format.
 		try {
 			out.append(prefix);
-			out.append("<");
-			sort.appendSort(out, namings);
-			out.append(">");
+			if (includeSorts) {
+				out.append("<");
+				sort.appendSort(out, namings);
+				out.append(">");
+			}
 			sort.appendSort(out, namings);
 			if (!namings.containsKey(var))
 				namings.put(var, var.name + namings.size());

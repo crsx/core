@@ -44,11 +44,12 @@ public abstract class Sink {
 	/**
 	 * Open an association argument context.
 	 * @param origin of the association
+	 * @param realIndex real argument index
 	 * @param keySort of association
 	 * @param valueSort of association
 	 * @throws PlankException if events are sent out of order or otherwise invalid
 	 */
-	public abstract Sink openAssoc(String origin, Sort keySort, Sort valueSort) throws PlankException;
+	public abstract Sink openAssoc(String origin, int realIndex, Sort keySort, Sort valueSort) throws PlankException;
 	
 	/**
 	 * Close the most recently opened and unclosed context, which must be an association.

@@ -14,6 +14,7 @@ import org.crsx.plank.sort.Sort;
 
 /**
  * A construction.
+ * @see Term#mkCons(String, Sort, ConsForm, Var[][], Term[], Assoc[])
  * @author Kristoffer H. Rose <krisrose@crsx.org>
  */
 public final class Cons extends Term {
@@ -31,7 +32,9 @@ public final class Cons extends Term {
 	
 	/** The associations of the construction. */
 	public final Assoc[] assoc;
-
+	
+	// Constructor.
+	
 	/** Generate it. */
 	Cons(final String origin, final Sort sort, final ConsForm form, final Var[][] binder, final Term[] sub, final Assoc[] assoc) {
 		super(origin, sort);
@@ -97,7 +100,7 @@ public final class Cons extends Term {
 		final int assocCount = assoc.length;
 		for (int i = 0; i < assocCount; ++i) {
 			final Assoc a = assoc[i];
-			sink = sink.openAssoc(a.origin(), a.keySort, a.valueSort);
+			sink = sink.openAssoc(a.origin(), a.realIndex, a.keySort, a.valueSort);
 			for (Map.Entry<Var, Term> e : a.map.entrySet()) {
 				Var key = e.getKey();
 				Term value = e.getValue();
@@ -131,7 +134,7 @@ public final class Cons extends Term {
 		final int assocCount = assoc.length;
 		for (int i = 0; i < assocCount; ++i) {
 			final Assoc a = assoc[i];
-			sink = sink.openAssoc(a.origin(), a.keySort, a.valueSort);
+			sink = sink.openAssoc(a.origin(), a.realIndex, a.keySort, a.valueSort);
 			for (Map.Entry<Var, Term> e : a.map.entrySet()) {
 				Var key = e.getKey();
 				Term value = e.getValue();
@@ -145,40 +148,52 @@ public final class Cons extends Term {
 	}
 
 	@Override
-	void appendTerm(Appendable out, String prefix, Map<Var, String> namings) throws PlankException {
+	public void appendTerm(Appendable out, String prefix, Map<Var, String> namings, boolean includeSorts) throws PlankException {
 		try {
 			out.append(prefix);
-			out.append("<");
-			sort().appendSort(out, namings);
-			out.append(">");
+			if (includeSorts) {
+				out.append("<");
+				sort().appendSort(out, namings);
+				out.append(">");
+			}
 			out.append(form.name);
-			if (sub.length + assoc.length > 0) {
-				if (prefix.startsWith("\n")) prefix += "  ";
+			final int arity = sub.length + assoc.length;
+			if (arity > 0) {
+				if (prefix.startsWith("\n")) prefix += "  "; // add indentation (not yet a parameter, TODO)
 				
+				// We have to work a bit to print the arguments in real order...
+				int scopeIndex = 0;
+				int assocIndex = 0;
 				String sep = "(";
-				// Scope arguments.
-				for (int i = 0; i < sub.length; ++i) {
+				for (int outIndex = 0; outIndex < arity; ++outIndex) {
+					assert assocIndex == form.assocRealIndex.length || outIndex <= form.assocRealIndex[assocIndex] : "Panic: we skipped an association on print?!?";
 					out.append(sep);
-					if (binder[i].length > 0) {
-						String sep2 = "[";
-						for (Var b : binder[i]) {
-							out.append(sep2);
-							String newName = b.name + namings.size();
-							namings.put(b, newName);
-							out.append(newName);
-							sep2 = ",";
+					
+					if (assocIndex == form.assocRealIndex.length || outIndex < form.assocRealIndex[assocIndex]) {
+
+						// No more associations or all associations are later, so this is a scope argument.
+						if (binder[scopeIndex].length > 0) {
+							String sep2 = "[";
+							for (Var b : binder[scopeIndex]) {
+								out.append(sep2);
+								String newName = b.name + namings.size();
+								namings.put(b, newName);
+								out.append(newName);
+								sep2 = ",";
+							}
+							out.append("]");
 						}
-						out.append("]");
+						sub[scopeIndex].appendTerm(out, prefix, namings, includeSorts);
+						++scopeIndex; // mark it printed
+
+					} else {
+
+						// This is the next association arguments.
+						assoc[assocIndex].appendAssoc(out, prefix, namings, includeSorts);
+						++assocIndex; // mark it printed
+
 					}
-					sub[i].appendTerm(out, prefix, namings);;
-					sep = ", ";
-				}
-				// Association arguments.
-				for (Assoc a : assoc) {
-					out.append(prefix);
-					out.append(sep);
-					a.appendAssoc(out, prefix, namings);
-					sep = ", ";
+					sep = ", "; // for next iteration...
 				}
 				out.append(")");
 			}
