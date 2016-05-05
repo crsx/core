@@ -5,6 +5,7 @@
 package org.crsx.plank.sort;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -109,6 +110,17 @@ public final class Sort extends Origined {
 	}
 	
 	// Object...
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (!(obj instanceof Sort))
+			return false;
+		Sort that = (Sort) obj;
+		return
+				var == that.var
+				&& ((name == null && that.name == null) || name.equals(that.name))
+				&& Arrays.equals(param, that.param);
+	}
 	
 	@Override
 	public String toString() {

@@ -55,9 +55,9 @@ public final class Occur extends Term {
 	}
 
 	@Override
-	Sink substituteTerm(Sink sink, Map<Var, Var> freeRenames, Map<Var, Term> substitution, Map<Var, Var> replacementRenames) throws PlankException {
+	Sink substituteTerm(Sink sink, Map<Var, Var> freeRenames, Map<Var, Term> substitution, Match replacementMatch) throws PlankException {
 		if (substitution.containsKey(var))
-			return substitution.get(var).send(sink, replacementRenames);
+			return substitution.get(var).rewriteTerm(sink, replacementMatch, freeRenames);
 		return pickVar(sink, freeRenames);
 	}
 
@@ -90,10 +90,8 @@ public final class Occur extends Term {
 				sort.appendSort(out, namings);
 				out.append(">");
 			}
-			sort.appendSort(out, namings);
 			if (!namings.containsKey(var))
 				namings.put(var, var.name + namings.size());
-			out.append(prefix);
 			out.append(namings.get(var));
 		} catch (IOException e) {
 			throw new PlankException(e);

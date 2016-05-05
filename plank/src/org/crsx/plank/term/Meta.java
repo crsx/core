@@ -70,11 +70,11 @@ public final class Meta extends Term {
 		for (int i = 0; i < sub.length; ++i) {
 			substitution.put(substitute.var[i], sub[i]);
 		}
-		return substitute.body.substituteTerm(sink, freeRenames, substitution, freeRenames);
+		return substitute.body.substituteTerm(sink, freeRenames, substitution, match);
 	}
 
 	@Override
-	Sink substituteTerm(Sink sink, Map<Var, Var> freeRenames, Map<Var, Term> substitution, Map<Var, Var> replacementRenames) throws PlankException {
+	Sink substituteTerm(Sink sink, Map<Var, Var> freeRenames, Map<Var, Term> substitution, Match replacementMatch) throws PlankException {
 		throw new PlankException("found meta-application in substituted term (%s)", name);
 	}
 

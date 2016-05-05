@@ -229,7 +229,7 @@ public abstract class Term extends Origined {
 	 * @return the sink to use for subsequent events after rewrite result has been received
 	 * @throws PlankException if an inconsistency is discovered or the sink fails
 	 */
-	abstract Sink substituteTerm(Sink sink, Map<Var, Var> freeRenames, Map<Var, Term> substitution, Map<Var, Var> replacementRenames)
+	abstract Sink substituteTerm(Sink sink, Map<Var, Var> freeRenames, Map<Var, Term> substitution, Match replacementMatch)
 			throws PlankException;
 	
 	/**
@@ -253,7 +253,7 @@ public abstract class Term extends Origined {
 	public final String toString() {
 		StringBuilder sb = new StringBuilder();
 		try {
-			appendTerm(sb, "\n  ", new HashMap<Var, String>(), true);
+			appendTerm(sb, "\n  ", new HashMap<Var, String>(), false);
 		} catch (PlankException e) {
 			sb.append("**** BAD TERM (" + e.getMessage() + ") ****");
 		}

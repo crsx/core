@@ -1,0 +1,7 @@
+Lambda scheme Ap(Lambda, Lambda);
+Lambda scheme Lam([Lambda]Lambda);
+Lambda data Z;
+Lambda data S(Lambda);
+
+Lambda rule Ap(Lam([x]#(x)), #x) → #(#x) ;
+Lambda rule Lam([x]Ap(#(), x)) → #() ;

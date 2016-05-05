@@ -5,6 +5,7 @@
 package org.crsx.plank.sort;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,7 +22,6 @@ public final class ConsForm extends Origined {
 	/**
 	 * Create constructor form (the name and argument shapes of a construction).
 	 * <p>
-	 * <bNote:</b> The system relies on ConsForms being unique (ensured by loader) and immutable.
 	 * @param origin of form
 	 * @param sort that form is declared to be
 	 * @param name name of constructor
@@ -125,15 +125,30 @@ public final class ConsForm extends Origined {
 	// Object...
 
 	@Override
-	public int hashCode() {
-		return System.identityHashCode(this);
-	}
-
-	@Override
 	public boolean equals(Object obj) {
-		return this == obj;
+		if (!(obj instanceof ConsForm))
+			return false;
+		ConsForm that = (ConsForm) obj;
+		return 
+				sort.equals(that.sort)
+				&& name.equals(that.name)
+				&& Arrays.equals(subSort, that.subSort)
+				&& array2Equals(binderSort, that.binderSort)
+				&& Arrays.equals(keySort, that.keySort)
+				&& Arrays.equals(valueSort, that.valueSort)
+				&& Arrays.equals(assocRealIndex, that.assocRealIndex)
+				&& scheme == that.scheme;
 	}
-
+	private static <T> boolean array2Equals(T[][] a1, T[][] a2) {
+		final int length = a1.length;
+		if (length != a2.length)
+			return false;
+		for (int i = 0; i < length; ++i)
+			if (!Arrays.equals(a1[i], a2[i]))
+				return false;
+		return true;
+	}
+	
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();

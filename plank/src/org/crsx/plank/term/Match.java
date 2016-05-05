@@ -4,6 +4,7 @@
  */
 package org.crsx.plank.term;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,6 +44,10 @@ public final class Match extends Origined {
 		private Substitute(final Var[] var, final T body) {
 			this.var = var;
 			this.body = body;
+		}
+		@Override
+		public String toString() {
+			return Arrays.asList(var).toString() +  body.toString();
 		}
 	}
 	
@@ -103,7 +108,7 @@ public final class Match extends Origined {
 				// Pattern and redex both constructions.
 				final Cons p = pattern.cons();
 				final Cons r = redex.cons();
-				if (p.form == r.form) {
+				if (p.form.equals(r.form)) {
 					// Same form!
 					// First check scopes.
 					final int scopeCount = p.sub.length; // of both
@@ -280,5 +285,16 @@ public final class Match extends Origined {
 			substituteVariables[i] = binderMap.get(p.sub[i].occur().var);
 		}
 		val.put(p.name,  new Substitute<T>(substituteVariables, r));
+	}
+	
+	// Object...
+	
+	@Override
+	public String toString() {
+		return "MAP(\n"
+				+ "  meta: " + valuation + "\n"
+				+ " var: " + freeRenames + "\n"
+				+ " assoc: " + assocAllValuation + "\n"
+				+ ")";
 	}
 }

@@ -114,7 +114,7 @@ public final class Cons extends Term {
 	}
 
 	@Override
-	Sink substituteTerm(Sink sink, Map<Var, Var> freeRenames, Map<Var, Term> substitution, Map<Var, Var> replacementRenames) throws PlankException {
+	Sink substituteTerm(Sink sink, Map<Var, Var> freeRenames, Map<Var, Term> substitution, Match replacementMatch) throws PlankException {
 		sink = sink.open(origin(), sort(), form);
 		// Scopes.
 		final int scopeCount = sub.length;
@@ -128,7 +128,7 @@ public final class Cons extends Term {
 				newBinders[j] = b2;
 			}
 			sink = sink.scope(newBinders);
-			sink = sub[i].substituteTerm(sink, freeRenames, substitution, replacementRenames);
+			sink = sub[i].substituteTerm(sink, freeRenames, substitution, replacementMatch);
 		}
 		// Associations.
 		final int assocCount = assoc.length;
@@ -139,7 +139,7 @@ public final class Cons extends Term {
 				Var key = e.getKey();
 				Term value = e.getValue();
 				sink = sink.map(freeRenames.containsKey(key) ? freeRenames.get(key) : key); 
-				sink = value.substituteTerm(sink, freeRenames, substitution, replacementRenames);
+				sink = value.substituteTerm(sink, freeRenames, substitution, replacementMatch);
 			}
 			sink = sink.closeAssoc();
 		}

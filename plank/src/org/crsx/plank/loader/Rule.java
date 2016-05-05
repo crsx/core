@@ -94,6 +94,16 @@ public final class Rule extends Origined {
 		} catch (IOException ioe) {
 			throw new PlankException(ioe);
 		}
-		
+	}
+	
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		try {
+			appendRule(sb, false);
+		} catch (PlankException e) {
+			sb.append("**BADSORT(" + e.getMessage() + ")**");
+		}
+		return sb.toString();
 	}
 }

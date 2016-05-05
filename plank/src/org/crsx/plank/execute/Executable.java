@@ -55,24 +55,21 @@ public class Executable {
 		/** The path we followed in the term in this state to the next (pushed after, or for top, the current state). */
 		final Path path;
 		/** Whether this and all ancestors are data. */
-		final boolean frontier;
+		final boolean stable;
+		/** The last child we focused on (only meaningful when stable). */
 		final Step lastFocus;
 		/** Whether the term stored here was changed. */
 		final boolean changed;
 		/** Whether we have tried all rules with only data failures for this one. */
 		final boolean blocked;
-		/** Paths to direct children that have been decisively determined to be normalized. */
-		final List<Step> nfs;
-		/** Create a state (null only allowed for nfs to initialize as empty). 
-		 * @param lastFocus TODO*/
-		State(Term term, Path path, boolean frontier, Step lastFocus, boolean changed, boolean blocked, List<Step> nfs) {
+		/** Create a state (null only allowed for nfs to initialize as empty). */
+		private State(Term term, Path path, boolean stable, Step lastFocus, boolean changed, boolean blocked) {
 			this.term = term;
 			this.path = path;
-			this.frontier = frontier;
+			this.stable = stable;
 			this.lastFocus = lastFocus;
 			this.changed = changed;
 			this.blocked = blocked;
-			this.nfs = nfs == null ? new ArrayList<Step>() : nfs;
 		}
 		// TODO: toString?
 	}
@@ -81,29 +78,29 @@ public class Executable {
 	
 	/**
 	 * Normalize term with the rules of the script.
-	 * Proceeds top-down.
+	 * The overall normalization strategy is to advance the "stable" above which all terms are data.
 	 * When a rule fails because of an unevaluated fragment, we suspend the normal evaluation to evaluate that fragment.
 	 * @param input to normalize - will be destroyed
 	 * @throws PlankException
 	 */
 	public Term normalize(Term input) throws PlankException {
 		
-		// Make copy?
-		TermBuilder tb = Term.builder();
-		input.send(tb);
-		input = tb.build();
+//		// Make copy?
+//		TermBuilder tb = Term.builder();
+//		input.send(tb);
+//		input = tb.build();
 
 		// Start evaluation with empty stack.
 		Deque<State> stack = new ArrayDeque<>();
 		
 		// The work state.
 		Term term = input; // current work term
-		boolean changed = false;
-		boolean frontier = true; // whether all stack terms are data
-		boolean reducible = true; // whether we think the top term is reducible
-		boolean blocked = false; // not blocked yet!
+		boolean changed = false; // did we modify the term?
+		boolean reducible = true; // whether we think the top term may be reducible
+		boolean blocked = false; // whether we know that this term is permanently irreducible
 		boolean variableFail = false; // we have failed with variables (so blocked but only until the context catches up)
 		Path schemeFailure = null; // we have failed with a scheme at the path if non-null
+		boolean stable = false; // true when all terms on stack as well as this term are in the stable top of the term 
 		Step lastFocus = null; // for walking the frontier - should be Path!
 		
 		// Main loop.
@@ -121,7 +118,7 @@ public class Executable {
 					variableFail = true;
 					schemeFailure = null;
 
-					// Try the rules for the function until we get a match.
+					// Try the rules for the function to see if we get a match.
 					List<Rule> rules = _constructorRules.get(fun.form.name);
 					for (Rule rule : rules) {
 
@@ -143,9 +140,9 @@ public class Executable {
 						}
 						// The match failed. Update the state and try next rule...
 						variableFail = variableFail || match.variableFail;
-						blocked = blocked && (match.alwaysFail || (frontier && variableFail));
+						blocked = blocked && match.alwaysFail;
 						if (schemeFailure == null && !match.alwaysFail && !match.variableFail)
-							schemeFailure = match.failurePath;
+							schemeFailure = match.failurePath; // record first path to a reducible needed term
 						
 					} // rule loop
 
@@ -157,11 +154,11 @@ public class Executable {
 				// This function cannot reduce but we have a place to evaluate! Suspend this, switch to there, reset state, and restart.
 				if (schemeFailure != null) {
 					assert term.isFun() : "Suspending non-function for schemeFailure?";
-					stack.push(new State(term, schemeFailure, frontier, lastFocus, changed, false, null));
+					stack.push(new State(term, schemeFailure, stable, lastFocus, changed, false));
 					term = schemeFailure.apply(term);
 					changed = false;
 					reducible = true;
-					frontier = false;
+					stable = false;
 					blocked = false;
 					variableFail = false;
 					schemeFailure = null;
@@ -174,19 +171,20 @@ public class Executable {
 			
 			// All cases where the term cannot reduce come here. We have to move the focus elsewhere!
 			
-			frontier = stack.isEmpty() || stack.peek().frontier; // update whether we're on the frontier
-			if (frontier) {
+			stable = blocked && (stack.isEmpty() || stack.peek().stable); // update whether we're part of the stable top now
+			
+			if (stable) {
 				if (term.kind() == Kind.CONS) {
 					Cons cons = term.cons();
 
-					// 	If we are on the frontier with a usual construction then go brute force to first or next child...TODO: function!
-					Step child = lastFocus == null ? Step.first(cons) : lastFocus.next(term);
+					// 	If we are on the frontier with a usual construction then go brute force to first or next child...
+					Step child = lastFocus == null ? Step.first(cons) : lastFocus.next(term); // TODO: last/first/next function!
 					if (child != null) {
-						stack.push(new State(cons, Term.path().pushStep(child), frontier, lastFocus, changed, blocked, null)); 
+						stack.push(new State(cons, Term.path().pushStep(child), stable, lastFocus, changed, blocked)); 
 						term = child.apply(term);
 						changed = false;
 						reducible = true;
-						frontier = false;
+						stable = false;
 						lastFocus = null;
 						blocked = false;
 						variableFail = false;
@@ -195,14 +193,18 @@ public class Executable {
 					}
 				}
 			}
-
+			
+			// Stable and top term has no more children.
+			if (stack.isEmpty())
+				return term;
+		
 			// No more to do here. Pop stack and repeat.
 			State parent = stack.pop();
 			if (changed)
 				parent.term.update(parent.path, term);
 			term = parent.term;
-			reducible = parent.frontier || parent.blocked;
-			frontier = parent.frontier;
+			reducible = parent.stable || parent.blocked;
+			stable = parent.stable;
 			lastFocus = parent.lastFocus;
 			changed = parent.changed;
 			blocked = parent.blocked;

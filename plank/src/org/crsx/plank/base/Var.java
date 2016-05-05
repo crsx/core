@@ -34,6 +34,13 @@ final public class Var implements Comparable<Var> {
 	public boolean equals(Object obj) {
 		return this == obj;
 	}
+	
+	@Override
+	public String toString() {
+		return name;
+	}
+	
+	// Comparable...
 
 	@Override
 	public int compareTo(Var o) {
