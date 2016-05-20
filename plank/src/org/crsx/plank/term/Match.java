@@ -4,8 +4,10 @@
  */
 package org.crsx.plank.term;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.crsx.plank.base.Origined;
@@ -195,13 +197,24 @@ public final class Match extends Origined {
 			final Meta p = pattern.meta();
 			final Term r = redex;
 			if (!valuation.containsKey(p.name)) {
+				if (p.sub.length < binderMap.size()) {
+					// Only possible problem is unauthorized free variables.
+					Map<Var, Var> disallowedMap = new HashMap<>();
+					disallowedMap.putAll(binderMap);
+					for (Term s : p.sub) {
+						disallowedMap.remove(s.occur().var);
+					}
+				}				
 				// First encounter of this meta-variable! Valuate it.
 				updateValuation(valuation, p, r, binderMap);
 			} else {
 				// Subsequent encounter - non-left-linear pattern!
-				// TODO
+				Term candidate = valuation.get(p.name).body;
+				if (!r.equals(candidate)) { // in same space
+					success = false;
+					if (!full) { return; }
+				}
 			}
-			// TODO: Check missing bound variables.
 			break;
 		}
 		
@@ -249,7 +262,9 @@ public final class Match extends Origined {
 				updateValuation(assocAllValuation, pAll, rAssoc, binderMap);
 			} else {
 				// Subsequent encounter - non-left-linear pattern!
-				// TODO
+				// This means identical environments, and is disallowed
+				success = false;
+				if (!full) { return; }
 			}
 			// TODO: Check missing bound variables.
 		}

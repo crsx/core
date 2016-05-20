@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.crsx.plank.base.Origined;
 import org.crsx.plank.base.PlankException;
@@ -231,6 +232,9 @@ public abstract class Term extends Origined {
 	 */
 	abstract Sink substituteTerm(Sink sink, Map<Var, Var> freeRenames, Map<Var, Term> substitution, Match replacementMatch)
 			throws PlankException;
+
+	/** Return whether the term contains any of the indicated variables. */
+	public abstract boolean containsFree(Set<Var> vars);
 	
 	/**
 	 * Append plank textual form of term to an output.

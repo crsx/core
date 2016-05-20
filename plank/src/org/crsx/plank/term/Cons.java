@@ -5,7 +5,9 @@
 package org.crsx.plank.term;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Set;
 
 import org.crsx.plank.base.PlankException;
 import org.crsx.plank.base.Var;
@@ -148,6 +150,13 @@ public final class Cons extends Term {
 	}
 
 	@Override
+	public boolean containsFree(final Set<Var> vars) {
+		return
+				Arrays.stream(sub).anyMatch(s -> containsFree(vars))
+				|| Arrays.stream(assoc).anyMatch(a -> a.map.entrySet().stream().filter(e -> ! vars.contains(e.getKey())).anyMatch(e -> e.getValue().containsFree(vars)));
+	}
+
+	@Override
 	public void appendTerm(Appendable out, String prefix, Map<Var, String> namings, boolean includeSorts) throws PlankException {
 		try {
 			out.append(prefix);
@@ -159,7 +168,7 @@ public final class Cons extends Term {
 			out.append(form.name);
 			final int arity = sub.length + assoc.length;
 			if (arity > 0) {
-				if (prefix.startsWith("\n")) prefix += "  "; // add indentation (not yet a parameter, TODO)
+				if (prefix.startsWith("\n")) prefix += "  "; // does not yet add indentation
 				
 				// We have to work a bit to print the arguments in real order...
 				int scopeIndex = 0;

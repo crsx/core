@@ -6,6 +6,7 @@ package org.crsx.plank.term;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 
 import org.crsx.plank.base.PlankException;
 import org.crsx.plank.base.Var;
@@ -72,6 +73,11 @@ public final class Occur extends Term {
 			freeRenames.put(var, v);
 		}
 		return sink.occur(origin(), sort(), v);
+	}
+
+	@Override
+	public boolean containsFree(Set<Var> vars) {
+		return vars.contains(var);
 	}
 
 	@Override

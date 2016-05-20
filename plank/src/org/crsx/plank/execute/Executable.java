@@ -85,10 +85,10 @@ public class Executable {
 	 */
 	public Term normalize(Term input) throws PlankException {
 		
-//		// Make copy?
-//		TermBuilder tb = Term.builder();
-//		input.send(tb);
-//		input = tb.build();
+ 		//// Make copy?
+ 		//TermBuilder tb = Term.builder();
+ 		//input.send(tb);
+ 		//input = tb.build();
 
 		// Start evaluation with empty stack.
 		Deque<State> stack = new ArrayDeque<>();
@@ -195,10 +195,12 @@ public class Executable {
 			}
 			
 			// Stable and top term has no more children.
+			
+			// If this is the top term, we're done.
 			if (stack.isEmpty())
 				return term;
 		
-			// No more to do here. Pop stack and repeat.
+			// Otherwise pop stack and repeat.
 			State parent = stack.pop();
 			if (changed)
 				parent.term.update(parent.path, term);
@@ -211,7 +213,6 @@ public class Executable {
 			variableFail = false;
 			schemeFailure = null;
 			continue Evaluate;
-			
 		}
 	}
 }

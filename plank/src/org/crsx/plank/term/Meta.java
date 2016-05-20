@@ -7,6 +7,7 @@ package org.crsx.plank.term;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.crsx.plank.base.PlankException;
 import org.crsx.plank.base.Var;
@@ -76,6 +77,15 @@ public final class Meta extends Term {
 	@Override
 	Sink substituteTerm(Sink sink, Map<Var, Var> freeRenames, Map<Var, Term> substitution, Match replacementMatch) throws PlankException {
 		throw new PlankException("found meta-application in substituted term (%s)", name);
+	}
+
+	@Override
+	public boolean containsFree(Set<Var> vars) {
+		for (Term s : sub) {
+			if (s.containsFree(vars))
+				return true;
+		}
+		return false;
 	}
 
 	@Override

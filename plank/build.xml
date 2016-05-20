@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+
+<project name="Plank" default="all">
+
+	<target name="all" description="build the project"
+		depends="compile,jar,javadoc"/>
+
+	<!-- Compile classes. -->
+	<target name="compile" description="compile the source">
+	    <javac source="1.8" includeantruntime="false" srcdir="src" destdir="bin"/>
+	</target>
+	
+	<!-- Generate Jar file --> 
+	<target name="jar" depends="compile" description="create jar file">
+        <jar jarfile="Plank.jar" manifest="plank.manifest" basedir="bin" includes="**/*.class"/>
+    </target>
+	
+	<!-- Generate javadoc -->
+	<target name="javadoc" description="Generate documentation">
+	    <javadoc sourcepath="src" destdir="javadoc"/>
+	</target>
+
+</project>

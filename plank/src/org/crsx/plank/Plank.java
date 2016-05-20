@@ -25,7 +25,7 @@ import org.crsx.plank.term.Term;
 public class Plank {
 
 	/** Help. */
-	static String USAGE = "Usage: Plank [--show-{inputs,sorts,parses}] scriptfile [termfile...]";
+	static String USAGE = "Usage: Plank [--show-{script,inputs,sorts,parses}] scriptfile [termfile...]";
 	
 	/**
 	 * Run script on inputs.
@@ -41,12 +41,16 @@ public class Plank {
 		// Process options and arguments.
 		String scriptFile = null;
 		List<String> termFiles = new ArrayList<>();
+		boolean showScript = false;
 		boolean showInputs = false;
 		boolean showSorts = false;
 		boolean traceParse = false;
 		for (String arg : args) {
 			if (arg.startsWith("-")) {
 				switch (arg) {
+				case "--show-script" :
+					showScript = true;
+					break;
 				case "--show-inputs" :
 					showInputs = true;
 					break;
@@ -77,8 +81,10 @@ public class Plank {
 				loader.appendErrors(System.err);
 				System.exit(1);
 			}
-			System.out.println("/* LOADED SCRIPT: */\n");
-			System.out.print(loader.toString());
+			if (showScript) {
+				System.out.println("/* LOADED SCRIPT: */\n");
+				System.out.print(loader.toString());
+			}
 			
 			// Process each input term.
 			if (termFiles.isEmpty()) {
@@ -121,7 +127,7 @@ public class Plank {
 		}
 		Executable executor = loader.executable();
 		Term nf = executor.normalize(term);
-		nf.appendTerm(out, "\n", new HashMap<>(), showSorts);
+		nf.appendTerm(out, "\n  ", new HashMap<>(), showSorts);
 		out.append("\n");
 	}
 }
