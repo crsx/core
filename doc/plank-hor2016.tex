@@ -58,7 +58,7 @@ the ``core'' elements of such languages should be.
 
 ħ is our attempt at providing such an extended foundation.  ħ is specifically based on Aczel's
 \emph{Contraction Schemes}~\cite{Aczel:1978} (where the restriction we shall see of only permitting
-abstractions as constrution arguments is first found) with the substitution notion from Klop's CRS,
+abstractions as constructor arguments is first found) with the substitution notion from Klop's CRSs,
 \emph{Combinatory Reduction Systems}~\cite{Klop+:tcs1993} and imposing a typing discipline similar
 to the the second-order limitation of Blanqui's \emph{Inductive Data Type
   Systems}~\cite{BlanquiJouannaudOkada:tcs2002}. The extension of ħ is the mechanism used to add
@@ -76,10 +76,12 @@ system~\cite{Rose:rta2011}, where they were never provided a formal foundation.
   L rule Lam([x]Ap(#M(), x)) →  #M();
   \end{hacs}
   The example shows CRS-style higher order matching, where patterns match all occurrences of bound
-  variables---"#M(x)" in the first rule---allowing rules to do \emph{substitution} of bound
-  variables---"#M(#N)" in the first rule achieves the substitution ``"#M[#N/x]"'' of the usual β
-  rule. CRS notably also makes \emph{absence} of binder arguments to meta-variables---"#M()" is not
-  "#M(x)" in the last rule---express that "x" can \emph{not} occur in subterms matching "#M".
+  variables, allowing rules to do \emph{substitution} of bound variables.
+  In the first rule, "#M(x)" in the left-hand side matches a term containing the bound variable
+  x, while in the right-hand side "#M(#N)" achieves the substitution ``"#M[#N/x]"'' of the usual β
+  rule. CRS notably also makes it possible to test for the \emph{absence} of binder arguments to
+  meta-variables: in the last rule, "#M()" is not the same as "#M(x)", and expresses that "x" can
+  \emph{not} occur in subterms matching "#M".
 \end{example}
 
 \begin{example}
@@ -152,8 +154,8 @@ system~\cite{Rose:rta2011}, where they were never provided a formal foundation.
   %%
   \begin{itemize}
   \item $c,s,d,f ∈ \mathcal{C}$ stand for \emph{constructor} terminals ("Lam", "Ap").
-  \item $v,α ∈ \mathcal{V}$ stand for \emph{variable} terminals ("x", "foo").
-  \item $m ∈ \mathcal{M}$ stands for \emph{meta-variable} terminals ("#", "#M").
+  \item $v,α ∈ \mathcal{V}$ stand for \emph{variable} terminals ("x", "z").
+  \item $m ∈ \mathcal{M}$ stands for \emph{meta-variable} terminals ("#M", "#env").
   \end{itemize}
   %%
 \end{definition}
